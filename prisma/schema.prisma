@@ -84,8 +84,9 @@ model Booking {
   packageId       String
   package         ServicePackage @relation(fields: [packageId], references: [id])
   addOns          Json?         // selected add-ons and their prices
-  message         String?       // initial message from customer
-  adminNotes      String?       // internal notes, admin-only
+  message               String?  // initial message from customer (legacy)
+  questionnaireAnswers  Json?    // structured pre-shoot questionnaire answers
+  adminNotes            String?  // internal notes, admin-only
   communicationPreference String @default("email") // "email" | "sms"
   status          BookingStatus @default(INQUIRY)
   depositAmount   Int           // in cents
@@ -350,6 +351,20 @@ model AuditLog {
   targetId   String?  // ID of the affected record
   meta       Json?    // extra context (old status → new status, etc.)
   createdAt  DateTime @default(now())
+}
+
+// ─── Client Reviews ──────────────────────────────────────────────────
+
+model Review {
+  id          String   @id @default(cuid())
+  bookingId   String?
+  clientName  String
+  clientEmail String
+  rating      Int      // 1–5
+  body        String
+  approved    Boolean  @default(false)
+  token       String   @unique @default(cuid())
+  createdAt   DateTime @default(now())
 }
 
 // ─── Admin ────────────────────────────────────────────────────────────

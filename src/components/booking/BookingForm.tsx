@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { getQuestionsForEventType } from "@/lib/booking-questionnaire";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
@@ -64,6 +65,7 @@ export default function BookingForm() {
   const [loadingPackages, setLoadingPackages] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
 
   const preselectedPackageId = searchParams.get("package") ?? "";
   const wasCancelled = searchParams.get("cancelled") === "1";
@@ -88,6 +90,22 @@ export default function BookingForm() {
   const selectedAddOns = watch("addOns");
   const selectedDate = watch("eventDate");
   const phone = watch("customerPhone");
+  const selectedEventType = watch("eventType");
+
+  const questions = useMemo(
+    () => selectedEventType ? getQuestionsForEventType(selectedEventType) : [],
+    [selectedEventType]
+  );
+
+  const availableAddOns = useMemo(() => {
+    if (!selectedPackage) return [];
+    const addOnPricing = selectedPackage.addOnPricing ?? {};
+    return Object.entries(ADD_ON_KEYS).filter(
+      ([, priceKey]) => addOnPricing[priceKey] && addOnPricing[priceKey] > 0
+    );
+  }, [selectedPackage]);
+
+  const contactStepNum = 3 + (selectedEventType ? 1 : 0) + (availableAddOns.length > 0 ? 1 : 0) + 1;
 
   const totalPrice = (() => {
     if (!selectedPackage) return 0;
@@ -128,10 +146,13 @@ export default function BookingForm() {
     setServerError(null);
 
     try {
+      const filteredAnswers = Object.fromEntries(
+        Object.entries(answers).filter(([, v]) => v.trim())
+      );
       const res = await fetch("/api/booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...values, questionnaireAnswers: filteredAnswers }),
       });
 
       const json = await res.json();
@@ -263,19 +284,58 @@ export default function BookingForm() {
             )}
           </div>
 
-          {/* Add-ons */}
-          {selectedPackage && (() => {
-            const addOns = selectedPackage.addOnPricing ?? {};
-            const available = Object.entries(ADD_ON_KEYS).filter(
-              ([, priceKey]) => addOns[priceKey] && addOns[priceKey] > 0
-            );
-            if (!available.length) return null;
+          {/* Questionnaire */}
+          {questions.length > 0 && (
+            <fieldset>
+              <legend className="font-display text-lg text-ink mb-1">4. About your shoot</legend>
+              <p className="text-sm text-muted-foreground mb-5">All fields are optional — answer what you can and leave the rest blank.</p>
+              <div className="space-y-5">
+                {questions.map((q) => (
+                  <div key={q.key}>
+                    <label className="block text-sm text-muted-foreground mb-1.5">{q.label}</label>
+                    {q.type === "select" ? (
+                      <select
+                        value={answers[q.key] ?? ""}
+                        onChange={(e) => setAnswers((prev) => ({ ...prev, [q.key]: e.target.value }))}
+                        className="w-full sm:w-auto border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm"
+                      >
+                        <option value="">Select…</option>
+                        {q.options?.map((opt) => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    ) : q.type === "textarea" ? (
+                      <textarea
+                        value={answers[q.key] ?? ""}
+                        onChange={(e) => setAnswers((prev) => ({ ...prev, [q.key]: e.target.value }))}
+                        placeholder={q.placeholder}
+                        rows={3}
+                        className="w-full border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm resize-none"
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        value={answers[q.key] ?? ""}
+                        onChange={(e) => setAnswers((prev) => ({ ...prev, [q.key]: e.target.value }))}
+                        placeholder={q.placeholder}
+                        className="w-full border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </fieldset>
+          )}
 
+          {/* Add-ons */}
+          {availableAddOns.length > 0 && selectedPackage && (() => {
+            const addOnPricing = selectedPackage.addOnPricing ?? {};
+            const addOnStep = 4 + (questions.length > 0 ? 1 : 0);
             return (
               <fieldset>
-                <legend className="font-display text-lg text-ink mb-4">4. Add-ons</legend>
+                <legend className="font-display text-lg text-ink mb-4">{addOnStep}. Add-ons</legend>
                 <div className="space-y-3">
-                  {available.map(([key, priceKey]) => (
+                  {availableAddOns.map(([key, priceKey]) => (
                     <label key={key} className="flex items-center gap-3 cursor-pointer">
                       <input
                         type="checkbox"
@@ -284,7 +344,7 @@ export default function BookingForm() {
                       />
                       <span className="text-ink text-sm">{ADD_ON_LABELS[key]}</span>
                       <span className="font-meta text-xs text-muted-foreground ml-auto">
-                        +{formatPrice(addOns[priceKey])}
+                        +{formatPrice(addOnPricing[priceKey])}
                       </span>
                     </label>
                   ))}
@@ -296,7 +356,7 @@ export default function BookingForm() {
           {/* Contact info */}
           <fieldset>
             <legend className="font-display text-lg text-ink mb-4">
-              {selectedPackage ? "5." : "4."} Your info
+              {contactStepNum}. Your info
             </legend>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
@@ -370,17 +430,6 @@ export default function BookingForm() {
                 </div>
               )}
 
-              <div className="sm:col-span-2">
-                <label className="block text-sm text-muted-foreground mb-1.5">
-                  Anything else I should know?
-                </label>
-                <textarea
-                  rows={4}
-                  {...register("message")}
-                  placeholder="Location, vision, vibe, special requests…"
-                  className="w-full border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm resize-none"
-                />
-              </div>
             </div>
           </fieldset>
 
