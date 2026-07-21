@@ -24,6 +24,7 @@ import {
   Settings,
   X,
   Search,
+  Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +44,7 @@ const NAV = [
   { href: "/admin/email", label: "Email", icon: Send },
   { href: "/admin/discounts", label: "Discounts", icon: Tag },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart2 },
+  { href: "/admin/reviews", label: "Reviews", icon: Star },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 

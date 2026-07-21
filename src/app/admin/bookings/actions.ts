@@ -73,6 +73,38 @@ export async function updateBookingStatus(formData: FormData) {
     }
   }
 
+  // Send review request when booking is completed for the first time
+  if (status === "COMPLETED" && prev && prev.status !== "COMPLETED") {
+    const siteUrl = process.env.NEXTAUTH_URL ?? "https://lucyevans.com";
+    const from = process.env.RESEND_FROM_EMAIL ?? "hello@lucyevans.com";
+    try {
+      const review = await prisma.review.create({
+        data: {
+          bookingId: id,
+          clientName: prev.customerName,
+          clientEmail: prev.customerEmail,
+          rating: 0,
+          body: "",
+        },
+      });
+      const { resend } = await import("@/lib/resend");
+      await resend.emails.send({
+        from,
+        to: prev.customerEmail,
+        subject: "How did we do? Leave a review — Lucy Evans Photography",
+        html: `<div style="font-family:sans-serif;max-width:600px;color:#2E2A24">
+          <p>Hi ${prev.customerName.split(" ")[0]},</p>
+          <p>It was such a pleasure working with you! I'd love to hear about your experience — your feedback means the world and helps other clients feel confident booking.</p>
+          <p><a href="${siteUrl}/reviews/${review.token}" style="display:inline-block;background:#2E2A24;color:#F5F0EA;padding:10px 20px;border-radius:3px;text-decoration:none;font-size:14px">Leave a review →</a></p>
+          <p style="font-size:13px;color:#888">This link is personal to you and takes just a minute.</p>
+          <p>— Lucy Evans<br/><a href="${siteUrl}" style="color:#A9C6D8">lucyevans.com</a></p>
+        </div>`,
+      });
+    } catch (err) {
+      console.error("[review request]", err);
+    }
+  }
+
   revalidatePath("/admin/bookings");
   revalidatePath(`/admin/bookings/${id}`);
 }

@@ -8,6 +8,7 @@ import { MessageThread } from "@/components/MessageThread";
 import { DeliveryGalleryUpload } from "@/components/admin/DeliveryGalleryUpload";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
+import { getQuestionsForEventType } from "@/lib/booking-questionnaire";
 
 export const dynamic = "force-dynamic";
 
@@ -177,13 +178,44 @@ export default async function BookingDetailPage({ params }: Props) {
           </dl>
         </section>
 
-        {/* Message */}
+        {/* Message (legacy field — new bookings use questionnaire) */}
         {booking.message && (
           <section className="border border-border rounded-sm p-6">
             <h2 className="font-display text-lg text-ink mb-4">Message from customer</h2>
             <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{booking.message}</p>
           </section>
         )}
+
+        {/* Questionnaire */}
+        {booking.questionnaireAnswers && (() => {
+          const raw = booking.questionnaireAnswers as Record<string, string>;
+          const questions = getQuestionsForEventType(booking.eventType);
+          const answered = questions.filter((q) => raw[q.key]?.trim());
+          if (answered.length === 0) return null;
+          return (
+            <section className="border border-border rounded-sm p-6">
+              <h2 className="font-display text-lg text-ink mb-6">Shoot questionnaire</h2>
+              <div className="space-y-5">
+                {answered.map((q) => (
+                  <div key={q.key}>
+                    <p className="font-meta text-xs text-muted-foreground mb-1">{q.label}</p>
+                    <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap">{raw[q.key]}</p>
+                  </div>
+                ))}
+                {/* Any answers for keys not in the current question set (future-proofing) */}
+                {Object.entries(raw)
+                  .filter(([key]) => !questions.find((q) => q.key === key))
+                  .filter(([, v]) => v?.trim())
+                  .map(([key, value]) => (
+                    <div key={key}>
+                      <p className="font-meta text-xs text-muted-foreground mb-1">{key.replace(/_/g, " ")}</p>
+                      <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap">{value}</p>
+                    </div>
+                  ))}
+              </div>
+            </section>
+          );
+        })()}
 
         {/* Notes (editable) */}
         <section className="border border-border rounded-sm p-6">
