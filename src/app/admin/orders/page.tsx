@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Admin — Orders" };
@@ -42,7 +43,14 @@ export default async function AdminOrdersPage() {
             )}
             {orders.map((o) => (
               <tr key={o.id} className="hover:bg-ink/5">
-                <td className="px-4 py-3 text-ink">{o.customerEmail || "—"}</td>
+                <td className="px-4 py-3">
+                  <Link
+                    href={`/admin/orders/${o.id}`}
+                    className="text-ink hover:opacity-70 transition-opacity"
+                  >
+                    {o.customerEmail || "—"}
+                  </Link>
+                </td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {o.items.map((item) => item.photo?.title ?? item.bundle?.title ?? "—").join(", ")}
                 </td>
