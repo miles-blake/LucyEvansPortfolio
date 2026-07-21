@@ -68,6 +68,13 @@ export function AdminSidebar() {
       </nav>
 
       <div className="p-4 border-t border-border space-y-2">
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 text-sm text-muted-foreground hover:text-ink transition-colors"
+        >
+          <ExternalLink size={15} />
+          View site
+        </Link>
         <a
           href="/api/admin/preview"
           className="flex items-center gap-2.5 text-sm text-muted-foreground hover:text-ink transition-colors"
