@@ -32,7 +32,7 @@ export default function Footer() {
               Lucy Evans
             </Link>
             <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-              Film photographer and content marketer based in the Pacific Northwest.
+              Film photographer and content marketer based in Utah County, Utah. Available to travel.
             </p>
           </div>
 
