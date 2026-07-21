@@ -20,7 +20,12 @@ export default async function AdminBookingsPage() {
 
   return (
     <div className="max-w-5xl">
-      <h1 className="font-display text-2xl text-ink mb-6">Bookings</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="font-display text-2xl text-ink">Bookings</h1>
+        <Link href="/admin/bookings/calendar" className="text-xs text-muted-foreground hover:text-ink transition-colors font-meta">
+          Calendar →
+        </Link>
+      </div>
 
       <div className="border border-border rounded-sm overflow-x-auto">
         <table className="w-full text-sm min-w-[700px]">
