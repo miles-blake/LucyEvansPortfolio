@@ -170,6 +170,27 @@ model Subscriber {
   confirmed   Boolean  @default(false)
 }
 
+// ─── Inquiries ────────────────────────────────────────────────────────
+
+model Inquiry {
+  id          String        @id @default(cuid())
+  name        String
+  email       String
+  subject     String
+  message     String
+  status      InquiryStatus @default(NEW)
+  adminNotes  String?
+  repliedAt   DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+enum InquiryStatus {
+  NEW
+  READ
+  REPLIED
+}
+
 // ─── Admin ────────────────────────────────────────────────────────────
 
 model AdminUser {

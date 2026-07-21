@@ -12,6 +12,8 @@ import {
   Users,
   LogOut,
   LayoutDashboard,
+  MessageSquare,
+  ExternalLink,
 } from "lucide-react";
 
 const NAV = [
@@ -20,6 +22,7 @@ const NAV = [
   { href: "/admin/bundles", label: "Bundles", icon: Package },
   { href: "/admin/services", label: "Services", icon: CalendarDays },
   { href: "/admin/bookings", label: "Bookings", icon: CalendarDays },
+  { href: "/admin/inquiries", label: "Inquiries", icon: MessageSquare },
   { href: "/admin/portfolio", label: "Portfolio", icon: Briefcase },
   { href: "/admin/subscribers", label: "Subscribers", icon: Users },
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
@@ -58,7 +61,14 @@ export function AdminSidebar() {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border space-y-2">
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 text-sm text-muted-foreground hover:text-ink transition-colors"
+        >
+          <ExternalLink size={15} />
+          View site
+        </Link>
         <button
           onClick={() => signOut({ callbackUrl: "/admin/login" })}
           className="flex items-center gap-2.5 text-sm text-muted-foreground hover:text-ink w-full transition-colors"
