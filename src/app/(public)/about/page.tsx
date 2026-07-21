@@ -2,13 +2,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
   title: "About",
   description: "Lucy Evans — film photographer and content marketer based in Utah County, Utah.",
 };
 
-export default function AboutPage() {
+export const revalidate = 3600;
+
+export default async function AboutPage() {
+  const portrait = await prisma.photo.findFirst({
+    where: { tags: { hasSome: ["Portrait", "People", "Wedding"] } },
+    select: { fullResFileUrl: true, title: true },
+    orderBy: { createdAt: "asc" },
+  });
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       {/* Hero */}
@@ -40,11 +48,11 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Portrait placeholder */}
+        {/* Portrait */}
         <div className="relative aspect-[3/4] bg-sage/10 rounded-sm overflow-hidden">
           <Image
-            src="https://picsum.photos/seed/lucy-portrait/600/800"
-            alt="Lucy Evans"
+            src={portrait?.fullResFileUrl ?? "https://picsum.photos/seed/lucy-portrait/600/800"}
+            alt={portrait?.title ?? "Lucy Evans"}
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 50vw"

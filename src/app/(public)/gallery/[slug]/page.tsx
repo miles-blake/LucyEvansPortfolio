@@ -163,6 +163,7 @@ export default async function PhotoDetailPage({ params }: Props) {
               photoId={photo.id}
               title={photo.title}
               price={photo.price}
+              imageUrl={photo.previewImageUrl}
               disabled={soldOut}
             />
             <SaveButton

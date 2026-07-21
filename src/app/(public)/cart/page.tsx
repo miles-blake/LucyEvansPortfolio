@@ -103,13 +103,19 @@ export default function CartPage() {
             >
               {/* Placeholder thumbnail — real image would need a lookup */}
               <div className="w-20 h-24 bg-muted flex-shrink-0 rounded-sm overflow-hidden relative">
-                <Image
-                  src={`https://picsum.photos/seed/${item.id}/160/200`}
-                  alt={item.title}
-                  fill
-                  className="object-cover"
-                  sizes="80px"
-                />
+                {item.imageUrl ? (
+                  <Image
+                    src={item.imageUrl}
+                    alt={item.title}
+                    fill
+                    className="object-cover"
+                    sizes="80px"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-sage/10 flex items-center justify-center">
+                    <span className="font-meta text-[10px] text-muted-foreground text-center px-1">{item.title.slice(0, 20)}</span>
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-display text-lg text-ink mb-1 truncate">{item.title}</p>

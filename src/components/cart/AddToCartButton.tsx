@@ -9,17 +9,18 @@ interface Props {
   photoId: string;
   title: string;
   price: number;
+  imageUrl?: string;
   disabled?: boolean;
 }
 
-export default function AddToCartButton({ photoId, title, price, disabled }: Props) {
+export default function AddToCartButton({ photoId, title, price, imageUrl, disabled }: Props) {
   const { add, items } = useCart();
   const [justAdded, setJustAdded] = useState(false);
   const inCart = items.some((i) => i.id === photoId);
 
   function handleClick() {
     if (inCart || disabled) return;
-    add({ id: photoId, type: "photo", title, price });
+    add({ id: photoId, type: "photo", title, price, imageUrl });
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 2000);
   }

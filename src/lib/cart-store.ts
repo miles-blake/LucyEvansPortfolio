@@ -9,6 +9,7 @@ export interface CartItem {
   title: string;
   price: number;       // cents
   quantity: number;
+  imageUrl?: string;   // previewImageUrl for cart thumbnails
 }
 
 interface CartStore {

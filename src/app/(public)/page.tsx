@@ -7,15 +7,25 @@ import { ArrowRight } from "lucide-react";
 export const revalidate = 3600;
 
 async function getFeaturedContent() {
-  const [photo, piece] = await Promise.all([
+  const [photo, piece, heroLandscape, heroPeople] = await Promise.all([
     prisma.photo.findFirst({ where: { featured: true } }),
     prisma.portfolioPiece.findFirst({ where: { featured: true } }),
+    prisma.photo.findFirst({
+      where: { tags: { hasSome: ["Landscape", "Mountains", "Coastal", "Nature"] } },
+      select: { fullResFileUrl: true, title: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.photo.findFirst({
+      where: { tags: { hasSome: ["People", "Portrait", "Wedding"] } },
+      select: { fullResFileUrl: true, title: true },
+      orderBy: { createdAt: "desc" },
+    }),
   ]);
-  return { photo, piece };
+  return { photo, piece, heroLandscape, heroPeople };
 }
 
 export default async function HomePage() {
-  const { photo, piece } = await getFeaturedContent();
+  const { photo, piece, heroLandscape, heroPeople } = await getFeaturedContent();
 
   return (
     <>
@@ -26,8 +36,8 @@ export default async function HomePage() {
           {/* Photography panel */}
           <div className="relative flex-1 flex flex-col justify-end p-8 md:p-16 min-h-[50svh] md:min-h-0 group overflow-hidden">
             <Image
-              src="https://picsum.photos/seed/hero-photo/900/1200"
-              alt="Golden hour landscape on film"
+              src={heroLandscape?.fullResFileUrl ?? "https://picsum.photos/seed/hero-photo/900/1200"}
+              alt={heroLandscape?.title ?? "Golden hour landscape on film"}
               fill
               priority
               className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
@@ -79,8 +89,8 @@ export default async function HomePage() {
           {/* Marketing panel */}
           <div className="relative flex-1 flex flex-col justify-end p-8 md:p-16 min-h-[50svh] md:min-h-0 group overflow-hidden">
             <Image
-              src="https://picsum.photos/seed/hero-marketing/900/1200"
-              alt="Behind the scenes content creation"
+              src={heroPeople?.fullResFileUrl ?? "https://picsum.photos/seed/hero-marketing/900/1200"}
+              alt={heroPeople?.title ?? "Behind the scenes content creation"}
               fill
               priority
               className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
