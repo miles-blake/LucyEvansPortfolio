@@ -91,6 +91,8 @@ model Booking {
   stripeSessionId String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+
+  portalToken ClientPortalToken?
 }
 
 enum BookingStatus {
@@ -234,6 +236,17 @@ enum InvoiceStatus {
   SENT
   PAID
   CANCELLED
+}
+
+// ─── Client Portal ───────────────────────────────────────────────────
+
+model ClientPortalToken {
+  id        String   @id @default(cuid())
+  token     String   @unique @default(cuid())
+  bookingId String   @unique
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 // ─── Admin ────────────────────────────────────────────────────────────
