@@ -19,6 +19,7 @@ model Photo {
   filmStock       String?
   camera          String?
   collectionTag   String?
+  tags            String[]
   previewImageUrl String   // watermarked, public
   fullResFileUrl  String   // private, never served directly
   price           Int      // in cents

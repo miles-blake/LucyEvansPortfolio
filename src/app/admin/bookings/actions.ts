@@ -133,6 +133,14 @@ export async function sendClientPortalLink(formData: FormData) {
   revalidatePath(`/admin/bookings/${bookingId}`);
 }
 
+export async function deleteBooking(formData: FormData) {
+  await requireAdmin();
+  const id = formData.get("id") as string;
+  if (!id) return;
+  await prisma.booking.delete({ where: { id } });
+  redirect("/admin/bookings");
+}
+
 export async function createInvoiceForBooking(formData: FormData) {
   await requireAdmin();
   const bookingId = formData.get("bookingId") as string;

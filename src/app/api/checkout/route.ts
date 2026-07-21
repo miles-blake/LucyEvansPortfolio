@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
+import { getBundleDiscountPct } from "@/lib/bundle-discount";
 
 const itemSchema = z.object({
   id: z.string(),
@@ -14,12 +15,13 @@ const itemSchema = z.object({
 const schema = z.object({
   items: z.array(itemSchema).min(1),
   discountCode: z.string().optional(),
+  bundlePct: z.number().int().min(0).max(20).optional(),
 });
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { items, discountCode } = schema.parse(body);
+    const { items, discountCode, bundlePct: clientBundlePct } = schema.parse(body);
 
     // Verify prices server-side — never trust client-sent prices
     const verifiedLineItems = await Promise.all(
@@ -54,13 +56,24 @@ export async function POST(req: NextRequest) {
       discount = code;
     }
 
+    // Server-side bundle discount (re-computed — never trust the client value blindly)
+    const photoCount = verifiedLineItems.filter((i) => i.type === "photo").length;
+    const serverBundlePct = getBundleDiscountPct(photoCount);
+    // If client sent a bundlePct, it must match server's calculation
+    if (clientBundlePct !== undefined && clientBundlePct !== serverBundlePct) {
+      return NextResponse.json({ error: "Invalid bundle discount." }, { status: 400 });
+    }
+    const photoSubtotal = verifiedLineItems.filter((i) => i.type === "photo").reduce((s, i) => s + i.price, 0);
+    const bundleSavings = Math.round((photoSubtotal * serverBundlePct) / 100);
+
     const subtotal = verifiedLineItems.reduce((s, i) => s + i.price, 0);
-    let discountAmount = 0;
+    let discountAmount = bundleSavings;
     if (discount) {
+      const afterBundle = subtotal - bundleSavings;
       if (discount.type === "percent") {
-        discountAmount = Math.round((subtotal * discount.amount) / 100);
+        discountAmount += Math.round((afterBundle * discount.amount) / 100);
       } else {
-        discountAmount = Math.min(discount.amount, subtotal);
+        discountAmount += Math.min(discount.amount, afterBundle);
       }
     }
     const totalAfterDiscount = Math.max(0, subtotal - discountAmount);
@@ -94,15 +107,28 @@ export async function POST(req: NextRequest) {
       quantity: 1,
     }));
 
-    // Add a negative line item for the discount
-    if (discount && discountAmount > 0) {
-      const label = discount.type === "percent"
-        ? `Discount (${discount.amount}% off)`
-        : `Discount (${discountCode})`;
+    // Bundle savings line item
+    if (bundleSavings > 0) {
       lineItemsForStripe.push({
         price_data: {
           currency: "usd",
-          unit_amount: -discountAmount,
+          unit_amount: -bundleSavings,
+          product_data: { name: `Bundle discount (${serverBundlePct}% off ${photoCount} photos)`, description: "" },
+        },
+        quantity: 1,
+      });
+    }
+
+    // Discount code line item
+    if (discount && discountAmount - bundleSavings > 0) {
+      const codeDiscount = discountAmount - bundleSavings;
+      const label = discount.type === "percent"
+        ? `Discount code (${discount.amount}% off)`
+        : `Discount code (${discountCode})`;
+      lineItemsForStripe.push({
+        price_data: {
+          currency: "usd",
+          unit_amount: -codeDiscount,
           product_data: { name: label, description: "" },
         },
         quantity: 1,

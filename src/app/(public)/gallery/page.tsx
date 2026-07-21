@@ -18,15 +18,29 @@ interface Props {
 
 async function getPhotos(collection?: string) {
   return prisma.photo.findMany({
-    where: collection ? { collectionTag: collection } : undefined,
+    where: collection
+      ? {
+          OR: [
+            { tags: { has: collection } },
+            { collectionTag: collection },
+          ],
+        }
+      : undefined,
     orderBy: [{ featured: "desc" }, { captureDate: "desc" }],
   });
 }
 
 async function getCollections() {
-  const photos = await prisma.photo.findMany({ select: { collectionTag: true } });
-  const tags = new Set(photos.map((p) => p.collectionTag).filter(Boolean) as string[]);
-  return Array.from(tags).sort();
+  const photos = await prisma.photo.findMany({ select: { collectionTag: true, tags: true } });
+  const tagSet = new Set<string>();
+  for (const p of photos) {
+    if (p.tags.length > 0) {
+      p.tags.forEach((t) => tagSet.add(t));
+    } else if (p.collectionTag) {
+      tagSet.add(p.collectionTag);
+    }
+  }
+  return Array.from(tagSet).sort();
 }
 
 export default async function GalleryPage({ searchParams }: Props) {

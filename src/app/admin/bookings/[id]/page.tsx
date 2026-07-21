@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { updateBookingStatus, saveBookingNotes, createInvoiceForBooking, sendClientPortalLink, sendBookingMessage } from "../actions";
 import { deleteDeliveredAsset, uploadContract, deleteContract } from "../delivery-actions";
+import { DeleteBookingButton } from "./DeleteBookingButton";
 import { MessageThread } from "@/components/MessageThread";
 import { DeliveryGalleryUpload } from "@/components/admin/DeliveryGalleryUpload";
 import { ArrowLeft } from "lucide-react";
@@ -368,6 +369,15 @@ export default async function BookingDetailPage({ params }: Props) {
               </form>
             </div>
           )}
+        </section>
+
+        {/* Danger zone */}
+        <section className="border border-rose-200 rounded-sm p-6">
+          <h2 className="font-display text-lg text-rose-600 mb-2">Delete booking</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Permanently removes this booking along with all messages, delivered assets, contract, and portal token. This cannot be undone.
+          </p>
+          <DeleteBookingButton bookingId={booking.id} />
         </section>
       </div>
     </div>

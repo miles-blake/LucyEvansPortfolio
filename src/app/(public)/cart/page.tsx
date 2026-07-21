@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Trash2, ArrowRight, ShoppingBag } from "lucide-react";
 import { useState } from "react";
+import { getBundleDiscountPct, nextTier, BUNDLE_TIERS } from "@/lib/bundle-discount";
 
 export default function CartPage() {
   const { items, remove, total, count } = useCart();
@@ -16,6 +17,12 @@ export default function CartPage() {
   const [discount, setDiscount] = useState<{ type: string; amount: number } | null>(null);
   const [codeError, setCodeError] = useState<string | null>(null);
   const [codeLoading, setCodeLoading] = useState(false);
+
+  const photoCount = items.filter((i) => i.type === "photo").length;
+  const bundlePct = getBundleDiscountPct(photoCount);
+  const photoSubtotal = items.filter((i) => i.type === "photo").reduce((s, i) => s + i.price, 0);
+  const bundleSavings = Math.round((photoSubtotal * bundlePct) / 100);
+  const upNext = nextTier(photoCount);
 
   async function applyCode() {
     setCodeError(null);
@@ -40,15 +47,15 @@ export default function CartPage() {
     setCodeError(null);
   }
 
-  function discountAmount() {
+  function codeDiscountAmount() {
     if (!discount) return 0;
-    const sub = total();
+    const sub = total() - bundleSavings;
     if (discount.type === "percent") return Math.round((sub * discount.amount) / 100);
     return Math.min(discount.amount, sub);
   }
 
   function finalTotal() {
-    return Math.max(0, total() - discountAmount());
+    return Math.max(0, total() - bundleSavings - codeDiscountAmount());
   }
 
   async function handleCheckout() {
@@ -58,7 +65,7 @@ export default function CartPage() {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, discountCode: appliedCode ?? undefined }),
+        body: JSON.stringify({ items, discountCode: appliedCode ?? undefined, bundlePct: bundlePct > 0 ? bundlePct : undefined }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Checkout failed.");
@@ -139,6 +146,25 @@ export default function CartPage() {
                 </div>
               ))}
             </div>
+
+            {/* Bundle discount info */}
+            {photoCount >= 2 && (
+              <div className="border border-sage/30 bg-sage/5 rounded-sm p-3 space-y-1.5">
+                <p className="font-meta text-xs font-medium text-sage">
+                  {bundlePct > 0
+                    ? `${bundlePct}% bundle discount applied on ${photoCount} photos`
+                    : `Add ${upNext?.photosNeeded} more photo${upNext?.photosNeeded === 1 ? "" : "s"} to unlock ${upNext?.nextPct}% off`}
+                </p>
+                <div className="space-y-0.5">
+                  {BUNDLE_TIERS.slice().reverse().map((tier) => (
+                    <p key={tier.min} className={`font-meta text-[11px] ${photoCount >= tier.min ? "text-sage" : "text-muted-foreground"}`}>
+                      {photoCount >= tier.min ? "✓ " : ""}{tier.min}+ photos — {tier.pct}% off
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Discount code */}
             <div className="border-t border-border pt-4 space-y-2">
               {appliedCode ? (
@@ -169,10 +195,16 @@ export default function CartPage() {
               {codeError && <p className="font-meta text-xs text-rose-600">{codeError}</p>}
             </div>
 
-            {discount && discountAmount() > 0 && (
+            {bundleSavings > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-sage">Discount</span>
-                <span className="text-sage">−${(discountAmount() / 100).toFixed(2)}</span>
+                <span className="text-sage">Bundle {bundlePct}% off</span>
+                <span className="text-sage">−${(bundleSavings / 100).toFixed(2)}</span>
+              </div>
+            )}
+            {discount && codeDiscountAmount() > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-sage">Discount code</span>
+                <span className="text-sage">−${(codeDiscountAmount() / 100).toFixed(2)}</span>
               </div>
             )}
 
