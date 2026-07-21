@@ -42,7 +42,7 @@ export default async function HomePage() {
                 Landscapes on<br />medium format film.
               </h1>
               <p className="text-cream/80 text-base md:text-lg mb-8 max-w-sm">
-                Digital downloads and prints. Landscape photography from the Pacific Northwest, Rockies, and beyond.
+                Digital downloads and prints. Landscape photography from Utah, the Rockies, and beyond.
               </p>
               <Link
                 href="/gallery"
