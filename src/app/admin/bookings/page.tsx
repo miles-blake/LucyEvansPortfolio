@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { updateBookingStatus } from "./actions";
+import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Admin — Bookings" };
@@ -39,8 +40,10 @@ export default async function AdminBookingsPage() {
             {bookings.map((b) => (
               <tr key={b.id} className="hover:bg-ink/5">
                 <td className="px-4 py-3">
-                  <p className="text-ink">{b.customerName}</p>
-                  <p className="font-meta text-xs text-muted-foreground">{b.customerEmail}</p>
+                  <Link href={`/admin/bookings/${b.id}`} className="hover:opacity-70 transition-opacity">
+                    <p className="text-ink">{b.customerName}</p>
+                    <p className="font-meta text-xs text-muted-foreground">{b.customerEmail}</p>
+                  </Link>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{b.package.name}</td>
                 <td className="px-4 py-3 font-meta text-muted-foreground">{formatDate(b.eventDate)}</td>

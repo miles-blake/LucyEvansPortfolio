@@ -4,7 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import { Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useWishlist } from "@/lib/wishlist-store";
 
 const photoLinks = [
   { href: "/gallery", label: "Gallery" },
@@ -22,6 +24,7 @@ export default function Nav() {
   const [open, setOpen] = useState(false);
   const { data: session } = useSession();
   const isAdmin = !!session?.user;
+  const wishlistCount = useWishlist((s) => s.items.length);
 
   const isMarketing =
     pathname.startsWith("/work") || pathname.startsWith("/media-kit");
@@ -64,6 +67,19 @@ export default function Nav() {
           <NavLink href="/about" active={pathname === "/about"}>
             About
           </NavLink>
+
+          <Link
+            href="/wishlist"
+            aria-label="Wishlist"
+            className="relative text-ink hover:opacity-70 transition-opacity"
+          >
+            <Bookmark size={20} />
+            {wishlistCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 flex items-center justify-center rounded-full bg-ink text-cream font-meta text-[9px] leading-none">
+                {wishlistCount}
+              </span>
+            )}
+          </Link>
 
           <Link
             href="/cart"
@@ -121,6 +137,9 @@ export default function Nav() {
           <div className="h-px bg-border my-2" />
           <MobileLink href="/about" onClick={() => setOpen(false)}>
             About
+          </MobileLink>
+          <MobileLink href="/wishlist" onClick={() => setOpen(false)}>
+            Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ""}
           </MobileLink>
           <MobileLink href="/cart" onClick={() => setOpen(false)}>
             Cart

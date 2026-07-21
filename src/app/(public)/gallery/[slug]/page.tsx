@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import AddToCartButton from "@/components/cart/AddToCartButton";
+import { SaveButton } from "@/components/gallery/SaveButton";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -156,13 +157,24 @@ export default async function PhotoDetailPage({ params }: Props) {
             </Link>
           </p>
 
-          {/* Add to cart */}
-          <AddToCartButton
-            photoId={photo.id}
-            title={photo.title}
-            price={photo.price}
-            disabled={soldOut}
-          />
+          {/* Add to cart + Save */}
+          <div className="flex items-center gap-4">
+            <AddToCartButton
+              photoId={photo.id}
+              title={photo.title}
+              price={photo.price}
+              disabled={soldOut}
+            />
+            <SaveButton
+              item={{
+                id: photo.id,
+                slug: photo.slug,
+                title: photo.title,
+                previewImageUrl: photo.previewImageUrl,
+                price: photo.price,
+              }}
+            />
+          </div>
 
           {/* Prev / Next within collection */}
           {(prev || next) && (

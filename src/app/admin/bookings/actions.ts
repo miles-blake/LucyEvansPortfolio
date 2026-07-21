@@ -16,4 +16,14 @@ export async function updateBookingStatus(formData: FormData) {
 
   await prisma.booking.update({ where: { id }, data: { status } });
   revalidatePath("/admin/bookings");
+  revalidatePath(`/admin/bookings/${id}`);
+}
+
+export async function saveBookingNotes(formData: FormData) {
+  await requireAdmin();
+  const id = formData.get("id") as string;
+  const notes = formData.get("notes") as string;
+  if (!id) return;
+  await prisma.booking.update({ where: { id }, data: { message: notes } });
+  revalidatePath(`/admin/bookings/${id}`);
 }
