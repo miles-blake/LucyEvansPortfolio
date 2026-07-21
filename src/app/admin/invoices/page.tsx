@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import type { Metadata } from "next";
 
+
 export const metadata: Metadata = { title: "Admin — Invoices" };
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,15 @@ export default async function AdminInvoicesPage() {
 
   return (
     <div className="max-w-5xl">
-      <h1 className="font-display text-2xl text-ink mb-6">Invoices</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="font-display text-2xl text-ink">Invoices</h1>
+        <Link
+          href="/admin/invoices/new"
+          className="border border-border text-muted-foreground px-3 py-1.5 rounded-sm text-xs font-meta hover:text-ink transition-colors"
+        >
+          New invoice →
+        </Link>
+      </div>
 
       <div className="border border-border rounded-sm overflow-x-auto">
         <table className="w-full text-sm min-w-[700px]">

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { updateBookingStatus, saveBookingNotes } from "../actions";
+import { updateBookingStatus, saveBookingNotes, createInvoiceForBooking } from "../actions";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -30,10 +30,16 @@ function formatPrice(cents: number) {
 
 export default async function BookingDetailPage({ params }: Props) {
   const { id } = await params;
-  const booking = await prisma.booking.findUnique({
-    where: { id },
-    include: { package: true },
-  });
+  const [booking, existingInvoice] = await Promise.all([
+    prisma.booking.findUnique({
+      where: { id },
+      include: { package: true },
+    }),
+    prisma.invoice.findFirst({
+      where: { bookingId: id },
+      select: { id: true, number: true },
+    }),
+  ]);
 
   if (!booking) notFound();
 
@@ -209,6 +215,29 @@ export default async function BookingDetailPage({ params }: Props) {
               Save
             </button>
           </form>
+        </section>
+
+        {/* Invoice */}
+        <section className="border border-border rounded-sm p-6">
+          <h2 className="font-display text-lg text-ink mb-4">Invoice</h2>
+          {existingInvoice ? (
+            <Link
+              href={`/admin/invoices/${existingInvoice.id}`}
+              className="font-meta text-sm text-sky hover:opacity-70 transition-opacity"
+            >
+              {existingInvoice.number} — View invoice →
+            </Link>
+          ) : (
+            <form action={createInvoiceForBooking}>
+              <input type="hidden" name="bookingId" value={booking.id} />
+              <button
+                type="submit"
+                className="text-xs bg-ink text-cream px-3 py-1.5 rounded-sm hover:opacity-80 transition-opacity font-meta"
+              >
+                Create invoice
+              </button>
+            </form>
+          )}
         </section>
       </div>
     </div>

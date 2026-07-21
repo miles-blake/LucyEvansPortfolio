@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 async function requireAdmin() {
   const session = await auth();
@@ -26,4 +27,13 @@ export async function saveBookingNotes(formData: FormData) {
   if (!id) return;
   await prisma.booking.update({ where: { id }, data: { message: notes } });
   revalidatePath(`/admin/bookings/${id}`);
+}
+
+export async function createInvoiceForBooking(formData: FormData) {
+  await requireAdmin();
+  const bookingId = formData.get("bookingId") as string;
+  const { createInvoiceFromBooking } = await import("@/app/admin/invoices/actions");
+  const result = await createInvoiceFromBooking(bookingId);
+  if ("error" in result && result.error) return;
+  redirect(`/admin/invoices/${result.invoiceId}`);
 }

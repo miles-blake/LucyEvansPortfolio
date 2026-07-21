@@ -87,6 +87,41 @@ export async function deleteInvoice(formData: FormData) {
   revalidatePath("/admin/invoices");
 }
 
+export async function createCustomInvoice(data: {
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  lineItems: Array<{ description: string; amount: number }>; // cents
+  dueDate?: string;
+  notes?: string;
+}): Promise<{ invoiceId?: string; error?: string }> {
+  const session = await auth();
+  if (!session) return { error: "Unauthorized" };
+
+  const subtotal = data.lineItems.reduce((sum, i) => sum + i.amount, 0);
+  const number = await nextInvoiceNumber();
+
+  const invoice = await prisma.invoice.create({
+    data: {
+      number,
+      type: "BOOKING", // custom invoices use BOOKING type
+      customerName: data.customerName,
+      customerEmail: data.customerEmail,
+      customerPhone: data.customerPhone ?? null,
+      lineItems: data.lineItems,
+      subtotal,
+      depositPaid: 0,
+      amountDue: subtotal,
+      dueDate: data.dueDate ? new Date(data.dueDate) : null,
+      notes: data.notes ?? null,
+      status: "DRAFT",
+    },
+  });
+
+  revalidatePath("/admin/invoices");
+  return { invoiceId: invoice.id };
+}
+
 export async function markInvoicePaid(formData: FormData) {
   const session = await auth();
   if (!session) return;
