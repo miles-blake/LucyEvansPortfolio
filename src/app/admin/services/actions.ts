@@ -28,12 +28,16 @@ export async function createService(formData: FormData) {
   const eventTypes = (formData.get("eventTypes") as string)
     .split(",").map((s) => s.trim()).filter(Boolean);
 
+  const hoursRaw = formData.get("hoursIncluded") as string;
+  const hoursIncluded = hoursRaw ? parseInt(hoursRaw) : null;
+
   await prisma.servicePackage.create({
     data: {
       name: formData.get("name") as string,
       description: (formData.get("description") as string) || null,
       rollsIncluded: parseInt(formData.get("rollsIncluded") as string),
       photosIncluded: parseInt(formData.get("photosIncluded") as string),
+      hoursIncluded,
       basePrice,
       eventTypes,
       addOnPricing: { extraRollPrice, rushDeliveryPrice, secondShooterPrice },
@@ -56,6 +60,9 @@ export async function updateService(formData: FormData) {
   const eventTypes = (formData.get("eventTypes") as string)
     .split(",").map((s) => s.trim()).filter(Boolean);
 
+  const hoursRaw = formData.get("hoursIncluded") as string;
+  const hoursIncluded = hoursRaw ? parseInt(hoursRaw) : null;
+
   await prisma.servicePackage.update({
     where: { id },
     data: {
@@ -63,6 +70,7 @@ export async function updateService(formData: FormData) {
       description: (formData.get("description") as string) || null,
       rollsIncluded: parseInt(formData.get("rollsIncluded") as string),
       photosIncluded: parseInt(formData.get("photosIncluded") as string),
+      hoursIncluded,
       basePrice,
       eventTypes,
       addOnPricing: { extraRollPrice, rushDeliveryPrice, secondShooterPrice },

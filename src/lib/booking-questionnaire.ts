@@ -1,4 +1,4 @@
-export type QuestionType = "text" | "textarea" | "select";
+export type QuestionType = "text" | "textarea" | "select" | "address" | "time" | "number";
 
 export type Question = {
   key: string;
@@ -6,14 +6,16 @@ export type Question = {
   type: QuestionType;
   options?: readonly string[];
   placeholder?: string;
+  min?: number;
+  max?: number;
 };
 
 export const WEDDING_QUESTIONS: Question[] = [
-  { key: "venue_ceremony", label: "Where is the ceremony taking place?", type: "text" },
-  { key: "venue_reception", label: "Where is the reception? (if different from ceremony)", type: "text" },
-  { key: "ceremony_time", label: "What time does the ceremony start?", type: "text" },
-  { key: "guest_count", label: "How many guests are you expecting?", type: "text" },
-  { key: "hours_coverage", label: "How many hours of coverage are you looking for?", type: "text" },
+  { key: "venue_ceremony", label: "Where is the ceremony taking place?", type: "address", placeholder: "Search for a venue or address…" },
+  { key: "venue_reception", label: "Where is the reception? (if different from ceremony)", type: "address", placeholder: "Search for a venue or address…" },
+  { key: "ceremony_time", label: "What time does the ceremony start?", type: "time" },
+  { key: "guest_count", label: "How many guests are you expecting?", type: "number", min: 1, max: 2000 },
+  { key: "hours_coverage", label: "How many hours of coverage are you looking for?", type: "number", min: 1, max: 24 },
   { key: "first_look", label: "Are you planning a first look?", type: "select", options: ["Yes", "No", "Undecided"] },
   { key: "vibe", label: "What's the overall vibe or aesthetic of your wedding?", type: "textarea", placeholder: "e.g. romantic, bohemian, moody, classic, timeless…" },
   { key: "priority_moments", label: "Any specific moments or people you want prioritized?", type: "textarea" },

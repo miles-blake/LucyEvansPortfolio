@@ -32,6 +32,7 @@ export function ServiceForm({
     description: string | null;
     rollsIncluded: number;
     photosIncluded: number;
+    hoursIncluded: number | null;
     basePrice: number;
     eventTypes: string[];
     addOnPricing: unknown;
@@ -53,7 +54,7 @@ export function ServiceForm({
         <textarea rows={3} name="description" defaultValue={pkg?.description ?? ""} className={`${cls} resize-none`} />
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-4">
+      <div className="grid sm:grid-cols-4 gap-4">
         <div>
           <label className="block text-sm text-muted-foreground mb-1.5">Rolls *</label>
           <input type="number" min="1" name="rollsIncluded" defaultValue={pkg?.rollsIncluded} required className={cls} />
@@ -61,6 +62,10 @@ export function ServiceForm({
         <div>
           <label className="block text-sm text-muted-foreground mb-1.5">Photos *</label>
           <input type="number" min="1" name="photosIncluded" defaultValue={pkg?.photosIncluded} required className={cls} />
+        </div>
+        <div>
+          <label className="block text-sm text-muted-foreground mb-1.5">Hours</label>
+          <input type="number" min="1" max="24" name="hoursIncluded" defaultValue={pkg?.hoursIncluded ?? ""} placeholder="—" className={cls} />
         </div>
         <div>
           <label className="block text-sm text-muted-foreground mb-1.5">Base price (USD) *</label>

@@ -64,6 +64,7 @@ model ServicePackage {
   description    String?
   rollsIncluded  Int
   photosIncluded Int
+  hoursIncluded  Int?     // hours of coverage included
   basePrice      Int      // in cents
   eventTypes     String[] // e.g. ["wedding", "portrait", "event", "elopement"]
   // Add-on pricing stored as JSON: { extraRollPrice, rushDeliveryPrice, secondShooterPrice }
