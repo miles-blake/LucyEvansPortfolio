@@ -124,11 +124,11 @@ export function BulkPhotoUpload() {
         className={`border-2 border-dashed rounded-sm p-10 text-center cursor-pointer transition-colors ${dragOver ? "border-sky bg-sky/5" : "border-border hover:border-sky/50"}`}
       >
         <p className="text-muted-foreground text-sm">Drop photos here or click to select</p>
-        <p className="font-meta text-xs text-muted-foreground mt-1">JPG, PNG, WEBP — multiple files OK</p>
+        <p className="font-meta text-xs text-muted-foreground mt-1">JPG, PNG, WEBP, NEF, CR2, CR3, ARW, DNG, RAF — multiple files OK</p>
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,.nef,.nrw,.cr2,.cr3,.arw,.dng,.raf,.orf,.rw2,.pef,.srw,.x3f,.3fr,.dcr,.kdc,.mef,.mrw,.ptx,.r3d,.rwl,.srf,.sr2"
           multiple
           className="hidden"
           onChange={(e) => addFiles(e.target.files)}
