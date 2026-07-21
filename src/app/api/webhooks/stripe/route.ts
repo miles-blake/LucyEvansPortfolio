@@ -26,12 +26,35 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
+    const metaType = session.metadata?.type;
     const orderId = session.metadata?.orderId;
     const bookingId = session.metadata?.bookingId;
+    const invoiceId = session.metadata?.invoiceId;
     const customerEmail = session.customer_details?.email ?? "";
 
-    // ── Booking deposit ──────────────────────────────────────────────
-    if (bookingId) {
+    // ── Invoice payment (new flow) ───────────────────────────────────
+    if (metaType === "invoice" && invoiceId) {
+      await prisma.invoice.update({
+        where: { id: invoiceId },
+        data: { status: "PAID" },
+      });
+      return NextResponse.json({ received: true });
+    }
+
+    // ── Booking deposit (new flow via type metadata) ─────────────────
+    if (metaType === "deposit" && bookingId) {
+      await prisma.booking.update({
+        where: { id: bookingId },
+        data: {
+          depositPaid: true,
+          stripeSessionId: session.id,
+        },
+      });
+      return NextResponse.json({ received: true });
+    }
+
+    // ── Booking deposit (legacy flow — no type metadata) ────────────
+    if (!metaType && bookingId) {
       await prisma.booking.update({
         where: { id: bookingId },
         data: {

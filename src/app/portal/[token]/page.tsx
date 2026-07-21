@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { PayButton } from "@/components/PayButton";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -96,6 +97,20 @@ export default async function ClientPortalPage({ params }: Props) {
               </span>
             </dd>
           </dl>
+
+          {!booking.depositPaid && booking.status !== "CANCELLED" && (
+            <div className="mt-5 pt-4 border-t border-border">
+              <p className="font-meta text-xs text-muted-foreground mb-3">
+                Deposit of {formatPrice(booking.depositAmount)} required to confirm your date.
+              </p>
+              <PayButton
+                type="deposit"
+                bookingId={booking.id}
+                portalToken={token}
+                label={`Pay deposit — ${formatPrice(booking.depositAmount)}`}
+              />
+            </div>
+          )}
         </section>
 
         {/* Invoice */}
@@ -140,13 +155,14 @@ export default async function ClientPortalPage({ params }: Props) {
             </div>
 
             {invoice.amountDue > 0 && invoice.status !== "PAID" && (
-              <p className="font-meta text-xs text-muted-foreground mt-4">
-                To pay your balance, please contact{" "}
-                <a href="mailto:hello@lucyevans.com" className="text-sky hover:opacity-70">
-                  hello@lucyevans.com
-                </a>
-                .
-              </p>
+              <div className="mt-4">
+                <PayButton
+                  type="invoice"
+                  invoiceId={invoice.id}
+                  portalToken={token}
+                  label={`Pay now — ${formatPrice(invoice.amountDue)}`}
+                />
+              </div>
             )}
           </section>
         )}

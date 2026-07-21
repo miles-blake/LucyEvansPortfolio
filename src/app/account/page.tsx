@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { signOut } from "@/auth";
 import Link from "next/link";
+import { PayButton } from "@/components/PayButton";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "My Account" };
@@ -66,8 +67,8 @@ export default async function AccountPage() {
         ) : (
           <div className="space-y-3">
             {bookings.map((b) => (
-              <div key={b.id} className="border border-border rounded-sm p-4 flex items-center justify-between gap-4">
-                <div>
+              <div key={b.id} className="border border-border rounded-sm p-4 flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-ink">
                     {b.package.name} — {b.eventType}
                   </p>
@@ -81,6 +82,15 @@ export default async function AccountPage() {
                   <p className={`font-meta text-xs mt-1 ${statusColor[b.status] ?? "text-muted-foreground"}`}>
                     {statusLabel[b.status] ?? b.status}
                   </p>
+                  {!b.depositPaid && b.status !== "CANCELLED" && (
+                    <div className="mt-3">
+                      <PayButton
+                        type="deposit"
+                        bookingId={b.id}
+                        label={`Pay deposit — $${(b.depositAmount / 100).toFixed(2)}`}
+                      />
+                    </div>
+                  )}
                 </div>
                 {b.portalToken && new Date(b.portalToken.expiresAt) > new Date() ? (
                   <Link
@@ -106,8 +116,8 @@ export default async function AccountPage() {
           <h2 className="font-display text-xl text-ink mb-4">Invoices</h2>
           <div className="space-y-3">
             {invoices.map((inv) => (
-              <div key={inv.id} className="border border-border rounded-sm p-4 flex items-center justify-between gap-4">
-                <div>
+              <div key={inv.id} className="border border-border rounded-sm p-4 flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-ink">{inv.number}</p>
                   <p className="font-meta text-xs text-muted-foreground mt-0.5">
                     ${(inv.amountDue / 100).toFixed(2)} due
@@ -115,6 +125,15 @@ export default async function AccountPage() {
                       ? ` · ${new Date(inv.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
                       : ""}
                   </p>
+                  {inv.amountDue > 0 && inv.status !== "PAID" && (
+                    <div className="mt-3">
+                      <PayButton
+                        type="invoice"
+                        invoiceId={inv.id}
+                        label={`Pay now — $${(inv.amountDue / 100).toFixed(2)}`}
+                      />
+                    </div>
+                  )}
                 </div>
                 <span
                   className={`font-meta text-xs ${
