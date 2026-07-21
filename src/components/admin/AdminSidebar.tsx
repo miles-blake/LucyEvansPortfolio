@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   MessageSquare,
   ExternalLink,
+  Mail,
 } from "lucide-react";
 
 const NAV = [
@@ -25,6 +26,7 @@ const NAV = [
   { href: "/admin/inquiries", label: "Inquiries", icon: MessageSquare },
   { href: "/admin/portfolio", label: "Portfolio", icon: Briefcase },
   { href: "/admin/subscribers", label: "Subscribers", icon: Users },
+  { href: "/admin/newsletter", label: "Newsletter", icon: Mail },
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
 ];
 

@@ -191,6 +191,17 @@ enum InquiryStatus {
   REPLIED
 }
 
+// ─── Newsletter History ───────────────────────────────────────────────
+
+model Newsletter {
+  id             String    @id @default(cuid())
+  subject        String
+  body           String
+  sentAt         DateTime?
+  recipientCount Int?
+  createdAt      DateTime  @default(now())
+}
+
 // ─── Admin ────────────────────────────────────────────────────────────
 
 model AdminUser {
