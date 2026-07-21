@@ -1,0 +1,151 @@
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import { signOut } from "@/auth";
+import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "My Account" };
+export const dynamic = "force-dynamic";
+
+const statusLabel: Record<string, string> = {
+  INQUIRY: "Inquiry received",
+  CONFIRMED: "Confirmed",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
+};
+
+const statusColor: Record<string, string> = {
+  INQUIRY: "text-sky",
+  CONFIRMED: "text-sage",
+  COMPLETED: "text-muted-foreground",
+  CANCELLED: "text-rose-500",
+};
+
+export default async function AccountPage() {
+  const session = await auth();
+  const email = session!.user.email!;
+
+  const bookings = await prisma.booking.findMany({
+    where: { customerEmail: email },
+    include: { package: true, portalToken: true },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const invoices = await prisma.invoice.findMany({
+    where: { customerEmail: email },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-12">
+      <div className="flex items-start justify-between mb-10">
+        <div>
+          <h1 className="font-display text-3xl text-ink">My Account</h1>
+          <p className="font-meta text-xs text-muted-foreground mt-1">{email}</p>
+        </div>
+        <form
+          action={async () => {
+            "use server";
+            await signOut({ redirectTo: "/" });
+          }}
+        >
+          <button
+            type="submit"
+            className="font-meta text-xs text-muted-foreground hover:text-ink transition-colors"
+          >
+            Sign out
+          </button>
+        </form>
+      </div>
+
+      {/* Bookings */}
+      <section className="mb-10">
+        <h2 className="font-display text-xl text-ink mb-4">Bookings</h2>
+        {bookings.length === 0 ? (
+          <p className="font-meta text-sm text-muted-foreground">No bookings on file yet.</p>
+        ) : (
+          <div className="space-y-3">
+            {bookings.map((b) => (
+              <div key={b.id} className="border border-border rounded-sm p-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-ink">
+                    {b.package.name} — {b.eventType}
+                  </p>
+                  <p className="font-meta text-xs text-muted-foreground mt-0.5">
+                    {new Date(b.eventDate).toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </p>
+                  <p className={`font-meta text-xs mt-1 ${statusColor[b.status] ?? "text-muted-foreground"}`}>
+                    {statusLabel[b.status] ?? b.status}
+                  </p>
+                </div>
+                {b.portalToken && new Date(b.portalToken.expiresAt) > new Date() ? (
+                  <Link
+                    href={`/portal/${b.portalToken.token}`}
+                    className="font-meta text-xs bg-ink text-cream px-3 py-1.5 rounded-sm hover:opacity-80 transition-opacity whitespace-nowrap"
+                  >
+                    View portal →
+                  </Link>
+                ) : (
+                  <span className="font-meta text-xs text-muted-foreground whitespace-nowrap">
+                    Portal coming soon
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Invoices */}
+      {invoices.length > 0 && (
+        <section>
+          <h2 className="font-display text-xl text-ink mb-4">Invoices</h2>
+          <div className="space-y-3">
+            {invoices.map((inv) => (
+              <div key={inv.id} className="border border-border rounded-sm p-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-ink">{inv.number}</p>
+                  <p className="font-meta text-xs text-muted-foreground mt-0.5">
+                    ${(inv.amountDue / 100).toFixed(2)} due
+                    {inv.dueDate
+                      ? ` · ${new Date(inv.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+                      : ""}
+                  </p>
+                </div>
+                <span
+                  className={`font-meta text-xs ${
+                    inv.status === "PAID"
+                      ? "text-sage"
+                      : inv.status === "SENT"
+                      ? "text-sky"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {inv.status.charAt(0) + inv.status.slice(1).toLowerCase()}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {bookings.length === 0 && invoices.length === 0 && (
+        <div className="mt-4 border border-border rounded-sm p-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            Nothing here yet. Once you book a session your details will appear here.
+          </p>
+          <Link
+            href="/services"
+            className="inline-block mt-4 font-meta text-xs bg-ink text-cream px-4 py-2 rounded-sm hover:opacity-80 transition-opacity"
+          >
+            Browse services →
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}

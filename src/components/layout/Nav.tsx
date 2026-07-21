@@ -23,8 +23,10 @@ export default function Nav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { data: session } = useSession();
-  const isAdmin = !!session?.user && !session.user.isTestClient;
-  const isTestClient = session?.user?.isTestClient === true;
+  const role = session?.user?.role;
+  const isAdmin = role === "admin" && !session?.user?.isTestClient;
+  const isTestClient = role === "admin" && session?.user?.isTestClient === true;
+  const isClient = role === "client";
   const wishlistCount = useWishlist((s) => s.items.length);
 
   const isMarketing =
@@ -98,9 +100,17 @@ export default function Nav() {
               Admin
             </Link>
           )}
-          {!isAdmin && !isTestClient && (
+          {isClient && (
             <Link
-              href="/admin/login"
+              href="/account"
+              className="font-meta text-xs bg-ink text-cream px-3 py-1.5 rounded-sm hover:opacity-80 transition-opacity"
+            >
+              My Account
+            </Link>
+          )}
+          {!isAdmin && !isTestClient && !isClient && (
+            <Link
+              href="/account/login"
               className="font-meta text-xs text-muted-foreground hover:text-ink transition-colors"
             >
               Sign in
@@ -152,8 +162,13 @@ export default function Nav() {
               Admin panel
             </MobileLink>
           )}
-          {!isAdmin && !isTestClient && (
-            <MobileLink href="/admin/login" onClick={() => setOpen(false)}>
+          {isClient && (
+            <MobileLink href="/account" onClick={() => setOpen(false)}>
+              My Account
+            </MobileLink>
+          )}
+          {!isAdmin && !isTestClient && !isClient && (
+            <MobileLink href="/account/login" onClick={() => setOpen(false)}>
               Sign in
             </MobileLink>
           )}

@@ -249,6 +249,16 @@ model ClientPortalToken {
   createdAt DateTime @default(now())
 }
 
+// ─── Client Accounts ─────────────────────────────────────────────────
+
+model Client {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  hashedPassword String
+  createdAt      DateTime @default(now())
+}
+
 // ─── Admin ────────────────────────────────────────────────────────────
 
 model AdminUser {
