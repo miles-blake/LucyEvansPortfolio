@@ -16,7 +16,11 @@ const marketingLinks = [
   { href: "/media-kit", label: "Media Kit" },
 ];
 
-export default function Nav() {
+type NavProps = {
+  adminUser?: { name: string | null } | null;
+};
+
+export default function Nav({ adminUser }: NavProps = {}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -69,6 +73,22 @@ export default function Nav() {
           >
             <CartIcon />
           </Link>
+
+          {adminUser ? (
+            <Link
+              href="/admin"
+              className="font-meta text-xs bg-ink text-cream px-3 py-1.5 rounded-sm hover:opacity-80 transition-opacity"
+            >
+              Admin
+            </Link>
+          ) : (
+            <Link
+              href="/admin/login"
+              className="font-meta text-xs text-muted-foreground hover:text-ink transition-colors"
+            >
+              Sign in
+            </Link>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -106,6 +126,16 @@ export default function Nav() {
           <MobileLink href="/cart" onClick={() => setOpen(false)}>
             Cart
           </MobileLink>
+          <div className="h-px bg-border my-2" />
+          {adminUser ? (
+            <MobileLink href="/admin" onClick={() => setOpen(false)}>
+              Admin panel
+            </MobileLink>
+          ) : (
+            <MobileLink href="/admin/login" onClick={() => setOpen(false)}>
+              Sign in
+            </MobileLink>
+          )}
         </div>
       )}
     </header>
