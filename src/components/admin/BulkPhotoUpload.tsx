@@ -76,13 +76,13 @@ export function BulkPhotoUpload() {
         fd.append("api_key", apiKey);
         fd.append("folder", folder);
 
-        // Upload directly to Cloudinary — no Vercel body size limit
+        // Use auto/upload so Cloudinary accepts both standard images and RAW formats (NEF, CR2, etc.)
         const res = await fetch(
-          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+          `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
           { method: "POST", body: fd }
         );
         const data = await res.json();
-        if (data.error) throw new Error(data.error.message);
+        if (data.error) throw new Error(data.error.message ?? JSON.stringify(data.error));
         setFiles((prev) =>
           prev.map((f) =>
             f.id === item.id
@@ -163,7 +163,9 @@ export function BulkPhotoUpload() {
                 }`}>
                   {f.status === "uploading" && "Uploading…"}
                   {f.status === "done" && <span className="text-sage text-lg">✓</span>}
-                  {f.status === "error" && "Error"}
+                  {f.status === "error" && (
+                    <span className="text-center px-1">{f.error ?? "Error"}</span>
+                  )}
                 </div>
                 {f.status === "pending" && (
                   <button
