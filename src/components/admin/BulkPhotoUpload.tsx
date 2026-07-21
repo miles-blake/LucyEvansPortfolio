@@ -35,14 +35,12 @@ export function BulkPhotoUpload() {
 
   function addFiles(newFiles: FileList | null) {
     if (!newFiles) return;
-    const items: UploadFile[] = Array.from(newFiles)
-      .filter((f) => f.type.startsWith("image/"))
-      .map((f) => ({
-        id: `${f.name}-${f.size}-${Date.now()}`,
-        file: f,
-        preview: URL.createObjectURL(f),
-        status: "pending",
-      }));
+    const items: UploadFile[] = Array.from(newFiles).map((f) => ({
+      id: `${f.name}-${f.size}-${Date.now()}`,
+      file: f,
+      preview: URL.createObjectURL(f),
+      status: "pending",
+    }));
     setFiles((prev) => [...prev, ...items]);
   }
 
@@ -64,17 +62,32 @@ export function BulkPhotoUpload() {
     setUploading(true);
     const pending = files.filter((f) => f.status === "pending");
 
+    // Get a signed upload credential from the server (avoids sending large files through Vercel)
+    const sigRes = await fetch("/api/admin/upload/signature");
+    const { signature, timestamp, cloudName, apiKey, folder } = await sigRes.json();
+
     for (const item of pending) {
       setFiles((prev) => prev.map((f) => f.id === item.id ? { ...f, status: "uploading" } : f));
       try {
         const fd = new FormData();
         fd.append("file", item.file);
-        const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+        fd.append("signature", signature);
+        fd.append("timestamp", String(timestamp));
+        fd.append("api_key", apiKey);
+        fd.append("folder", folder);
+
+        // Upload directly to Cloudinary — no Vercel body size limit
+        const res = await fetch(
+          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+          { method: "POST", body: fd }
+        );
         const data = await res.json();
-        if (data.error) throw new Error(data.error);
+        if (data.error) throw new Error(data.error.message);
         setFiles((prev) =>
           prev.map((f) =>
-            f.id === item.id ? { ...f, status: "done", publicId: data.publicId, secureUrl: data.secureUrl } : f
+            f.id === item.id
+              ? { ...f, status: "done", publicId: data.public_id, secureUrl: data.secure_url }
+              : f
           )
         );
       } catch (err) {
