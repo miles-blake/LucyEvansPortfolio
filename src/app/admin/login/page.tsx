@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { LoginForm } from "@/components/admin/LoginForm";
 import type { Metadata } from "next";
 
@@ -16,7 +17,9 @@ export default function AdminLoginPage() {
           </p>
           <h1 className="font-display text-2xl text-ink">Admin</h1>
         </div>
-        <LoginForm />
+        <Suspense>
+          <LoginForm />
+        </Suspense>
       </div>
     </div>
   );
