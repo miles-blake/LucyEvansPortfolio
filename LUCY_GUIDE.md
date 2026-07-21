@@ -2,7 +2,7 @@
 
 This document explains everything your website can do and how to get to each feature. No technical knowledge needed — just plain English.
 
-> **Living document:** Every time a new feature is added to the site, it will be added here.
+> **Living document:** Every time a new feature is added to the site, it will be updated here.
 
 ---
 
@@ -14,7 +14,7 @@ Open your website and add **/admin/login** to the end of your address bar, then 
 
 ## Dashboard
 
-**How to get there:** It's the first thing you see after logging in. Click the site logo or "Dashboard" in the sidebar to come back to it anytime.
+**How to get there:** It's the first thing you see after logging in. Click "Dashboard" in the sidebar to come back to it anytime.
 
 At a glance it shows:
 
@@ -66,7 +66,7 @@ Your photography service packages — things like weddings, portraits, and event
 - See all service packages
 - Add, edit, or delete packages — set the name, description, how many rolls and photos are included, base price, and which types of events it applies to
 
-**Where services appear publicly:** Your services page, where clients can learn about your packages and book a session.
+**Where services appear publicly:** Your services page, where clients can learn about your packages and start a booking.
 
 ---
 
@@ -76,17 +76,38 @@ Your photography service packages — things like weddings, portraits, and event
 
 Booking requests that come in when someone fills out your booking form on the site.
 
+**What you can do from the list view:**
+- See all bookings in a table, or click **Calendar →** in the top right to see a 3-month calendar view (color-coded by status — green for confirmed, blue for inquiry, grey for completed, red for cancelled)
+
+**What you can do inside a booking:**
+- See the client's name, email, phone, event date, event type, and package
+- See pricing, deposit status, and any add-ons they selected
+- Update the booking status: Inquiry → Confirmed → Completed (or Cancelled)
+  - When you change a status to **Confirmed**, the client automatically gets a confirmation email with their booking details and a link to their portal
+- Add internal notes — only you see these
+- **Create invoice** — generates an invoice from this booking's details in one click
+- **Email customer** — opens the email tool with the customer's address already filled in
+- **Send portal link** — emails the client a private link to their personal booking page; you can resend it anytime to reset the 30-day clock
+
+**Messaging:** Every booking has a message thread at the bottom. You can send messages directly from the booking detail page and the client can reply from their portal — all messages appear in the same thread.
+
+**Delivery gallery:** Once you've finished a shoot, you can upload the final photos directly on the booking detail page. The client will then see a download section in their portal where they can download each photo. You can upload as many files as you like — they go straight to Cloudinary.
+
+**Contracts:** You can upload a contract PDF to any booking. Once uploaded, the client sees a "View contract" link and a signature box in their portal. They type their full name to sign — the signature and timestamp are saved automatically.
+
+---
+
+## Availability
+
+**How to get there:** Click **Availability** in the left sidebar.
+
+Block out dates when you're unavailable so clients can't book those days.
+
 **What you can do:**
-- See all bookings in a list, or click **Calendar →** in the top right to see a 3-month calendar view (color-coded by status — green for confirmed, blue for inquiry, grey for completed, red for cancelled)
-- Click on any booking to see full details:
-  - Customer name, email, and phone
-  - Event date, type, and package
-  - Pricing and deposit status
-  - Internal notes (only you see these)
-  - Update the booking status (Inquiry → Confirmed → Completed, or Cancelled)
-  - **Create invoice** — generates an invoice from this booking's details in one click; once created, shows a link to view it instead
-  - **Email customer** — opens the email tool with the customer's address already filled in
-  - **Send portal link** — emails the client a private link to their personal booking page (see Client Portal below); once sent, you can resend or preview it
+- Add a blackout date — pick a date and an optional reason (e.g. "Holiday", "Already booked privately")
+- Delete any blackout date to make it available again
+
+Blocked-out dates automatically appear as unavailable on the public booking form so clients can't select them.
 
 ---
 
@@ -98,7 +119,7 @@ General contact form submissions from people visiting your site.
 
 **What you can do:**
 - See all messages and their status (new, read, replied)
-- Click on any message to read it, add your own internal notes, and reply by email
+- Click on any message to read it, add internal notes, and reply by email
 
 ---
 
@@ -106,12 +127,12 @@ General contact form submissions from people visiting your site.
 
 **How to get there:** Click **Orders** in the left sidebar.
 
-Digital download orders — when someone buys a photo print or bundle from your shop.
+Digital download orders — when someone buys a photo or bundle from your shop.
 
 **What you can do:**
 - See all paid orders in a list; click any row to open the full order details
 - Edit the customer's email, order status, and the items in the order (add photos or bundles from your catalog, change prices, adjust download limits, or remove items)
-- Click **Email customer →** at the bottom to open the email tool with that customer's address already filled in
+- Click **Email customer →** to open the email tool with that customer's address filled in
 
 ---
 
@@ -124,15 +145,28 @@ Invoices you create and send to clients — separate from automated shop receipt
 **What you can do:**
 - See all invoices and their status (Draft, Sent, Paid, Cancelled)
 - Click **New invoice →** to create a fully custom invoice:
-  - Enter a client's name, email, and phone (or pull from an existing booking)
+  - Enter a client's name, email, and phone (or link it to an existing booking)
   - Add line items by choosing from your existing photos, bundles, and packages with **Add from catalog…**, or write a completely custom description with **+ Custom line item**
-  - Set an optional due date and any notes for the client
+  - Set an optional due date and notes for the client
 - From any invoice detail page:
-  - **Download PDF** — opens a professionally designed PDF invoice in a new tab
+  - **Download PDF** — opens a professionally designed PDF in a new tab
   - **Send invoice / Resend invoice** — emails the PDF directly to the client and marks it as Sent
   - **Email customer →** — opens the email tool for a custom message
-  - **Mark as paid** — updates the invoice status when payment comes in
+  - **Mark as paid** — updates the invoice status when payment comes in outside the site
   - **Delete invoice** — removes it permanently
+
+**Clients can pay invoices online:** If a client has a portal link or a client account, they see a **Pay now** button directly on the invoice. Clicking it takes them to a secure Stripe checkout — no extra setup needed on your end.
+
+---
+
+## Payments (Stripe)
+
+Stripe handles all online payments on the site. Clients can pay in two places:
+
+- **Deposit** — shown on the client portal and in their account. A "Pay deposit" button appears until the deposit is paid. Once paid, their booking is automatically updated.
+- **Invoice** — shown on the portal and account pages. A "Pay now" button appears if there's a balance due. Once paid, the invoice is automatically marked as paid.
+
+Stripe payments go directly to your connected Stripe account. No manual steps needed on your end — everything updates automatically when payment clears.
 
 ---
 
@@ -182,15 +216,59 @@ Send a one-off email to anyone directly from the site — useful for following u
 
 **What you can do:**
 - Type in any email address, a subject, and your message, then hit **Send email**
-- The **Email customer →** buttons on booking, order, and invoice pages all take you here with the address and subject already filled in — so you can jump straight to writing
+- The **Email customer →** buttons on booking, order, and invoice pages all take you here with the address and subject already filled in
+
+---
+
+## Discount Codes
+
+**How to get there:** Click **Discounts** in the left sidebar.
+
+Create promo codes that customers can enter at checkout in the photo shop.
+
+**What you can do:**
+- Create a code — give it a name (e.g. SUMMER20), choose whether it's a flat dollar discount or a percentage off, set the amount, and optionally cap how many times it can be used or set an expiry date
+- Enable or disable any code without deleting it
+- Delete codes you no longer need
+
+**How customers use them:** On the cart page, there's a "Discount code" field. They type in the code, click Apply, and the discount is shown immediately before they proceed to checkout.
+
+---
+
+## Analytics
+
+**How to get there:** Click **Analytics** in the left sidebar.
+
+A bird's-eye view of how the site is performing.
+
+**What's shown:**
+- **Summary cards** — total revenue and number of orders in the last 30 days, plus your overall inquiry-to-booking conversion rate
+- **Booking funnel** — a bar chart showing how many bookings are at each stage (Inquiry, Confirmed, Completed, Cancelled) and what percentage each represents
+- **Revenue by event type** — which kinds of shoots (weddings, portraits, events, etc.) are bringing in the most revenue
+- **Top-selling photos** — your 10 best-selling individual photos by number of sales and total revenue earned
+- **Discount code usage** — which promo codes have been used and how many times
+
+---
+
+## Settings
+
+**How to get there:** Click **Settings** in the left sidebar.
+
+**Watermark customization:** You can change how the watermark appears on your shop preview images — all from here, without touching any code:
+- **Watermark text** — what the watermark says (e.g. "© Lucy Evans")
+- **Opacity** — how transparent or solid the watermark appears (0 = invisible, 100 = fully solid)
+- **Font size** — how large the text appears
+- **Position** — where on the photo it sits (bottom right, bottom left, top right, top left, or center)
+
+Changes take effect on all watermarked images immediately after saving.
 
 ---
 
 ## Client Portal
 
-A private page you can send to booking clients so they can check their booking details, invoice, and balance — without needing an account or password.
+A private page you send to booking clients so they can see their booking details, invoice, messages, contract, and final photos — all in one place, without needing an account.
 
-**How to use it:**
+**How to send it:**
 1. Go to any booking (click **Bookings** in the sidebar, then click the booking you want)
 2. Scroll to the **Client portal** section
 3. Click **Send portal link** — the client gets an email with their personal link, which stays active for 30 days
@@ -199,45 +277,17 @@ A private page you can send to booking clients so they can check their booking d
 
 **What the client sees on their portal page:**
 - Their booking details (package, event type, date, and current status)
-- Their invoice with line items and the amount still due (if you've created one)
-- A way to contact you by email
-
----
-
-## Booking Calendar
-
-**How to get there:** Click **Bookings** in the sidebar, then click **Calendar →** in the top right corner.
-
-A 3-month calendar view showing all bookings, color-coded by status:
-
-- **Green** = Confirmed
-- **Blue** = Inquiry (not yet confirmed)
-- **Grey** = Completed
-- **Red** = Cancelled
-
-Click any booking name on the calendar to go straight to that booking's detail page.
-
----
-
-## Preview as Visitor
-
-A way to see and use your site exactly as a customer would — useful for testing the shop, cart, booking flow, and client portal before a client does.
-
-**How to use it:**
-1. Look in the bottom of the left sidebar for **Preview as visitor** and click it
-2. You'll land on the homepage with a dark bar across the top that says *"Admin preview mode — you're seeing the site as a visitor would"*
-3. Browse the shop, add photos to your cart, go through checkout, fill out the booking form — everything works exactly as it would for a real customer
-4. When you're done, click **Return to admin →** in that bar to go straight back to your admin panel
-
-Real visitors will never see the preview bar — it only appears for you during a preview session. Sessions last up to 4 hours.
-
-> **Also in the sidebar:** "View site" opens the public homepage in the same tab without starting preview mode — handy for a quick look without the bar appearing.
+- A **Pay deposit** button if their deposit hasn't been paid yet
+- Their invoice with line items and a **Pay now** button if there's a balance due
+- Their contract — with a "View contract PDF" link and a digital signature box if it hasn't been signed yet
+- Their delivered photos as download links, once you've uploaded them
+- The message thread where they can write to you and see your replies
 
 ---
 
 ## Client Accounts
 
-Clients can now create their own accounts on the site and log in to see everything in one place — no magic link required.
+Clients can create their own accounts on the site and log in to see everything in one place — no magic link required.
 
 **How clients sign up:**
 1. They click **Sign in** in the top right corner of any page
@@ -245,30 +295,39 @@ Clients can now create their own accounts on the site and log in to see everythi
 3. They land on their **My Account** page automatically
 
 **What clients see after logging in (My Account page):**
-- All their bookings on file, with the status of each (Inquiry received, Confirmed, Completed)
+- All their bookings on file, with the status of each
 - A **View portal →** button on any booking where you've sent them a portal link
-- Their invoices and the amount due on each
+- Their invoices and the amount due on each, with a **Pay now** button for any outstanding balance
 - A prompt to browse services if they don't have any bookings yet
 
-**How bookings get linked to their account:**
-The email they use to register must match the email you entered when their booking was created. If it matches, their bookings appear automatically — nothing extra needed.
+**How bookings get linked:** The email they use to register must match the email you entered when their booking was created. If it matches, their bookings appear automatically.
 
-**What clients see in the nav:**
-- Not logged in → **Sign in** button
-- Logged in → **My Account** button (takes them back to their dashboard)
-
-> **Note:** The admin panel is separate and still only accessible to you. Clients cannot see anything in the admin area.
+> **Note:** The admin panel is completely separate and only accessible to you. Clients cannot see anything in the admin area.
 
 ---
 
-## Before Going Live
+## Preview as Visitor
 
-Most things are connected and ready. The remaining two need accounts and settings:
+A way to see and use your site exactly as a customer would — useful for testing the shop, cart, booking flow, and client portal.
 
-- **Stripe** — for taking payments online (photo shop, deposits). Not yet connected.
-- **Resend** — for sending emails (newsletters, invoice PDFs, portal links, booking confirmations). Not yet connected.
+**How to use it:**
+1. Look in the bottom of the left sidebar for **Preview as visitor** and click it
+2. You'll land on the homepage with a dark bar across the top that says *"Admin preview mode — you're seeing the site as a visitor would"*
+3. Browse the shop, add photos to your cart, go through checkout, fill out the booking form — everything works exactly as it would for a real customer
+4. When you're done, click **Return to admin →** in that bar to go straight back to your admin panel
 
-**Already connected:** Cloudinary (photo uploads and storage) is live — you can upload photos right now.
+Real visitors will never see the preview bar — it only appears for you during a preview session.
 
-Ask your developer to help with Stripe and Resend when you're ready to go live — each takes about 10 minutes once you have the accounts.
+> **Also in the sidebar:** "View site" opens the public homepage without starting a preview session — handy for a quick look.
 
+---
+
+## Go-Live Status
+
+Everything is connected and ready:
+
+- **Stripe** — taking payments for photo shop orders, booking deposits, and invoices
+- **Cloudinary** — photo uploads, storage, and watermarked previews
+- **Resend** — sending emails (booking confirmations, portal links, newsletters, invoice PDFs)
+
+The site is live and fully operational.
