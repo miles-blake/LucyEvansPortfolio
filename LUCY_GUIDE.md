@@ -214,6 +214,22 @@ These are the pages your visitors and customers see:
 
 ---
 
+## Preview as visitor
+
+A way to see and use your site exactly as a customer would — useful for testing the shop, cart, and booking flow without leaving your admin account.
+
+**How to use it:**
+1. In the admin sidebar (bottom left), click **Preview as visitor**
+2. You'll land on the homepage with a dark banner across the top reading *"Admin preview mode — you're seeing the site as a visitor would"*
+3. Browse the shop, add photos to cart, go through checkout, fill out the booking form — everything works exactly as it would for a real customer
+4. When you're done, click **Return to admin →** in the banner to go straight back to the admin panel
+
+The banner is only visible to you (it's tied to a private cookie). Real visitors will never see it. The preview session lasts up to 4 hours.
+
+> **Also in the sidebar:** "View site" opens the public homepage in the same tab without starting preview mode — handy if you just want a quick look without the banner.
+
+---
+
 ## Things that still need to be set up before going live
 
 These features are built but require accounts and API keys to work fully:
