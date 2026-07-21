@@ -14,12 +14,20 @@ export default async function AdminPhotosPage() {
     <div className="max-w-5xl">
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-2xl text-ink">Photos</h1>
-        <Link
-          href="/admin/photos/new"
-          className="bg-ink text-cream text-sm px-4 py-2 rounded-sm hover:opacity-80 transition-opacity"
-        >
-          + New photo
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/photos/upload"
+            className="border border-border text-muted-foreground text-sm px-4 py-2 rounded-sm hover:text-ink transition-colors font-meta"
+          >
+            Bulk upload
+          </Link>
+          <Link
+            href="/admin/photos/new"
+            className="bg-ink text-cream text-sm px-4 py-2 rounded-sm hover:opacity-80 transition-opacity"
+          >
+            + New photo
+          </Link>
+        </div>
       </div>
 
       <div className="border border-border rounded-sm overflow-hidden">
