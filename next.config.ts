@@ -27,8 +27,8 @@ const securityHeaders = [
       "font-src 'self'",
       // Frames: Stripe checkout only
       "frame-src https://js.stripe.com https://hooks.stripe.com",
-      // Connections: self + Stripe + Cloudinary + Upstash (rate limit)
-      "connect-src 'self' https://api.stripe.com https://res.cloudinary.com https://*.upstash.io",
+      // Connections: self + Stripe + Cloudinary + Upstash (rate limit) + Nominatim (address autocomplete)
+      "connect-src 'self' https://api.stripe.com https://res.cloudinary.com https://*.upstash.io https://nominatim.openstreetmap.org",
     ].join("; "),
   },
 ];
