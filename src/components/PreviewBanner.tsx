@@ -1,12 +1,10 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function PreviewBanner() {
   const { data: session } = useSession();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   if (!session?.user?.isTestClient) return null;
@@ -14,8 +12,8 @@ export function PreviewBanner() {
   async function exitPreview() {
     setLoading(true);
     await fetch("/api/admin/preview", { method: "POST" });
-    router.push("/admin");
-    router.refresh();
+    // Hard navigation forces a full session cookie re-read
+    window.location.href = "/admin";
   }
 
   return (
