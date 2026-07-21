@@ -88,6 +88,7 @@ Booking requests that come in when someone fills out your booking form on the si
 - **Create invoice** — generates an invoice from this booking's details in one click
 - **Email customer** — opens the email tool with the customer's address already filled in
 - **Send portal link** — emails the client a private link to their personal booking page; you can resend it anytime to reset the 30-day clock
+- **Delete booking** — at the bottom of any booking detail page there's a delete button. It asks you to confirm before deleting. This permanently removes the booking, all its messages, delivered photos, contract, and portal token.
 
 **Messaging:** Every booking has a message thread at the bottom. You can send messages directly from the booking detail page and the client can reply from their portal — all messages appear in the same thread.
 
@@ -217,6 +218,24 @@ Send a one-off email to anyone directly from the site — useful for following u
 **What you can do:**
 - Type in any email address, a subject, and your message, then hit **Send email**
 - The **Email customer →** buttons on booking, order, and invoice pages all take you here with the address and subject already filled in
+
+---
+
+## Photo Gallery & Shop
+
+**How customers browse:** They go to your Gallery page and see all 282 of your film photos in a contact-sheet style grid. They can filter by tag (Landscape, Portrait, Wedding, Coastal, etc.) using the filter bar at the top. Each photo has 3–4 tags assigned automatically based on what's in the image.
+
+**Pricing:** All photos are currently set at $3 each.
+
+**Bundle discounts:** Customers who buy multiple photos in one order automatically get a discount — no code needed. The discount scales based on how many individual photos are in their cart:
+- 3–5 photos: 5% off
+- 6–9 photos: 10% off
+- 10–14 photos: 15% off
+- 15+ photos: 20% off
+
+The discount is shown clearly in the cart before checkout and applied automatically. Discount codes (if you create them) stack on top of the bundle discount.
+
+**Saved photos (wishlist):** Customers can bookmark photos by clicking the bookmark icon on any photo. Their saved photos appear on the Wishlist page. Prices always reflect the current price in your shop, even if the price changed after they saved it.
 
 ---
 
