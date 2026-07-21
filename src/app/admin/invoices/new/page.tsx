@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Admin — New Invoice" };
 export const dynamic = "force-dynamic";
 
 export default async function NewInvoicePage() {
-  const [bookingCustomers, orderCustomers] = await Promise.all([
+  const [bookingCustomers, orderCustomers, photos, bundles, packages] = await Promise.all([
     prisma.booking.findMany({
       select: { customerName: true, customerEmail: true, customerPhone: true },
       distinct: ["customerEmail"],
@@ -18,6 +18,9 @@ export default async function NewInvoicePage() {
       select: { customerEmail: true },
       distinct: ["customerEmail"],
     }),
+    prisma.photo.findMany({ select: { id: true, title: true, price: true }, orderBy: { title: "asc" } }),
+    prisma.bundle.findMany({ select: { id: true, title: true, price: true }, orderBy: { title: "asc" } }),
+    prisma.servicePackage.findMany({ select: { id: true, name: true, basePrice: true }, orderBy: { name: "asc" } }),
   ]);
 
   // Merge: prefer booking records (which have names), dedupe by email
@@ -53,7 +56,14 @@ export default async function NewInvoicePage() {
 
       <h1 className="font-display text-2xl text-ink mb-8">New invoice</h1>
 
-      <InvoiceCreateForm customers={customers} />
+      <InvoiceCreateForm
+        customers={customers}
+        catalogItems={[
+          ...photos.map((p) => ({ label: p.title, description: p.title, amount: p.price, group: "Photos" })),
+          ...bundles.map((b) => ({ label: b.title, description: b.title, amount: b.price, group: "Bundles" })),
+          ...packages.map((p) => ({ label: p.name, description: p.name, amount: p.basePrice, group: "Packages" })),
+        ]}
+      />
     </div>
   );
 }
