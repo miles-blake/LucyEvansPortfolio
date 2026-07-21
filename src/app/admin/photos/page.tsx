@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { deletePhoto } from "./actions";
+import { DeleteButton } from "@/components/admin/DeleteButton";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Admin — Photos" };
@@ -64,18 +65,7 @@ export default async function AdminPhotosPage() {
                     >
                       Edit
                     </Link>
-                    <form action={deletePhoto}>
-                      <input type="hidden" name="id" value={photo.id} />
-                      <button
-                        type="submit"
-                        className="text-xs text-rose hover:opacity-70"
-                        onClick={(e) => {
-                          if (!confirm(`Delete "${photo.title}"?`)) e.preventDefault();
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </form>
+                    <DeleteButton action={deletePhoto} id={photo.id} label={photo.title} />
                   </div>
                 </td>
               </tr>

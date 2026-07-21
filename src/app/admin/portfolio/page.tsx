@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { deletePortfolioPiece } from "./actions";
+import { DeleteButton } from "@/components/admin/DeleteButton";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Admin — Portfolio" };
@@ -46,16 +47,7 @@ export default async function AdminPortfolioPage() {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3 justify-end">
                     <Link href={`/admin/portfolio/${p.id}/edit`} className="text-xs text-muted-foreground hover:text-ink">Edit</Link>
-                    <form action={deletePortfolioPiece}>
-                      <input type="hidden" name="id" value={p.id} />
-                      <button
-                        type="submit"
-                        className="text-xs text-rose hover:opacity-70"
-                        onClick={(e) => { if (!confirm(`Delete "${p.title}"?`)) e.preventDefault(); }}
-                      >
-                        Delete
-                      </button>
-                    </form>
+                    <DeleteButton action={deletePortfolioPiece} id={p.id} label={p.title} />
                   </div>
                 </td>
               </tr>

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { deleteService } from "./actions";
+import { DeleteButton } from "@/components/admin/DeleteButton";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Admin — Services" };
@@ -42,16 +43,7 @@ export default async function AdminServicesPage() {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3 justify-end">
                     <Link href={`/admin/services/${p.id}/edit`} className="text-xs text-muted-foreground hover:text-ink">Edit</Link>
-                    <form action={deleteService}>
-                      <input type="hidden" name="id" value={p.id} />
-                      <button
-                        type="submit"
-                        className="text-xs text-rose hover:opacity-70"
-                        onClick={(e) => { if (!confirm(`Delete "${p.name}"?`)) e.preventDefault(); }}
-                      >
-                        Delete
-                      </button>
-                    </form>
+                    <DeleteButton action={deleteService} id={p.id} label={p.name} />
                   </div>
                 </td>
               </tr>

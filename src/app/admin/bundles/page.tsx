@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { deleteBundle } from "./actions";
+import { DeleteButton } from "@/components/admin/DeleteButton";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Admin — Bundles" };
@@ -43,16 +44,7 @@ export default async function AdminBundlesPage() {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3 justify-end">
                     <Link href={`/admin/bundles/${b.id}/edit`} className="text-xs text-muted-foreground hover:text-ink">Edit</Link>
-                    <form action={deleteBundle}>
-                      <input type="hidden" name="id" value={b.id} />
-                      <button
-                        type="submit"
-                        className="text-xs text-rose hover:opacity-70"
-                        onClick={(e) => { if (!confirm(`Delete "${b.title}"?`)) e.preventDefault(); }}
-                      >
-                        Delete
-                      </button>
-                    </form>
+                    <DeleteButton action={deleteBundle} id={b.id} label={b.title} />
                   </div>
                 </td>
               </tr>
