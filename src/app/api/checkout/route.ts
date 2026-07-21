@@ -13,12 +13,13 @@ const itemSchema = z.object({
 
 const schema = z.object({
   items: z.array(itemSchema).min(1),
+  discountCode: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { items } = schema.parse(body);
+    const { items, discountCode } = schema.parse(body);
 
     // Verify prices server-side — never trust client-sent prices
     const verifiedLineItems = await Promise.all(
@@ -35,11 +36,40 @@ export async function POST(req: NextRequest) {
       })
     );
 
+    // Validate discount code
+    let discount: { id: string; type: string; amount: number } | null = null;
+    if (discountCode) {
+      const code = await prisma.discountCode.findUnique({
+        where: { code: discountCode.trim().toUpperCase() },
+      });
+      if (!code || !code.active) {
+        return NextResponse.json({ error: "Invalid or inactive discount code." }, { status: 400 });
+      }
+      if (code.expiresAt && code.expiresAt < new Date()) {
+        return NextResponse.json({ error: "This discount code has expired." }, { status: 400 });
+      }
+      if (code.usageLimit !== null && code.usageCount >= code.usageLimit) {
+        return NextResponse.json({ error: "This discount code has reached its usage limit." }, { status: 400 });
+      }
+      discount = code;
+    }
+
+    const subtotal = verifiedLineItems.reduce((s, i) => s + i.price, 0);
+    let discountAmount = 0;
+    if (discount) {
+      if (discount.type === "percent") {
+        discountAmount = Math.round((subtotal * discount.amount) / 100);
+      } else {
+        discountAmount = Math.min(discount.amount, subtotal);
+      }
+    }
+    const totalAfterDiscount = Math.max(0, subtotal - discountAmount);
+
     // Create a pending Order record before redirecting to Stripe
     const order = await prisma.order.create({
       data: {
         customerEmail: "", // filled in by webhook after payment
-        totalAmount: verifiedLineItems.reduce((s, i) => s + i.price, 0),
+        totalAmount: totalAfterDiscount,
         status: "PENDING",
         items: {
           create: verifiedLineItems.map((i) => ({
@@ -52,32 +82,57 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const lineItemsForStripe = verifiedLineItems.map((item) => ({
+      price_data: {
+        currency: "usd",
+        unit_amount: item.price,
+        product_data: {
+          name: item.name,
+          description: "Digital download — personal use license",
+        },
+      },
+      quantity: 1,
+    }));
+
+    // Add a negative line item for the discount
+    if (discount && discountAmount > 0) {
+      const label = discount.type === "percent"
+        ? `Discount (${discount.amount}% off)`
+        : `Discount (${discountCode})`;
+      lineItemsForStripe.push({
+        price_data: {
+          currency: "usd",
+          unit_amount: -discountAmount,
+          product_data: { name: label, description: "" },
+        },
+        quantity: 1,
+      });
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
-      line_items: verifiedLineItems.map((item) => ({
-        price_data: {
-          currency: "usd",
-          unit_amount: item.price,
-          product_data: {
-            name: item.name,
-            description: "Digital download — personal use license",
-          },
-        },
-        quantity: 1,
-      })),
+      line_items: lineItemsForStripe,
       metadata: { orderId: order.id },
       success_url: `${process.env.NEXTAUTH_URL}/order/${order.id}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXTAUTH_URL}/cart`,
-      // Collect email at checkout so we can email the download link
       customer_creation: "always",
     });
 
     // Store the Stripe session ID on the order for webhook reconciliation
-    await prisma.order.update({
-      where: { id: order.id },
-      data: { stripePaymentIntentId: session.payment_intent as string | null },
-    });
+    const ops: Promise<unknown>[] = [
+      prisma.order.update({
+        where: { id: order.id },
+        data: { stripePaymentIntentId: session.payment_intent as string | null },
+      }),
+    ];
+    if (discount) {
+      ops.push(prisma.discountCode.update({
+        where: { id: discount.id },
+        data: { usageCount: { increment: 1 } },
+      }));
+    }
+    await Promise.all(ops);
 
     return NextResponse.json({ url: session.url });
   } catch (err) {

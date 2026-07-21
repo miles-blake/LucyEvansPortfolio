@@ -271,3 +271,4 @@ Most things are connected and ready. The remaining two need accounts and setting
 **Already connected:** Cloudinary (photo uploads and storage) is live — you can upload photos right now.
 
 Ask your developer to help with Stripe and Resend when you're ready to go live — each takes about 10 minutes once you have the accounts.
+

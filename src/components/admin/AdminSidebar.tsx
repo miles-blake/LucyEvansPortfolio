@@ -18,6 +18,9 @@ import {
   FileText,
   Send,
   CalendarOff,
+  BarChart2,
+  Tag,
+  Settings,
 } from "lucide-react";
 
 const NAV = [
@@ -34,6 +37,9 @@ const NAV = [
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
   { href: "/admin/invoices", label: "Invoices", icon: FileText },
   { href: "/admin/email", label: "Email", icon: Send },
+  { href: "/admin/discounts", label: "Discounts", icon: Tag },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart2 },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 export function AdminSidebar() {

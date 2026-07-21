@@ -11,6 +11,45 @@ export default function CartPage() {
   const { items, remove, total, count } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [codeInput, setCodeInput] = useState("");
+  const [appliedCode, setAppliedCode] = useState<string | null>(null);
+  const [discount, setDiscount] = useState<{ type: string; amount: number } | null>(null);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [codeLoading, setCodeLoading] = useState(false);
+
+  async function applyCode() {
+    setCodeError(null);
+    setCodeLoading(true);
+    try {
+      const res = await fetch(`/api/discount?code=${encodeURIComponent(codeInput)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Invalid code.");
+      setAppliedCode(codeInput.toUpperCase());
+      setDiscount(data);
+    } catch (err) {
+      setCodeError(err instanceof Error ? err.message : "Invalid code.");
+    } finally {
+      setCodeLoading(false);
+    }
+  }
+
+  function removeCode() {
+    setAppliedCode(null);
+    setDiscount(null);
+    setCodeInput("");
+    setCodeError(null);
+  }
+
+  function discountAmount() {
+    if (!discount) return 0;
+    const sub = total();
+    if (discount.type === "percent") return Math.round((sub * discount.amount) / 100);
+    return Math.min(discount.amount, sub);
+  }
+
+  function finalTotal() {
+    return Math.max(0, total() - discountAmount());
+  }
 
   async function handleCheckout() {
     setLoading(true);
@@ -19,7 +58,7 @@ export default function CartPage() {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({ items, discountCode: appliedCode ?? undefined }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Checkout failed.");
@@ -100,9 +139,46 @@ export default function CartPage() {
                 </div>
               ))}
             </div>
+            {/* Discount code */}
+            <div className="border-t border-border pt-4 space-y-2">
+              {appliedCode ? (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-meta text-sage">
+                    {appliedCode} applied
+                    {discount?.type === "percent" ? ` (${discount.amount}% off)` : ""}
+                  </span>
+                  <button onClick={removeCode} className="font-meta text-xs text-muted-foreground hover:text-ink transition-colors">Remove</button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    value={codeInput}
+                    onChange={(e) => setCodeInput(e.target.value)}
+                    placeholder="Discount code"
+                    className="flex-1 border border-border rounded-sm px-3 py-1.5 text-xs bg-cream text-ink uppercase focus:outline-none focus:ring-1 focus:ring-ink/30"
+                  />
+                  <button
+                    onClick={applyCode}
+                    disabled={!codeInput || codeLoading}
+                    className="font-meta text-xs border border-border rounded-sm px-3 py-1.5 text-ink hover:bg-ink/5 transition-colors disabled:opacity-40"
+                  >
+                    {codeLoading ? "…" : "Apply"}
+                  </button>
+                </div>
+              )}
+              {codeError && <p className="font-meta text-xs text-rose-600">{codeError}</p>}
+            </div>
+
+            {discount && discountAmount() > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-sage">Discount</span>
+                <span className="text-sage">−${(discountAmount() / 100).toFixed(2)}</span>
+              </div>
+            )}
+
             <div className="border-t border-border pt-4 flex justify-between">
               <span className="font-display text-lg text-ink">Total</span>
-              <span className="font-display text-lg text-ink">${(total() / 100).toFixed(2)}</span>
+              <span className="font-display text-lg text-ink">${(finalTotal() / 100).toFixed(2)}</span>
             </div>
             <p className="font-meta text-muted-foreground text-xs">
               Digital downloads only — no physical shipping. Delivered instantly after purchase.

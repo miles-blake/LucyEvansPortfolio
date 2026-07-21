@@ -306,6 +306,30 @@ model Client {
   createdAt      DateTime @default(now())
 }
 
+// ─── Discount Codes ──────────────────────────────────────────────────
+
+model DiscountCode {
+  id         String    @id @default(cuid())
+  code       String    @unique
+  type       String    // "fixed" | "percent"
+  amount     Int       // cents (fixed) or 1-100 (percent)
+  active     Boolean   @default(true)
+  usageLimit Int?
+  usageCount Int       @default(0)
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+}
+
+// ─── Site Settings ────────────────────────────────────────────────────
+
+model SiteSettings {
+  id                String @id @default("main")
+  watermarkText     String @default("© Lucy Evans")
+  watermarkOpacity  Int    @default(60)
+  watermarkPosition String @default("south_east")
+  watermarkFontSize Int    @default(24)
+}
+
 // ─── Admin ────────────────────────────────────────────────────────────
 
 model AdminUser {
