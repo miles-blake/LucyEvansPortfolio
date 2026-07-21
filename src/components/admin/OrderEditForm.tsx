@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { saveOrder } from "@/app/admin/orders/actions";
 
@@ -20,9 +21,10 @@ interface OrderItemData {
   id?: string;
   photoId?: string;
   bundleId?: string;
-  price: number; // cents
+  price: number;
   downloadLimit: number;
   label: string;
+  previewImageUrl?: string;
 }
 
 interface OrderInput {
@@ -35,7 +37,7 @@ interface OrderInput {
     bundleId?: string | null;
     price: number;
     downloadLimit: number;
-    photo?: { title: string; price: number } | null;
+    photo?: { title: string; price: number; previewImageUrl: string } | null;
     bundle?: { title: string; price: number } | null;
   }>;
 }
@@ -61,6 +63,7 @@ export function OrderEditForm({ order, photos, bundles }: Props) {
       price: item.price,
       downloadLimit: item.downloadLimit,
       label: item.photo?.title ?? item.bundle?.title ?? "—",
+      previewImageUrl: item.photo?.previewImageUrl,
     }))
   );
 
@@ -115,7 +118,6 @@ export function OrderEditForm({ order, photos, bundles }: Props) {
     setError("");
     setSaved(false);
     setSubmitting(true);
-
     try {
       const result = await saveOrder({
         orderId: order.id,
@@ -129,7 +131,6 @@ export function OrderEditForm({ order, photos, bundles }: Props) {
           downloadLimit: item.downloadLimit,
         })),
       });
-
       if (result.error) {
         setError(result.error);
       } else {
@@ -169,9 +170,7 @@ export function OrderEditForm({ order, photos, bundles }: Props) {
           className="text-sm border border-border rounded-sm px-3 py-2 bg-cream text-ink focus:outline-none focus:ring-1 focus:ring-sky/40"
         >
           {STATUS_OPTIONS.map((s) => (
-            <option key={s} value={s}>
-              {s.toLowerCase()}
-            </option>
+            <option key={s} value={s}>{s.toLowerCase()}</option>
           ))}
         </select>
       </section>
@@ -180,63 +179,73 @@ export function OrderEditForm({ order, photos, bundles }: Props) {
       <section className="border border-border rounded-sm p-6">
         <h2 className="font-display text-lg text-ink mb-4">Items</h2>
 
-        {items.length > 0 ? (
-          <div className="overflow-x-auto mb-4">
-            <table className="w-full text-sm min-w-[480px]">
-              <thead className="border-b border-border">
-                <tr>
-                  <th className="text-left pb-2 font-meta text-xs text-muted-foreground font-normal">Product</th>
-                  <th className="text-left pb-2 font-meta text-xs text-muted-foreground font-normal w-28">Price ($)</th>
-                  <th className="text-left pb-2 font-meta text-xs text-muted-foreground font-normal w-24">DL limit</th>
-                  <th className="pb-2 w-8" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {items.map((item, index) => (
-                  <tr key={index}>
-                    <td className="py-2 pr-3 text-ink">{item.label}</td>
-                    <td className="py-2 pr-3">
-                      <div className="relative">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>
-                        <input
-                          type="number"
-                          value={(item.price / 100).toFixed(2)}
-                          onChange={(e) => updateItemPrice(index, e.target.value)}
-                          min="0"
-                          step="0.01"
-                          className="w-full text-sm border border-border rounded-sm pl-5 pr-2 py-1.5 bg-cream text-ink focus:outline-none focus:ring-1 focus:ring-sky/40"
-                        />
-                      </div>
-                    </td>
-                    <td className="py-2 pr-3">
+        <div className="space-y-3 mb-4">
+          {items.length === 0 && (
+            <p className="text-sm text-muted-foreground">No items.</p>
+          )}
+          {items.map((item, index) => (
+            <div key={index} className="flex items-center gap-3 border border-border rounded-sm p-3">
+              {/* Thumbnail */}
+              <div className="w-14 h-14 shrink-0 rounded-sm overflow-hidden bg-muted relative">
+                {item.previewImageUrl ? (
+                  <Image
+                    src={item.previewImageUrl}
+                    alt={item.label}
+                    fill
+                    sizes="56px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-sage/10 flex items-center justify-center">
+                    <span className="font-meta text-[9px] text-muted-foreground text-center px-1">Bundle</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Info + controls */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-ink truncate mb-1.5">{item.label}</p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-1.5">
+                    <label className="font-meta text-[10px] text-muted-foreground">Price</label>
+                    <div className="relative w-20">
+                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>
                       <input
                         type="number"
-                        value={item.downloadLimit}
-                        onChange={(e) => updateItemDownloadLimit(index, e.target.value)}
+                        value={(item.price / 100).toFixed(2)}
+                        onChange={(e) => updateItemPrice(index, e.target.value)}
                         min="0"
-                        className="w-full text-sm border border-border rounded-sm px-2 py-1.5 bg-cream text-ink focus:outline-none focus:ring-1 focus:ring-sky/40"
+                        step="0.01"
+                        className="w-full text-xs border border-border rounded-sm pl-5 pr-2 py-1 bg-cream text-ink focus:outline-none focus:ring-1 focus:ring-sky/40"
                       />
-                    </td>
-                    <td className="py-2">
-                      <button
-                        type="button"
-                        onClick={() => removeItem(index)}
-                        className="text-muted-foreground hover:text-rose transition-colors text-lg leading-none"
-                        aria-label="Remove item"
-                      >
-                        ×
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground mb-4">No items.</p>
-        )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <label className="font-meta text-[10px] text-muted-foreground">DL limit</label>
+                    <input
+                      type="number"
+                      value={item.downloadLimit}
+                      onChange={(e) => updateItemDownloadLimit(index, e.target.value)}
+                      min="0"
+                      className="w-14 text-xs border border-border rounded-sm px-2 py-1 bg-cream text-ink focus:outline-none focus:ring-1 focus:ring-sky/40"
+                    />
+                  </div>
+                </div>
+              </div>
 
-        {/* Add item row */}
+              <button
+                type="button"
+                onClick={() => removeItem(index)}
+                className="text-muted-foreground hover:text-rose transition-colors text-lg leading-none shrink-0 pb-0.5"
+                aria-label="Remove item"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Add item */}
         {(photos.length > 0 || bundles.length > 0) && (
           <div className="flex items-center gap-2">
             <select

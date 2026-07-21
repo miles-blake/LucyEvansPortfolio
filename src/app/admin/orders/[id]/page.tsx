@@ -31,7 +31,7 @@ export default async function OrderDetailPage({ params }: Props) {
       include: {
         items: {
           include: {
-            photo: { select: { title: true, price: true } },
+            photo: { select: { title: true, price: true, previewImageUrl: true } },
             bundle: { select: { title: true, price: true } },
           },
         },
