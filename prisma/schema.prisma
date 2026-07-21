@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Photography Shop ───────────────────────────────────────────────
+
+model Photo {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String   @unique
+  description     String?
+  location        String?
+  captureDate     DateTime?
+  filmStock       String?
+  camera          String?
+  collectionTag   String?
+  previewImageUrl String   // watermarked, public
+  fullResFileUrl  String   // private, never served directly
+  price           Int      // in cents
+  isLimitedEdition Boolean @default(false)
+  editionSize     Int?
+  editionSold     Int      @default(0)
+  featured        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  bundles     BundlePhoto[]
+  orderItems  OrderItem[]
+}
+
+model Bundle {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String?
+  price       Int      // in cents
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  photos     BundlePhoto[]
+  orderItems OrderItem[]
+}
+
+// many-to-many join for Bundle ↔ Photo
+model BundlePhoto {
+  bundle   Bundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  bundleId String
+  photo    Photo  @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  photoId  String
+
+  @@id([bundleId, photoId])
+}
+
+model ServicePackage {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  rollsIncluded  Int
+  photosIncluded Int
+  basePrice      Int      // in cents
+  eventTypes     String[] // e.g. ["wedding", "portrait", "event", "elopement"]
+  // Add-on pricing stored as JSON: { extraRollPrice, rushDeliveryPrice, secondShooterPrice }
+  addOnPricing   Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  bookings Booking[]
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  customerName    String
+  customerEmail   String
+  customerPhone   String?
+  eventDate       DateTime
+  eventType       String
+  packageId       String
+  package         ServicePackage @relation(fields: [packageId], references: [id])
+  addOns          Json?         // selected add-ons and their prices
+  message         String?
+  status          BookingStatus @default(INQUIRY)
+  depositAmount   Int           // in cents
+  depositPaid     Boolean       @default(false)
+  totalPrice      Int           // in cents
+  stripeSessionId String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+enum BookingStatus {
+  INQUIRY
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+// ─── Orders & Digital Delivery ──────────────────────────────────────
+
+model Order {
+  id                    String      @id @default(cuid())
+  customerEmail         String
+  totalAmount           Int         // in cents
+  stripePaymentIntentId String?     @unique
+  status                OrderStatus @default(PENDING)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  items OrderItem[]
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model OrderItem {
+  id            String   @id @default(cuid())
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  photoId       String?
+  photo         Photo?   @relation(fields: [photoId], references: [id])
+  bundleId      String?
+  bundle        Bundle?  @relation(fields: [bundleId], references: [id])
+  price         Int      // in cents, snapshot at time of purchase
+  signedDownloadUrl String?
+  downloadCount Int      @default(0)
+  downloadLimit Int      @default(5)
+  expiresAt     DateTime?
+  createdAt     DateTime @default(now())
+}
+
+// ─── Marketing Portfolio ─────────────────────────────────────────────
+
+model PortfolioPiece {
+  id                String   @id @default(cuid())
+  title             String
+  slug              String   @unique
+  brandName         String
+  role              String?
+  description       String?
+  deliverables      String?
+  metrics           String?  // free text: views/engagement/reach
+  videoUrls         String[] // self-hosted Cloudinary URLs
+  originalPostUrls  String[] // links back to TikTok/Instagram originals
+  coverImageUrl     String?
+  tags              String[]
+  dateCompleted     DateTime?
+  testimonialQuote  String?
+  testimonialAuthor String?
+  featured          Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// ─── Newsletter ───────────────────────────────────────────────────────
+
+model Subscriber {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  subscribedAt DateTime @default(now())
+  source      String?  // "footer", "homepage", etc.
+  confirmed   Boolean  @default(false)
+}
+
+// ─── Admin ────────────────────────────────────────────────────────────
+
+model AdminUser {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  hashedPassword String
+  createdAt      DateTime @default(now())
+}

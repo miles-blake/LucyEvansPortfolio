@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh auth *)",
+      "Bash(ssh-keygen -t ed25519 -C \"187061026+miles-blake@users.noreply.github.com\" -f ~/.ssh/id_ed25519 -N \"\")",
+      "Read(//Users/Miles/.ssh/**)",
+      "Bash(ssh *)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack)",
+      "Read(//Users/Miles/Desktop/**)",
+      "Bash(npx create-next-app@latest lucy-temp --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack)",
+      "Bash(cp -r lucy-temp/. \"Lucy Portfolio Website/\" --exclude=.git)",
+      "Bash(rsync -a --exclude='.git' lucy-temp/ \"Lucy Portfolio Website/\")",
+      "Bash(rm -rf lucy-temp)",
+      "Bash(npm install *)",
+      "Bash(npx shadcn@latest init --defaults)",
+      "Bash(npx prisma *)",
+      "Bash(npx tsx *)",
+      "Bash(npx next *)"
+    ]
+  }
+}
