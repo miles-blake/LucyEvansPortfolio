@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { updateBookingStatus, saveBookingNotes, createInvoiceForBooking } from "../actions";
+import { updateBookingStatus, saveBookingNotes, createInvoiceForBooking, sendClientPortalLink } from "../actions";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -33,7 +33,7 @@ export default async function BookingDetailPage({ params }: Props) {
   const [booking, existingInvoice] = await Promise.all([
     prisma.booking.findUnique({
       where: { id },
-      include: { package: true },
+      include: { package: true, portalToken: { select: { token: true, expiresAt: true } } },
     }),
     prisma.invoice.findFirst({
       where: { bookingId: id },
@@ -248,6 +248,42 @@ export default async function BookingDetailPage({ params }: Props) {
                 Create invoice
               </button>
             </form>
+          )}
+        </section>
+        {/* Client portal */}
+        <section className="border border-border rounded-sm p-6">
+          <h2 className="font-display text-lg text-ink mb-4">Client portal</h2>
+          {booking.portalToken ? (
+            <div className="space-y-2">
+              <p className="font-meta text-xs text-muted-foreground">
+                Link active · expires {formatDate(booking.portalToken.expiresAt)}
+              </p>
+              <div className="flex items-center gap-3">
+                <form action={sendClientPortalLink}>
+                  <input type="hidden" name="bookingId" value={booking.id} />
+                  <button type="submit" className="text-xs bg-ink text-cream px-3 py-1.5 rounded-sm hover:opacity-80 transition-opacity font-meta">
+                    Resend portal link
+                  </button>
+                </form>
+                <Link
+                  href={`/portal/${booking.portalToken.token}`}
+                  target="_blank"
+                  className="border border-border text-muted-foreground px-3 py-1.5 rounded-sm text-xs font-meta hover:text-ink transition-colors"
+                >
+                  Preview portal →
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Send the client a personal link to view their booking and invoice.</p>
+              <form action={sendClientPortalLink}>
+                <input type="hidden" name="bookingId" value={booking.id} />
+                <button type="submit" className="text-xs bg-ink text-cream px-3 py-1.5 rounded-sm hover:opacity-80 transition-opacity font-meta">
+                  Send portal link
+                </button>
+              </form>
+            </div>
           )}
         </section>
       </div>
