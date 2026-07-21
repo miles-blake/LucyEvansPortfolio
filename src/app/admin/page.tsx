@@ -128,14 +128,14 @@ export default async function AdminDashboardPage() {
       <section className="border border-border rounded-sm p-6 mb-10">
         <h2 className="font-display text-lg text-ink mb-4">Revenue</h2>
 
-        <div className="grid grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-3 gap-3 md:gap-6 mb-6">
           {[
             { label: "All time", value: formatRevenue(allTimeRevenue) },
             { label: "This month", value: formatRevenue(revenueThisMonth) },
             { label: "Last month", value: formatRevenue(revenueLastMonth) },
           ].map(({ label, value }) => (
             <div key={label}>
-              <p className="font-display text-2xl text-ink">{value}</p>
+              <p className="font-display text-lg md:text-2xl text-ink">{value}</p>
               <p className="font-meta text-xs text-muted-foreground mt-0.5">{label}</p>
             </div>
           ))}

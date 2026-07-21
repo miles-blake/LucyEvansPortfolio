@@ -21,7 +21,9 @@ import {
   BarChart2,
   Tag,
   Settings,
+  X,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -42,7 +44,12 @@ const NAV = [
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
-export function AdminSidebar() {
+interface Props {
+  open?: boolean;
+  onClose?: () => void;
+}
+
+export function AdminSidebar({ open = false, onClose }: Props) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const userName = session?.user?.name ?? "Admin";
@@ -51,19 +58,32 @@ export function AdminSidebar() {
     return exact ? pathname === href : pathname.startsWith(href);
   }
 
-  return (
-    <aside className="w-52 shrink-0 border-r border-border flex flex-col min-h-screen">
-      <div className="p-4 border-b border-border">
-        <p className="font-meta text-xs text-muted-foreground uppercase tracking-widest">Admin</p>
-        <p className="font-display text-sm text-ink mt-0.5 truncate">{userName}</p>
+  const sidebarContent = (
+    <>
+      {/* Header */}
+      <div className="p-4 border-b border-border flex items-start justify-between">
+        <div>
+          <p className="font-meta text-xs text-muted-foreground uppercase tracking-widest">Admin</p>
+          <p className="font-display text-sm text-ink mt-0.5 truncate">{userName}</p>
+        </div>
+        {/* Close button — mobile only */}
+        <button
+          onClick={onClose}
+          className="md:hidden p-1 -mr-1 rounded-sm hover:bg-ink/5 transition-colors text-muted-foreground"
+          aria-label="Close menu"
+        >
+          <X size={18} />
+        </button>
       </div>
 
-      <nav className="flex-1 py-2">
+      {/* Nav */}
+      <nav className="flex-1 py-2 overflow-y-auto">
         {NAV.map(({ href, label, icon: Icon, exact }) => (
           <Link
             key={href}
             href={href}
-            className={`flex items-center gap-2.5 px-4 py-2 text-sm transition-colors ${
+            onClick={onClose}
+            className={`flex items-center gap-2.5 px-4 py-2.5 md:py-2 text-sm transition-colors ${
               isActive(href, exact)
                 ? "text-ink bg-ink/5 border-r-2 border-ink"
                 : "text-muted-foreground hover:text-ink hover:bg-ink/5"
@@ -75,9 +95,11 @@ export function AdminSidebar() {
         ))}
       </nav>
 
+      {/* Footer */}
       <div className="p-4 border-t border-border space-y-2">
         <Link
           href="/"
+          onClick={onClose}
           className="flex items-center gap-2.5 text-sm text-muted-foreground hover:text-ink transition-colors"
         >
           <ExternalLink size={15} />
@@ -98,6 +120,33 @@ export function AdminSidebar() {
           Sign out
         </button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile backdrop */}
+      {open && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-ink/40 backdrop-blur-sm"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar panel */}
+      <aside
+        className={cn(
+          "flex flex-col bg-cream border-r border-border",
+          // Desktop: always-visible sidebar
+          "md:relative md:w-52 md:shrink-0 md:min-h-screen md:translate-x-0 md:flex",
+          // Mobile: fixed drawer
+          "fixed inset-y-0 left-0 z-50 w-72 min-h-screen transition-transform duration-200 ease-in-out",
+          open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        )}
+      >
+        {sidebarContent}
+      </aside>
+    </>
   );
 }
