@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PayButton } from "@/components/PayButton";
+import { MessageThread } from "@/components/MessageThread";
+import { sendPortalMessage } from "@/app/account/messages/actions";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -54,10 +56,13 @@ export default async function ClientPortalPage({ params }: Props) {
 
   const booking = portalToken.booking;
 
-  // Find any invoice linked to this booking
-  const invoice = await prisma.invoice.findFirst({
-    where: { bookingId: booking.id },
-  });
+  const [invoice, messages] = await Promise.all([
+    prisma.invoice.findFirst({ where: { bookingId: booking.id } }),
+    prisma.bookingMessage.findMany({
+      where: { bookingId: booking.id },
+      orderBy: { createdAt: "asc" },
+    }),
+  ]);
 
   type LineItem = { description: string; amount: number };
   const lineItems = invoice ? (invoice.lineItems as LineItem[]) : [];
@@ -167,16 +172,15 @@ export default async function ClientPortalPage({ params }: Props) {
           </section>
         )}
 
-        {/* Contact */}
+        {/* Messages */}
         <section className="border border-border rounded-sm p-6">
-          <h2 className="font-display text-lg text-ink mb-2">Questions?</h2>
-          <p className="text-sm text-muted-foreground">
-            Reach out any time at{" "}
-            <a href="mailto:hello@lucyevans.com" className="text-sky hover:opacity-70">
-              hello@lucyevans.com
-            </a>
-            .
-          </p>
+          <h2 className="font-display text-lg text-ink mb-4">Messages</h2>
+          <MessageThread
+            messages={messages}
+            sendAction={sendPortalMessage as (prev: unknown, fd: FormData) => Promise<void>}
+            hiddenFields={{ portalToken: token }}
+            viewerRole="client"
+          />
         </section>
 
         <p className="font-meta text-xs text-muted-foreground text-center">

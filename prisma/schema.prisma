@@ -93,6 +93,7 @@ model Booking {
   updatedAt       DateTime      @updatedAt
 
   portalToken ClientPortalToken?
+  messages    BookingMessage[]
 }
 
 enum BookingStatus {
@@ -247,6 +248,26 @@ model ClientPortalToken {
   booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+// ─── Availability ────────────────────────────────────────────────────
+
+model BlackoutDate {
+  id        String   @id @default(cuid())
+  date      DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+}
+
+// ─── Messaging ────────────────────────────────────────────────────────
+
+model BookingMessage {
+  id         String   @id @default(cuid())
+  bookingId  String
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  senderRole String   // "admin" | "client"
+  body       String
+  createdAt  DateTime @default(now())
 }
 
 // ─── Client Accounts ─────────────────────────────────────────────────

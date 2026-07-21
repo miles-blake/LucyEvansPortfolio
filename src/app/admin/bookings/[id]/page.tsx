@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { updateBookingStatus, saveBookingNotes, createInvoiceForBooking, sendClientPortalLink } from "../actions";
+import { updateBookingStatus, saveBookingNotes, createInvoiceForBooking, sendClientPortalLink, sendBookingMessage } from "../actions";
+import { MessageThread } from "@/components/MessageThread";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -30,15 +31,13 @@ function formatPrice(cents: number) {
 
 export default async function BookingDetailPage({ params }: Props) {
   const { id } = await params;
-  const [booking, existingInvoice] = await Promise.all([
+  const [booking, existingInvoice, messages] = await Promise.all([
     prisma.booking.findUnique({
       where: { id },
       include: { package: true, portalToken: { select: { token: true, expiresAt: true } } },
     }),
-    prisma.invoice.findFirst({
-      where: { bookingId: id },
-      select: { id: true, number: true },
-    }),
+    prisma.invoice.findFirst({ where: { bookingId: id }, select: { id: true, number: true } }),
+    prisma.bookingMessage.findMany({ where: { bookingId: id }, orderBy: { createdAt: "asc" } }),
   ]);
 
   if (!booking) notFound();
@@ -250,6 +249,17 @@ export default async function BookingDetailPage({ params }: Props) {
             </form>
           )}
         </section>
+        {/* Messages */}
+        <section className="border border-border rounded-sm p-6">
+          <h2 className="font-display text-lg text-ink mb-4">Messages</h2>
+          <MessageThread
+            messages={messages}
+            sendAction={sendBookingMessage as (prev: unknown, fd: FormData) => Promise<void>}
+            hiddenFields={{ bookingId: booking.id }}
+            viewerRole="admin"
+          />
+        </section>
+
         {/* Client portal */}
         <section className="border border-border rounded-sm p-6">
           <h2 className="font-display text-lg text-ink mb-4">Client portal</h2>

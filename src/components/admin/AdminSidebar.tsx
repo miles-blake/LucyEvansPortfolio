@@ -17,6 +17,7 @@ import {
   Mail,
   FileText,
   Send,
+  CalendarOff,
 } from "lucide-react";
 
 const NAV = [
@@ -25,6 +26,7 @@ const NAV = [
   { href: "/admin/bundles", label: "Bundles", icon: Package },
   { href: "/admin/services", label: "Services", icon: CalendarDays },
   { href: "/admin/bookings", label: "Bookings", icon: CalendarDays },
+  { href: "/admin/availability", label: "Availability", icon: CalendarOff },
   { href: "/admin/inquiries", label: "Inquiries", icon: MessageSquare },
   { href: "/admin/portfolio", label: "Portfolio", icon: Briefcase },
   { href: "/admin/subscribers", label: "Subscribers", icon: Users },
