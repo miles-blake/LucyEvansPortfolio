@@ -1,0 +1,410 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod/v4";
+
+type ServicePackage = {
+  id: string;
+  name: string;
+  description: string | null;
+  rollsIncluded: number;
+  photosIncluded: number;
+  basePrice: number;
+  eventTypes: string[];
+  addOnPricing: Record<string, number> | null;
+};
+
+const schema = z.object({
+  packageId: z.string().min(1, "Select a package"),
+  eventType: z.string().min(1, "Select an event type"),
+  eventDate: z.string().min(1, "Select a date"),
+  customerName: z.string().min(2, "Name is required"),
+  customerEmail: z.email("Valid email required"),
+  customerPhone: z.string().optional(),
+  message: z.string().optional(),
+  addOns: z.object({
+    extraRoll: z.boolean(),
+    rushDelivery: z.boolean(),
+    secondShooter: z.boolean(),
+  }),
+});
+
+type FormValues = z.infer<typeof schema>;
+
+const ADD_ON_LABELS: Record<string, string> = {
+  extraRoll: "Extra roll",
+  rushDelivery: "Rush delivery (1 week)",
+  secondShooter: "Second shooter",
+};
+
+const ADD_ON_KEYS: Record<string, string> = {
+  extraRoll: "extraRollPrice",
+  rushDelivery: "rushDeliveryPrice",
+  secondShooter: "secondShooterPrice",
+};
+
+function formatPrice(cents: number) {
+  return `$${(cents / 100).toLocaleString("en-US")}`;
+}
+
+function today() {
+  return new Date().toISOString().split("T")[0];
+}
+
+export default function BookingForm() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const [packages, setPackages] = useState<ServicePackage[]>([]);
+  const [bookedDates, setBookedDates] = useState<string[]>([]);
+  const [loadingPackages, setLoadingPackages] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const preselectedPackageId = searchParams.get("package") ?? "";
+  const wasCancelled = searchParams.get("cancelled") === "1";
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      packageId: preselectedPackageId,
+      addOns: { extraRoll: false, rushDelivery: false, secondShooter: false },
+    },
+  });
+
+  const selectedPackageId = watch("packageId");
+  const selectedPackage = packages.find((p) => p.id === selectedPackageId) ?? null;
+  const selectedAddOns = watch("addOns");
+  const selectedDate = watch("eventDate");
+
+  const totalPrice = (() => {
+    if (!selectedPackage) return 0;
+    const addOns = selectedPackage.addOnPricing ?? {};
+    let total = selectedPackage.basePrice;
+    if (selectedAddOns.extraRoll && addOns.extraRollPrice) total += addOns.extraRollPrice;
+    if (selectedAddOns.rushDelivery && addOns.rushDeliveryPrice) total += addOns.rushDeliveryPrice;
+    if (selectedAddOns.secondShooter && addOns.secondShooterPrice) total += addOns.secondShooterPrice;
+    return total;
+  })();
+  const depositAmount = Math.round(totalPrice * 0.5);
+
+  useEffect(() => {
+    if (selectedPackage && selectedPackage.eventTypes.length === 1) {
+      setValue("eventType", selectedPackage.eventTypes[0]);
+    }
+  }, [selectedPackageId, selectedPackage, setValue]);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/services/packages").then((r) => r.json()),
+      fetch("/api/booking/booked-dates").then((r) => r.json()),
+    ]).then(([pkgsData, datesData]: [{ packages: ServicePackage[] }, { dates: string[] }]) => {
+      setPackages(pkgsData.packages ?? []);
+      setBookedDates(datesData.dates ?? []);
+      setLoadingPackages(false);
+    });
+  }, []);
+
+  const isDateBooked = (date: string) => bookedDates.includes(date);
+
+  async function onSubmit(values: FormValues) {
+    if (isDateBooked(values.eventDate)) {
+      setServerError("That date is already booked. Please choose another.");
+      return;
+    }
+    setSubmitting(true);
+    setServerError(null);
+
+    try {
+      const res = await fetch("/api/booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        setServerError(json.error ?? "Something went wrong.");
+        setSubmitting(false);
+        return;
+      }
+
+      router.push(json.url);
+    } catch {
+      setServerError("Network error. Please try again.");
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="mb-10">
+        <p className="font-meta text-muted-foreground mb-3">Book a session</p>
+        <h1 className="font-display text-4xl text-ink mb-4">Request a booking</h1>
+        <p className="text-muted-foreground leading-relaxed">
+          A 50% deposit secures your date. The remaining balance is due before your shoot.
+          You&rsquo;ll receive a confirmation email within 24 hours.
+        </p>
+      </div>
+
+      {wasCancelled && (
+        <div className="mb-6 p-4 bg-blush/30 border border-rose/20 rounded-sm text-sm text-ink">
+          Your payment was cancelled — your booking wasn&rsquo;t confirmed. You can try again below.
+        </div>
+      )}
+
+      {loadingPackages ? (
+        <p className="text-muted-foreground">Loading packages…</p>
+      ) : (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
+
+          {/* Package selection */}
+          <fieldset>
+            <legend className="font-display text-lg text-ink mb-4">1. Choose a package</legend>
+            <div className="space-y-3">
+              {packages.map((pkg) => (
+                <label
+                  key={pkg.id}
+                  className={`flex items-start gap-4 p-4 border rounded-sm cursor-pointer transition-colors ${
+                    selectedPackageId === pkg.id
+                      ? "border-ink bg-ink/5"
+                      : "border-border hover:border-sky/40"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    value={pkg.id}
+                    {...register("packageId")}
+                    className="mt-1"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="font-display text-ink">{pkg.name}</span>
+                      <span className="font-meta text-sm text-muted-foreground shrink-0">
+                        {formatPrice(pkg.basePrice)}
+                      </span>
+                    </div>
+                    {pkg.description && (
+                      <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                        {pkg.description}
+                      </p>
+                    )}
+                    <p className="font-meta text-xs text-muted-foreground mt-2">
+                      {pkg.rollsIncluded} {pkg.rollsIncluded === 1 ? "roll" : "rolls"} · {pkg.photosIncluded}+ photos
+                    </p>
+                  </div>
+                </label>
+              ))}
+            </div>
+            {errors.packageId && (
+              <p className="text-rose text-sm mt-2">{errors.packageId.message}</p>
+            )}
+          </fieldset>
+
+          {/* Event type */}
+          {selectedPackage && (
+            <fieldset>
+              <legend className="font-display text-lg text-ink mb-4">2. Event type</legend>
+              <div className="flex flex-wrap gap-3">
+                {selectedPackage.eventTypes.map((type) => (
+                  <label
+                    key={type}
+                    className={`px-4 py-2 border rounded-sm cursor-pointer capitalize text-sm transition-colors ${
+                      watch("eventType") === type
+                        ? "border-ink bg-ink text-cream"
+                        : "border-border hover:border-sky/40"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      value={type}
+                      {...register("eventType")}
+                      className="sr-only"
+                    />
+                    {type}
+                  </label>
+                ))}
+              </div>
+              {errors.eventType && (
+                <p className="text-rose text-sm mt-2">{errors.eventType.message}</p>
+              )}
+            </fieldset>
+          )}
+
+          {/* Date */}
+          <div>
+            <label className="block font-display text-lg text-ink mb-4">3. Event date</label>
+            <input
+              type="date"
+              min={today()}
+              {...register("eventDate")}
+              className="block border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 font-meta"
+            />
+            {selectedDate && isDateBooked(selectedDate) && (
+              <p className="text-rose text-sm mt-2">
+                This date is already booked. Please choose another.
+              </p>
+            )}
+            {errors.eventDate && (
+              <p className="text-rose text-sm mt-2">{errors.eventDate.message}</p>
+            )}
+          </div>
+
+          {/* Add-ons */}
+          {selectedPackage && (() => {
+            const addOns = selectedPackage.addOnPricing ?? {};
+            const available = Object.entries(ADD_ON_KEYS).filter(
+              ([, priceKey]) => addOns[priceKey] && addOns[priceKey] > 0
+            );
+            if (!available.length) return null;
+
+            return (
+              <fieldset>
+                <legend className="font-display text-lg text-ink mb-4">4. Add-ons</legend>
+                <div className="space-y-3">
+                  {available.map(([key, priceKey]) => (
+                    <label key={key} className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        {...register(`addOns.${key as "extraRoll" | "rushDelivery" | "secondShooter"}`)}
+                        className="w-4 h-4 accent-ink"
+                      />
+                      <span className="text-ink text-sm">{ADD_ON_LABELS[key]}</span>
+                      <span className="font-meta text-xs text-muted-foreground ml-auto">
+                        +{formatPrice(addOns[priceKey])}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            );
+          })()}
+
+          {/* Contact info */}
+          <fieldset>
+            <legend className="font-display text-lg text-ink mb-4">
+              {selectedPackage ? "5." : "4."} Your info
+            </legend>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-muted-foreground mb-1.5">
+                  Name <span className="text-rose">*</span>
+                </label>
+                <input
+                  type="text"
+                  autoComplete="name"
+                  {...register("customerName")}
+                  className="w-full border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm"
+                />
+                {errors.customerName && (
+                  <p className="text-rose text-xs mt-1">{errors.customerName.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm text-muted-foreground mb-1.5">
+                  Email <span className="text-rose">*</span>
+                </label>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  {...register("customerEmail")}
+                  className="w-full border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm"
+                />
+                {errors.customerEmail && (
+                  <p className="text-rose text-xs mt-1">{errors.customerEmail.message}</p>
+                )}
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-sm text-muted-foreground mb-1.5">Phone (optional)</label>
+                <input
+                  type="tel"
+                  autoComplete="tel"
+                  {...register("customerPhone")}
+                  className="w-full border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-sm text-muted-foreground mb-1.5">
+                  Anything else I should know?
+                </label>
+                <textarea
+                  rows={4}
+                  {...register("message")}
+                  placeholder="Location, vision, vibe, special requests…"
+                  className="w-full border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm resize-none"
+                />
+              </div>
+            </div>
+          </fieldset>
+
+          {/* Price summary + submit */}
+          {selectedPackage && (
+            <div className="border border-border rounded-sm p-6 bg-cream">
+              <h3 className="font-display text-ink mb-4">Summary</h3>
+              <dl className="space-y-2 text-sm mb-4">
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">{selectedPackage.name}</dt>
+                  <dd className="font-meta">{formatPrice(selectedPackage.basePrice)}</dd>
+                </div>
+                {selectedAddOns.extraRoll && selectedPackage.addOnPricing?.extraRollPrice && (
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Extra roll</dt>
+                    <dd className="font-meta">+{formatPrice(selectedPackage.addOnPricing.extraRollPrice)}</dd>
+                  </div>
+                )}
+                {selectedAddOns.rushDelivery && selectedPackage.addOnPricing?.rushDeliveryPrice && (
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Rush delivery</dt>
+                    <dd className="font-meta">+{formatPrice(selectedPackage.addOnPricing.rushDeliveryPrice)}</dd>
+                  </div>
+                )}
+                {selectedAddOns.secondShooter && selectedPackage.addOnPricing?.secondShooterPrice && (
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Second shooter</dt>
+                    <dd className="font-meta">+{formatPrice(selectedPackage.addOnPricing.secondShooterPrice)}</dd>
+                  </div>
+                )}
+                <div className="flex justify-between pt-2 border-t border-border">
+                  <dt className="text-muted-foreground">Total</dt>
+                  <dd className="font-meta">{formatPrice(totalPrice)}</dd>
+                </div>
+                <div className="flex justify-between font-medium">
+                  <dt className="text-ink">Due today (50% deposit)</dt>
+                  <dd className="font-meta text-ink">{formatPrice(depositAmount)}</dd>
+                </div>
+              </dl>
+
+              {serverError && (
+                <p className="text-rose text-sm mb-4">{serverError}</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full bg-ink text-cream py-3 rounded-sm font-display text-sm hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submitting ? "Redirecting to payment…" : `Pay deposit ${formatPrice(depositAmount)}`}
+              </button>
+              <p className="text-xs text-muted-foreground text-center mt-3">
+                Secure payment via Stripe. Remaining {formatPrice(totalPrice - depositAmount)} due before shoot.
+              </p>
+            </div>
+          )}
+        </form>
+      )}
+    </div>
+  );
+}

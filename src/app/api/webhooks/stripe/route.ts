@@ -27,7 +27,42 @@ export async function POST(req: NextRequest) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const orderId = session.metadata?.orderId;
+    const bookingId = session.metadata?.bookingId;
     const customerEmail = session.customer_details?.email ?? "";
+
+    // ── Booking deposit ──────────────────────────────────────────────
+    if (bookingId) {
+      await prisma.booking.update({
+        where: { id: bookingId },
+        data: {
+          depositPaid: true,
+          status: "CONFIRMED",
+          stripeSessionId: session.id,
+        },
+      });
+
+      if (customerEmail) {
+        try {
+          await resend.emails.send({
+            from: process.env.RESEND_FROM_EMAIL ?? "Lucy Evans <hello@lucyevans.com>",
+            to: customerEmail,
+            subject: "Your booking is confirmed — Lucy Evans Photography",
+            html: `
+              <h2>You&rsquo;re on the books!</h2>
+              <p>Your deposit has been received and your date is officially held.</p>
+              <p>Lucy will be in touch within 24 hours to confirm all the details.</p>
+              <p style="color:#6B6560;font-size:12px;">Lucy Evans Photography &mdash; Utah County, UT</p>
+            `,
+          });
+        } catch (emailErr) {
+          console.error("[stripe webhook] booking email failed:", emailErr);
+        }
+      }
+
+      return NextResponse.json({ received: true });
+    }
+
+    // ── Digital photo order ──────────────────────────────────────────
 
     if (!orderId) {
       console.error("[stripe webhook] no orderId in session metadata");
