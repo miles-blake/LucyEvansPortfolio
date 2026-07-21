@@ -27,6 +27,8 @@ export function NewsletterComposer({ history }: Props) {
     if (!prompt.trim()) return;
     setAiLoading(true);
     setAiError(null);
+    setSubject("");
+    setBody("");
 
     try {
       const res = await fetch("/api/admin/ai/draft", {
@@ -38,14 +40,49 @@ export function NewsletterComposer({ history }: Props) {
         setAiError("Failed to draft.");
         return;
       }
+
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      setBody(""); // clear existing body
+      let buffer = "";
+      let subjectParsed = false;
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        setBody((prev) => prev + decoder.decode(value));
+        buffer += decoder.decode(value);
+
+        if (!subjectParsed) {
+          // Wait until we have the full first line
+          const newlineIdx = buffer.indexOf("\n");
+          if (newlineIdx !== -1) {
+            const firstLine = buffer.slice(0, newlineIdx).trim();
+            if (firstLine.toLowerCase().startsWith("subject:")) {
+              setSubject(firstLine.slice("subject:".length).trim());
+            }
+            // Everything after the first line + blank line goes into body
+            const bodyStart = buffer.indexOf("\n\n");
+            if (bodyStart !== -1) {
+              setBody(buffer.slice(bodyStart + 2));
+            }
+            subjectParsed = true;
+          }
+        } else {
+          // Keep appending to body
+          setBody((prev) => {
+            // On first body update after parsing, buffer already seeded it above
+            return prev + decoder.decode(value);
+          });
+        }
       }
+
+      // Final pass: if subject line ended up in body, strip it
+      setBody((prev) => {
+        const lines = prev.split("\n");
+        if (lines[0]?.toLowerCase().startsWith("subject:")) {
+          return lines.slice(1).join("\n").trimStart();
+        }
+        return prev;
+      });
     } catch {
       setAiError("Failed to draft. Check your connection.");
     } finally {
@@ -81,28 +118,30 @@ export function NewsletterComposer({ history }: Props) {
     }
   }
 
+  const inputCls =
+    "w-full border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm";
+
   return (
     <div className="space-y-8">
-      {/* Composer */}
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* AI Prompt Panel */}
-        <div className="w-full md:w-80 shrink-0 space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">
-              What&apos;s this newsletter about?
-            </label>
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              rows={5}
-              placeholder="e.g. Fall booking slots are open, new prints in the gallery, thoughts on shooting Velvia 50 in winter..."
-              className="w-full border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm resize-none"
-            />
-          </div>
+      {/* AI prompt row */}
+      <div className="flex gap-3 items-start p-4 bg-sky/5 border border-sky/20 rounded-sm">
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-ink mb-1.5">
+            What&apos;s this newsletter about?
+          </label>
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            rows={3}
+            placeholder="e.g. Fall booking slots are open, new prints in the gallery, thoughts on shooting Velvia 50 in winter..."
+            className={`${inputCls} resize-none`}
+          />
+        </div>
+        <div className="pt-6 shrink-0 flex flex-col items-start gap-2">
           <button
             onClick={handleDraft}
             disabled={aiLoading || !prompt.trim()}
-            className="bg-sky/20 text-ink text-sm px-4 py-2 rounded-sm hover:bg-sky/30 transition-colors disabled:opacity-50 flex items-center gap-2"
+            className="bg-sky/20 text-ink text-sm px-4 py-2 rounded-sm hover:bg-sky/30 transition-colors disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
           >
             {aiLoading ? (
               <>
@@ -113,56 +152,53 @@ export function NewsletterComposer({ history }: Props) {
               "Draft with AI"
             )}
           </button>
-          {aiError && <p className="text-xs text-red-600">{aiError}</p>}
-          <p className="text-xs text-muted-foreground">AI will write in Lucy&apos;s voice</p>
+          <p className="text-xs text-muted-foreground">Writes in Lucy&apos;s voice</p>
+        </div>
+      </div>
+      {aiError && <p className="text-xs text-rose">{aiError}</p>}
+
+      {/* Compose */}
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-ink mb-1.5">Subject line</label>
+          <input
+            type="text"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            className={inputCls}
+            placeholder="Newsletter subject..."
+          />
         </div>
 
-        {/* Compose Panel */}
-        <div className="flex-1 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">
-              Subject line
-            </label>
-            <input
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              className="w-full border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm"
-              placeholder="Newsletter subject..."
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">
-              Body
-            </label>
-            <textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              rows={16}
-              className="w-full border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm resize-none font-mono"
-              placeholder="Write your newsletter here, or use AI to draft from the prompt on the left..."
-            />
-          </div>
-
-          {result && (
-            <div className="rounded-sm bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
-              Sent to {result.sent} subscriber{result.sent !== 1 ? "s" : ""} successfully.
-            </div>
-          )}
-          {error && (
-            <div className="rounded-sm bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
-              {error}
-            </div>
-          )}
-
-          <button
-            onClick={handleSend}
-            disabled={sending || !subject.trim() || !body.trim()}
-            className="bg-ink text-cream text-sm px-5 py-2.5 rounded-sm hover:opacity-80 transition-opacity disabled:opacity-50"
-          >
-            {sending ? "Sending..." : "Send to all subscribers"}
-          </button>
+        <div>
+          <label className="block text-sm font-medium text-ink mb-1.5">Body</label>
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            className={`${inputCls} resize-y`}
+            style={{ minHeight: "520px" }}
+            placeholder="Write your newsletter here, or use AI to draft from the prompt above..."
+          />
         </div>
+
+        {result && (
+          <div className="rounded-sm bg-sage/10 border border-sage/30 px-4 py-3 text-sm text-ink">
+            Sent to {result.sent} subscriber{result.sent !== 1 ? "s" : ""} successfully.
+          </div>
+        )}
+        {error && (
+          <div className="rounded-sm bg-rose/10 border border-rose/30 px-4 py-3 text-sm text-rose">
+            {error}
+          </div>
+        )}
+
+        <button
+          onClick={handleSend}
+          disabled={sending || !subject.trim() || !body.trim()}
+          className="bg-ink text-cream text-sm px-5 py-2.5 rounded-sm hover:opacity-80 transition-opacity disabled:opacity-50"
+        >
+          {sending ? "Sending..." : "Send to all subscribers"}
+        </button>
       </div>
 
       {/* History */}
@@ -184,9 +220,7 @@ export function NewsletterComposer({ history }: Props) {
                 {history.map((item) => (
                   <tr key={item.id} className="border-b border-border last:border-0 hover:bg-ink/[0.02]">
                     <td className="px-4 py-2.5 text-ink">{item.subject}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">
-                      {item.recipientCount ?? "—"}
-                    </td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{item.recipientCount ?? "—"}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">
                       {item.sentAt
                         ? new Date(item.sentAt).toLocaleDateString("en-US", {
