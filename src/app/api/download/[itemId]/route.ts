@@ -28,24 +28,50 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ item
   }
 
   if (item.downloadCount >= item.downloadLimit) {
-    return new NextResponse("Download limit reached. Contact Lucy Evans to request additional downloads.", { status: 429 });
+    return new NextResponse(
+      "Download limit reached. Contact Lucy Evans to request additional downloads.",
+      { status: 429 }
+    );
   }
 
-  // Increment download count
+  const fileUrl = item.photo?.fullResFileUrl;
+  if (!fileUrl) {
+    return NextResponse.redirect(new URL(`/order/${item.orderId}/confirmation`, req.url));
+  }
+
+  // Increment before streaming so a failed fetch doesn't double-count on retry
   await prisma.orderItem.update({
     where: { id: itemId },
     data: { downloadCount: { increment: 1 } },
   });
 
-  // For bundles, redirect to a zip or the first photo — for now redirect to the order page
-  // so they see the individual photos in the bundle
-  const fileUrl = item.photo?.fullResFileUrl;
-  if (!fileUrl) {
-    return NextResponse.redirect(
-      new URL(`/order/${item.orderId}/confirmation`, req.url)
-    );
+  // Proxy the file through our server so the browser sees a same-origin response.
+  // This is what makes Content-Disposition: attachment work on mobile — a cross-origin
+  // redirect to Cloudinary loses the download intent and just opens in the browser.
+  const upstream = await fetch(fileUrl);
+  if (!upstream.ok || !upstream.body) {
+    return new NextResponse("File unavailable. Please try again.", { status: 502 });
   }
 
-  // Redirect to the Cloudinary full-res file
-  return NextResponse.redirect(fileUrl);
+  const contentType = upstream.headers.get("content-type") ?? "image/jpeg";
+  const ext = contentType.includes("png") ? "png" : contentType.includes("webp") ? "webp" : "jpg";
+  const safeName = (item.photo?.title ?? "photo")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  const filename = `${safeName}.${ext}`;
+
+  return new NextResponse(upstream.body, {
+    status: 200,
+    headers: {
+      "Content-Type": contentType,
+      "Content-Disposition": `attachment; filename="${filename}"`,
+      // Forward content-length if Cloudinary provides it (enables progress bars)
+      ...(upstream.headers.get("content-length")
+        ? { "Content-Length": upstream.headers.get("content-length")! }
+        : {}),
+      // Don't cache download responses — each hit counts against the limit
+      "Cache-Control": "no-store",
+    },
+  });
 }
