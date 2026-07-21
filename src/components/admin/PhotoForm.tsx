@@ -1,4 +1,19 @@
-import type { Photo } from "@/generated/prisma/client";
+type Photo = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  collectionTag: string | null;
+  filmStock: string | null;
+  camera: string | null;
+  previewImageUrl: string;
+  fullResFileUrl: string;
+  price: number;
+  featured: boolean;
+  isLimitedEdition: boolean;
+  editionSize: number | null;
+};
 
 type Props = {
   action: (formData: FormData) => Promise<void>;

@@ -1,6 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Photo } from "@/generated/prisma/client";
+type Photo = {
+  id: string;
+  slug: string;
+  title: string;
+  previewImageUrl: string;
+  filmStock: string | null;
+  isLimitedEdition: boolean;
+  editionSize: number | null;
+  featured: boolean;
+};
 
 // Frame counter pagination style: 01A, 02A … like a contact sheet
 function frameLabel(index: number) {

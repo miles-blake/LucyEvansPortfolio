@@ -1,7 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import type { PortfolioPiece } from "@/generated/prisma/client";
+type PortfolioPiece = {
+  id: string;
+  slug: string;
+  title: string;
+  brandName: string;
+  coverImageUrl: string | null;
+  videoUrls: string[];
+  role: string | null;
+  metrics: string | null;
+  tags: string[];
+};
 
 export default function CaseStudyCard({ piece }: { piece: PortfolioPiece }) {
   return (
