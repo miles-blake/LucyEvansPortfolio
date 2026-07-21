@@ -136,12 +136,12 @@ export async function POST(req: NextRequest) {
           subject: "Your Lucy Evans download is ready",
           html: `
             <h2>Thank you for your order!</h2>
-            <p>Your download links are below. Each link expires in 30 days and can be used up to 5 times.</p>
+            <p>Your download links are ready. You can re-download anytime — the links never expire.</p>
             <ul>
               ${downloadLinks.map(({ name, signedUrl }) => `<li><a href="${signedUrl}">${name}</a></li>`).join("")}
             </ul>
             <p>You can also access your order at: <a href="${process.env.NEXTAUTH_URL}/order/${orderId}/confirmation">View order</a></p>
-            <p style="color:#6B6560;font-size:12px;">Personal use only. See lucyevans.com/license for full terms.</p>
+            <p style="color:#6B6560;font-size:12px;">Personal use only — not for resale or commercial use.</p>
           `,
         });
       } catch (emailErr) {

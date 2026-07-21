@@ -22,7 +22,6 @@ interface OrderItemData {
   photoId?: string;
   bundleId?: string;
   price: number;
-  downloadLimit: number;
   label: string;
   previewImageUrl?: string;
 }
@@ -36,7 +35,6 @@ interface OrderInput {
     photoId?: string | null;
     bundleId?: string | null;
     price: number;
-    downloadLimit: number;
     photo?: { title: string; price: number; previewImageUrl: string } | null;
     bundle?: { title: string; price: number } | null;
   }>;
@@ -61,7 +59,6 @@ export function OrderEditForm({ order, photos, bundles }: Props) {
       photoId: item.photoId ?? undefined,
       bundleId: item.bundleId ?? undefined,
       price: item.price,
-      downloadLimit: item.downloadLimit,
       label: item.photo?.title ?? item.bundle?.title ?? "—",
       previewImageUrl: item.photo?.previewImageUrl,
     }))
@@ -80,14 +77,6 @@ export function OrderEditForm({ order, photos, bundles }: Props) {
     );
   }
 
-  function updateItemDownloadLimit(index: number, limit: string) {
-    setItems((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, downloadLimit: parseInt(limit || "0", 10) } : item
-      )
-    );
-  }
-
   function removeItem(index: number) {
     setItems((prev) => prev.filter((_, i) => i !== index));
   }
@@ -100,14 +89,14 @@ export function OrderEditForm({ order, photos, bundles }: Props) {
       if (!photo) return;
       setItems((prev) => [
         ...prev,
-        { photoId: photo.id, price: photo.price, downloadLimit: 5, label: photo.title },
+        { photoId: photo.id, price: photo.price, label: photo.title },
       ]);
     } else if (type === "bundle") {
       const bundle = bundles.find((b) => b.id === id);
       if (!bundle) return;
       setItems((prev) => [
         ...prev,
-        { bundleId: bundle.id, price: bundle.price, downloadLimit: 5, label: bundle.title },
+        { bundleId: bundle.id, price: bundle.price, label: bundle.title },
       ]);
     }
     setAddSelectValue("");
@@ -128,7 +117,6 @@ export function OrderEditForm({ order, photos, bundles }: Props) {
           photoId: item.photoId,
           bundleId: item.bundleId,
           price: item.price,
-          downloadLimit: item.downloadLimit,
         })),
       });
       if (result.error) {
@@ -205,29 +193,17 @@ export function OrderEditForm({ order, photos, bundles }: Props) {
               {/* Info + controls */}
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-ink truncate mb-1.5">{item.label}</p>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-1.5">
-                    <label className="font-meta text-[10px] text-muted-foreground">Price</label>
-                    <div className="relative w-20">
-                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>
-                      <input
-                        type="number"
-                        value={(item.price / 100).toFixed(2)}
-                        onChange={(e) => updateItemPrice(index, e.target.value)}
-                        min="0"
-                        step="0.01"
-                        className="w-full text-xs border border-border rounded-sm pl-5 pr-2 py-1 bg-cream text-ink focus:outline-none focus:ring-1 focus:ring-sky/40"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <label className="font-meta text-[10px] text-muted-foreground">DL limit</label>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <label className="font-meta text-[10px] text-muted-foreground">Price</label>
+                  <div className="relative w-20">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>
                     <input
                       type="number"
-                      value={item.downloadLimit}
-                      onChange={(e) => updateItemDownloadLimit(index, e.target.value)}
+                      value={(item.price / 100).toFixed(2)}
+                      onChange={(e) => updateItemPrice(index, e.target.value)}
                       min="0"
-                      className="w-14 text-xs border border-border rounded-sm px-2 py-1 bg-cream text-ink focus:outline-none focus:ring-1 focus:ring-sky/40"
+                      step="0.01"
+                      className="w-full text-xs border border-border rounded-sm pl-5 pr-2 py-1 bg-cream text-ink focus:outline-none focus:ring-1 focus:ring-sky/40"
                     />
                   </div>
                 </div>

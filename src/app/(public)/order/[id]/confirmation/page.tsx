@@ -74,7 +74,7 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
             : "Your download links are ready below."}
         </p>
         <p className="font-meta text-sm text-muted-foreground">
-          Links expire in 30 days · 5 downloads each
+          Download anytime — your links never expire.
         </p>
       </div>
 
@@ -83,7 +83,6 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
         <p className="font-meta text-xs text-muted-foreground uppercase tracking-widest mb-4">Your downloads</p>
         {order.items.map((item) => {
           const name = item.photo?.title ?? item.bundle?.title ?? "Download";
-          const remaining = item.downloadLimit - item.downloadCount;
           const filename = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + ".jpg";
           return (
             <div
@@ -92,9 +91,7 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
             >
               <div className="min-w-0">
                 <p className="font-display text-ink truncate">{name}</p>
-                <p className="font-meta text-muted-foreground text-xs mt-0.5">
-                  {remaining} download{remaining !== 1 ? "s" : ""} remaining
-                </p>
+                <p className="font-meta text-muted-foreground text-xs mt-0.5">Digital print · personal use license</p>
               </div>
               {item.signedDownloadUrl ? (
                 <DownloadButton href={item.signedDownloadUrl} filename={filename} />

@@ -237,6 +237,8 @@ The discount is shown clearly in the cart before checkout and applied automatica
 
 **Saved photos (wishlist):** Customers can bookmark photos by clicking the bookmark icon on any photo. Their saved photos appear on the Wishlist page. Prices always reflect the current price in your shop, even if the price changed after they saved it.
 
+**After purchase:** Customers get a confirmation email with their download links immediately after paying. The links never expire — they can re-download anytime if they lose the file.
+
 ---
 
 ## Discount Codes

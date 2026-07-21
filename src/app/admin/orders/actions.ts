@@ -12,43 +12,31 @@ export async function saveOrder(data: {
     id?: string;
     photoId?: string;
     bundleId?: string;
-    price: number; // cents
-    downloadLimit: number;
+    price: number;
   }>;
 }): Promise<{ error?: string }> {
   const session = await auth();
   if (!session) return { error: "Unauthorized" };
 
   const totalAmount = data.items.reduce((sum, i) => sum + i.price, 0);
-
   const incomingIds = data.items.filter((i) => i.id).map((i) => i.id as string);
 
   try {
     await prisma.$transaction(async (tx) => {
-      // 1. Update the order
       await tx.order.update({
         where: { id: data.orderId },
-        data: {
-          customerEmail: data.customerEmail,
-          status: data.status,
-          totalAmount,
-        },
+        data: { customerEmail: data.customerEmail, status: data.status, totalAmount },
       });
 
-      // 2. Delete removed items
       await tx.orderItem.deleteMany({
-        where: {
-          orderId: data.orderId,
-          id: { notIn: incomingIds },
-        },
+        where: { orderId: data.orderId, id: { notIn: incomingIds } },
       });
 
-      // 3. Update existing items / create new ones
       for (const item of data.items) {
         if (item.id) {
           await tx.orderItem.update({
             where: { id: item.id },
-            data: { price: item.price, downloadLimit: item.downloadLimit },
+            data: { price: item.price },
           });
         } else {
           await tx.orderItem.create({
@@ -57,7 +45,6 @@ export async function saveOrder(data: {
               photoId: item.photoId ?? null,
               bundleId: item.bundleId ?? null,
               price: item.price,
-              downloadLimit: item.downloadLimit,
             },
           });
         }

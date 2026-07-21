@@ -93,8 +93,6 @@ export async function POST(req: NextRequest) {
           create: verifiedLineItems.map((i) => ({
             ...(i.type === "photo" ? { photoId: i.id } : { bundleId: i.id }),
             price: i.price,
-            downloadLimit: 5,
-            expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), // 30 days
           })),
         },
       },
