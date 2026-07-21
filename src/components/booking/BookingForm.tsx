@@ -445,36 +445,42 @@ export default function BookingForm() {
                 />
               </div>
 
-              {phone && phone.length > 4 && (
-                <div className="sm:col-span-2">
+              <div className="sm:col-span-2">
                   <label className="block text-sm text-muted-foreground mb-2">Preferred contact method</label>
                   <div className="flex gap-3">
-                    {(["email", "sms"] as const).map((val) => (
-                      <label
-                        key={val}
-                        className={`flex items-center gap-2 px-4 py-2 border rounded-sm cursor-pointer text-sm transition-colors capitalize ${
-                          watch("communicationPreference") === val
-                            ? "border-ink bg-ink/5 text-ink"
-                            : "border-border text-muted-foreground hover:border-sky/40"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          value={val}
-                          {...register("communicationPreference")}
-                          className="sr-only"
-                        />
-                        {val === "email" ? "Email" : "Text message"}
-                      </label>
-                    ))}
+                    {(["email", "sms"] as const).map((val) => {
+                      const needsPhone = val === "sms" && (!phone || phone.length <= 4);
+                      return (
+                        <label
+                          key={val}
+                          className={`flex items-center gap-2 px-4 py-2 border rounded-sm text-sm transition-colors capitalize ${
+                            needsPhone
+                              ? "border-border text-muted-foreground/40 cursor-not-allowed"
+                              : watch("communicationPreference") === val
+                              ? "border-ink bg-ink/5 text-ink cursor-pointer"
+                              : "border-border text-muted-foreground hover:border-sky/40 cursor-pointer"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            value={val}
+                            disabled={needsPhone}
+                            {...register("communicationPreference")}
+                            className="sr-only"
+                          />
+                          {val === "email" ? "Email" : "Text message"}
+                        </label>
+                      );
+                    })}
                   </div>
                   <p className="font-meta text-xs text-muted-foreground mt-1.5">
                     {watch("communicationPreference") === "sms"
                       ? "You'll receive confirmations and reminders by text."
+                      : !phone || phone.length <= 4
+                      ? "Add a phone number above to enable text message notifications."
                       : "You'll receive confirmations and reminders by email."}
                   </p>
                 </div>
-              )}
 
             </div>
           </fieldset>
