@@ -24,6 +24,59 @@ interface CreateResult {
   error?: string;
 }
 
+const CHUNK_SIZE = 8 * 1024 * 1024; // 8 MB — stays under Cloudinary's per-chunk limit
+
+async function uploadToCloudinary(
+  file: File,
+  opts: { cloudName: string; apiKey: string; signature: string; timestamp: number; folder: string }
+) {
+  const { cloudName, apiKey, signature, timestamp, folder } = opts;
+  const url = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
+
+  if (file.size <= CHUNK_SIZE) {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("signature", signature);
+    fd.append("timestamp", String(timestamp));
+    fd.append("api_key", apiKey);
+    fd.append("folder", folder);
+    const res = await fetch(url, { method: "POST", body: fd });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message ?? JSON.stringify(data.error));
+    return data;
+  }
+
+  // Chunked upload for files larger than 8 MB (e.g. NEF RAW files)
+  const uniqueId = `chunk-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  let start = 0;
+  let result;
+
+  while (start < file.size) {
+    const end = Math.min(start + CHUNK_SIZE, file.size);
+    const chunk = file.slice(start, end);
+    const fd = new FormData();
+    fd.append("file", chunk, file.name);
+    fd.append("signature", signature);
+    fd.append("timestamp", String(timestamp));
+    fd.append("api_key", apiKey);
+    fd.append("folder", folder);
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "X-Unique-Upload-Id": uniqueId,
+        "Content-Range": `bytes ${start}-${end - 1}/${file.size}`,
+      },
+      body: fd,
+    });
+    result = await res.json();
+    if (result.error) throw new Error(result.error.message ?? JSON.stringify(result.error));
+    start = end;
+  }
+
+  return result;
+}
+
 export function BulkPhotoUpload() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -62,27 +115,14 @@ export function BulkPhotoUpload() {
     setUploading(true);
     const pending = files.filter((f) => f.status === "pending");
 
-    // Get a signed upload credential from the server (avoids sending large files through Vercel)
+    // Signed credential from server — file goes directly to Cloudinary, bypassing Vercel limits
     const sigRes = await fetch("/api/admin/upload/signature");
     const { signature, timestamp, cloudName, apiKey, folder } = await sigRes.json();
 
     for (const item of pending) {
       setFiles((prev) => prev.map((f) => f.id === item.id ? { ...f, status: "uploading" } : f));
       try {
-        const fd = new FormData();
-        fd.append("file", item.file);
-        fd.append("signature", signature);
-        fd.append("timestamp", String(timestamp));
-        fd.append("api_key", apiKey);
-        fd.append("folder", folder);
-
-        // Use auto/upload so Cloudinary accepts both standard images and RAW formats (NEF, CR2, etc.)
-        const res = await fetch(
-          `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
-          { method: "POST", body: fd }
-        );
-        const data = await res.json();
-        if (data.error) throw new Error(data.error.message ?? JSON.stringify(data.error));
+        const data = await uploadToCloudinary(item.file, { cloudName, apiKey, signature, timestamp, folder });
         setFiles((prev) =>
           prev.map((f) =>
             f.id === item.id
