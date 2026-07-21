@@ -92,8 +92,10 @@ model Booking {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  portalToken ClientPortalToken?
-  messages    BookingMessage[]
+  portalToken      ClientPortalToken?
+  messages         BookingMessage[]
+  deliveredAssets  DeliveredAsset[]
+  contract         BookingContract?
 }
 
 enum BookingStatus {
@@ -248,6 +250,30 @@ model ClientPortalToken {
   booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+// ─── Delivery Gallery ────────────────────────────────────────────────
+
+model DeliveredAsset {
+  id        String   @id @default(cuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  name      String
+  url       String
+  publicId  String
+  createdAt DateTime @default(now())
+}
+
+// ─── Contracts ───────────────────────────────────────────────────────
+
+model BookingContract {
+  id         String    @id @default(cuid())
+  bookingId  String    @unique
+  booking    Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  pdfUrl     String
+  signedAt   DateTime?
+  signedName String?
+  createdAt  DateTime  @default(now())
 }
 
 // ─── Availability ────────────────────────────────────────────────────

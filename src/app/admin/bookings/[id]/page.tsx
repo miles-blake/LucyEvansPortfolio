@@ -2,7 +2,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { updateBookingStatus, saveBookingNotes, createInvoiceForBooking, sendClientPortalLink, sendBookingMessage } from "../actions";
+import { deleteDeliveredAsset, uploadContract, deleteContract } from "../delivery-actions";
 import { MessageThread } from "@/components/MessageThread";
+import { DeliveryGalleryUpload } from "@/components/admin/DeliveryGalleryUpload";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -31,13 +33,15 @@ function formatPrice(cents: number) {
 
 export default async function BookingDetailPage({ params }: Props) {
   const { id } = await params;
-  const [booking, existingInvoice, messages] = await Promise.all([
+  const [booking, existingInvoice, messages, assets, contract] = await Promise.all([
     prisma.booking.findUnique({
       where: { id },
       include: { package: true, portalToken: { select: { token: true, expiresAt: true } } },
     }),
     prisma.invoice.findFirst({ where: { bookingId: id }, select: { id: true, number: true } }),
     prisma.bookingMessage.findMany({ where: { bookingId: id }, orderBy: { createdAt: "asc" } }),
+    prisma.deliveredAsset.findMany({ where: { bookingId: id }, orderBy: { createdAt: "asc" } }),
+    prisma.bookingContract.findUnique({ where: { bookingId: id } }),
   ]);
 
   if (!booking) notFound();
@@ -249,6 +253,75 @@ export default async function BookingDetailPage({ params }: Props) {
             </form>
           )}
         </section>
+        {/* Delivery gallery */}
+        <section className="border border-border rounded-sm p-6">
+          <h2 className="font-display text-lg text-ink mb-4">Delivery gallery</h2>
+          <p className="font-meta text-xs text-muted-foreground mb-4">
+            Upload edited photos here — the client will be able to download them from their portal.
+          </p>
+          {assets.length > 0 && (
+            <ul className="space-y-2 mb-4">
+              {assets.map((a) => (
+                <li key={a.id} className="flex items-center justify-between gap-3 text-sm">
+                  <a href={a.url} target="_blank" rel="noopener noreferrer"
+                    className="text-sky hover:opacity-70 truncate">{a.name}</a>
+                  <form action={deleteDeliveredAsset}>
+                    <input type="hidden" name="id" value={a.id} />
+                    <input type="hidden" name="publicId" value={a.publicId} />
+                    <input type="hidden" name="bookingId" value={booking.id} />
+                    <button type="submit" className="font-meta text-xs text-muted-foreground hover:text-rose-500 transition-colors whitespace-nowrap">
+                      Remove
+                    </button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          )}
+          <DeliveryGalleryUpload bookingId={booking.id} />
+        </section>
+
+        {/* Contract */}
+        <section className="border border-border rounded-sm p-6">
+          <h2 className="font-display text-lg text-ink mb-4">Contract</h2>
+          {contract ? (
+            <div className="space-y-3">
+              <a href={contract.pdfUrl} target="_blank" rel="noopener noreferrer"
+                className="font-meta text-xs text-sky hover:opacity-70">
+                View contract PDF →
+              </a>
+              {contract.signedAt ? (
+                <p className="font-meta text-xs text-sage">
+                  Signed by {contract.signedName} on{" "}
+                  {contract.signedAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                </p>
+              ) : (
+                <p className="font-meta text-xs text-muted-foreground">Not yet signed by client.</p>
+              )}
+              <form action={deleteContract}>
+                <input type="hidden" name="bookingId" value={booking.id} />
+                <button type="submit" className="font-meta text-xs text-muted-foreground hover:text-rose-500 transition-colors">
+                  Remove contract
+                </button>
+              </form>
+            </div>
+          ) : (
+            <form action={uploadContract} className="space-y-3">
+              <input type="hidden" name="bookingId" value={booking.id} />
+              <div>
+                <label className="font-meta text-xs text-muted-foreground block mb-1">Contract PDF URL</label>
+                <input name="pdfUrl" type="url" required placeholder="https://…"
+                  className="w-full text-sm border border-border rounded-sm px-3 py-2 bg-cream text-ink focus:outline-none focus:ring-1 focus:ring-ink/30" />
+                <p className="font-meta text-[11px] text-muted-foreground mt-1">
+                  Paste a link to the contract — Google Drive, Dropbox, or any direct PDF URL.
+                </p>
+              </div>
+              <button type="submit" className="text-xs bg-ink text-cream px-3 py-1.5 rounded-sm hover:opacity-80 transition-opacity font-meta">
+                Attach contract
+              </button>
+            </form>
+          )}
+        </section>
+
         {/* Messages */}
         <section className="border border-border rounded-sm p-6">
           <h2 className="font-display text-lg text-ink mb-4">Messages</h2>

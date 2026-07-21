@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PayButton } from "@/components/PayButton";
 import { MessageThread } from "@/components/MessageThread";
+import { ContractSigner } from "@/components/ContractSigner";
 import { sendPortalMessage } from "@/app/account/messages/actions";
 import type { Metadata } from "next";
 
@@ -56,12 +57,11 @@ export default async function ClientPortalPage({ params }: Props) {
 
   const booking = portalToken.booking;
 
-  const [invoice, messages] = await Promise.all([
+  const [invoice, messages, assets, contract] = await Promise.all([
     prisma.invoice.findFirst({ where: { bookingId: booking.id } }),
-    prisma.bookingMessage.findMany({
-      where: { bookingId: booking.id },
-      orderBy: { createdAt: "asc" },
-    }),
+    prisma.bookingMessage.findMany({ where: { bookingId: booking.id }, orderBy: { createdAt: "asc" } }),
+    prisma.deliveredAsset.findMany({ where: { bookingId: booking.id }, orderBy: { createdAt: "asc" } }),
+    prisma.bookingContract.findUnique({ where: { bookingId: booking.id } }),
   ]);
 
   type LineItem = { description: string; amount: number };
@@ -169,6 +169,46 @@ export default async function ClientPortalPage({ params }: Props) {
                 />
               </div>
             )}
+          </section>
+        )}
+
+        {/* Contract */}
+        {contract && (
+          <section className="border border-border rounded-sm p-6">
+            <h2 className="font-display text-lg text-ink mb-4">Your contract</h2>
+            {contract.signedAt ? (
+              <p className="font-meta text-xs text-sage">
+                Signed on{" "}
+                {contract.signedAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+              </p>
+            ) : (
+              <ContractSigner contractId={contract.id} pdfUrl={contract.pdfUrl} portalToken={token} />
+            )}
+          </section>
+        )}
+
+        {/* Delivery gallery */}
+        {assets.length > 0 && (
+          <section className="border border-border rounded-sm p-6">
+            <h2 className="font-display text-lg text-ink mb-2">Your photos</h2>
+            <p className="font-meta text-xs text-muted-foreground mb-4">
+              Click any photo to open and download it.
+            </p>
+            <ul className="space-y-2">
+              {assets.map((a) => (
+                <li key={a.id}>
+                  <a
+                    href={a.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-sky hover:opacity-70 transition-opacity"
+                  >
+                    <span>↓</span>
+                    <span>{a.name}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
           </section>
         )}
 
