@@ -24,6 +24,7 @@ const schema = z.object({
   customerName: z.string().min(2, "Name is required"),
   customerEmail: z.email("Valid email required"),
   customerPhone: z.string().optional(),
+  communicationPreference: z.enum(["email", "sms"]),
   message: z.string().optional(),
   addOns: z.object({
     extraRoll: z.boolean(),
@@ -77,6 +78,7 @@ export default function BookingForm() {
     resolver: zodResolver(schema),
     defaultValues: {
       packageId: preselectedPackageId,
+      communicationPreference: "email",
       addOns: { extraRoll: false, rushDelivery: false, secondShooter: false },
     },
   });
@@ -85,6 +87,7 @@ export default function BookingForm() {
   const selectedPackage = packages.find((p) => p.id === selectedPackageId) ?? null;
   const selectedAddOns = watch("addOns");
   const selectedDate = watch("eventDate");
+  const phone = watch("customerPhone");
 
   const totalPrice = (() => {
     if (!selectedPackage) return 0;
@@ -335,6 +338,37 @@ export default function BookingForm() {
                   className="w-full border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm"
                 />
               </div>
+
+              {phone && phone.length > 4 && (
+                <div className="sm:col-span-2">
+                  <label className="block text-sm text-muted-foreground mb-2">Preferred contact method</label>
+                  <div className="flex gap-3">
+                    {(["email", "sms"] as const).map((val) => (
+                      <label
+                        key={val}
+                        className={`flex items-center gap-2 px-4 py-2 border rounded-sm cursor-pointer text-sm transition-colors capitalize ${
+                          watch("communicationPreference") === val
+                            ? "border-ink bg-ink/5 text-ink"
+                            : "border-border text-muted-foreground hover:border-sky/40"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          value={val}
+                          {...register("communicationPreference")}
+                          className="sr-only"
+                        />
+                        {val === "email" ? "Email" : "Text message"}
+                      </label>
+                    ))}
+                  </div>
+                  <p className="font-meta text-xs text-muted-foreground mt-1.5">
+                    {watch("communicationPreference") === "sms"
+                      ? "You'll receive confirmations and reminders by text."
+                      : "You'll receive confirmations and reminders by email."}
+                  </p>
+                </div>
+              )}
 
               <div className="sm:col-span-2">
                 <label className="block text-sm text-muted-foreground mb-1.5">

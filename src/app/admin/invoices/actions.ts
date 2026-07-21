@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { nextInvoiceNumber } from "@/lib/invoice-number";
 import { revalidatePath } from "next/cache";
 import { resend } from "@/lib/resend";
+import { logAdminAction } from "@/lib/audit";
 
 export async function createInvoiceFromBooking(bookingId: string) {
   const session = await auth();
@@ -84,7 +85,9 @@ export async function deleteInvoice(formData: FormData) {
   if (!session) return;
   const id = formData.get("id") as string;
   if (!id) return;
+  const inv = await prisma.invoice.findUnique({ where: { id }, select: { number: true, customerEmail: true } });
   await prisma.invoice.delete({ where: { id } });
+  await logAdminAction("invoice.deleted", id, { number: inv?.number, customerEmail: inv?.customerEmail });
   revalidatePath("/admin/invoices");
 }
 
@@ -166,7 +169,9 @@ export async function markInvoicePaid(formData: FormData) {
   if (!session) return;
   const id = formData.get("id") as string;
   if (!id) return;
+  const inv = await prisma.invoice.findUnique({ where: { id }, select: { number: true, amountDue: true } });
   await prisma.invoice.update({ where: { id }, data: { status: "PAID" } });
+  await logAdminAction("invoice.marked_paid", id, { number: inv?.number, amountDue: inv?.amountDue });
   revalidatePath("/admin/invoices");
   revalidatePath(`/admin/invoices/${id}`);
 }

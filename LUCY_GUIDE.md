@@ -90,6 +90,8 @@ Booking requests that come in when someone fills out your booking form on the si
 - **Send portal link** — emails the client a private link to their personal booking page; you can resend it anytime to reset the 30-day clock
 - **Delete booking** — at the bottom of any booking detail page there's a delete button. It asks you to confirm before deleting. This permanently removes the booking, all its messages, delivered photos, contract, and portal token.
 
+**Communication preference:** When clients fill out the booking form, they can choose whether they prefer to be contacted by **email** or **text message** (SMS). Their preference is shown in the Customer section of their booking detail page. The site automatically uses their preferred channel when sending booking confirmations and reminders. If they prefer text, you'll also see a **Send text →** button on their booking page. (Requires Twilio setup — see setup notes.)
+
 **Messaging:** Every booking has a message thread at the bottom. You can send messages directly from the booking detail page and the client can reply from their portal — all messages appear in the same thread.
 
 **Delivery gallery:** Once you've finished a shoot, you can upload the final photos directly on the booking detail page. The client will then see a download section in their portal where they can download each photo. You can upload as many files as you like — they go straight to Cloudinary.
@@ -285,6 +287,8 @@ A bird's-eye view of how the site is performing.
 
 Changes take effect on all watermarked images immediately after saving.
 
+**Activity log:** Also under Settings, click **View activity log →** to see a running record of every admin action — booking status changes, deleted bookings, invoices marked paid, order edits. Timestamped and labelled with who did it.
+
 ---
 
 ## Client Portal
@@ -315,7 +319,10 @@ Clients can create their own accounts on the site and log in to see everything i
 **How clients sign up:**
 1. They click **Sign in** in the top right corner of any page
 2. They click **Create one** to make a new account with their name, email, and a password
-3. They land on their **My Account** page automatically
+3. They'll receive a **verification email** — they need to click the link in it before their bookings and invoices appear
+4. Once verified, they land on their **My Account** page and can see everything
+
+**Password requirements:** 8 or more characters, at least one uppercase letter, and at least one number. The signup form shows a live checklist as they type so they know exactly what's missing.
 
 **What clients see after logging in (My Account page):**
 - All their bookings on file, with the status of each

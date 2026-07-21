@@ -84,12 +84,16 @@ model Booking {
   packageId       String
   package         ServicePackage @relation(fields: [packageId], references: [id])
   addOns          Json?         // selected add-ons and their prices
-  message         String?
+  message         String?       // initial message from customer
+  adminNotes      String?       // internal notes, admin-only
+  communicationPreference String @default("email") // "email" | "sms"
   status          BookingStatus @default(INQUIRY)
   depositAmount   Int           // in cents
   depositPaid     Boolean       @default(false)
   totalPrice      Int           // in cents
   stripeSessionId String?
+  reminderSent7Day Boolean      @default(false)
+  reminderSent2Day Boolean      @default(false)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -171,11 +175,12 @@ model PortfolioPiece {
 // ─── Newsletter ───────────────────────────────────────────────────────
 
 model Subscriber {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  subscribedAt DateTime @default(now())
-  source      String?  // "footer", "homepage", etc.
-  confirmed   Boolean  @default(false)
+  id               String   @id @default(cuid())
+  email            String   @unique
+  subscribedAt     DateTime @default(now())
+  source           String?  // "footer", "homepage", etc.
+  confirmed        Boolean  @default(true)
+  unsubscribeToken String?  @unique @default(cuid())
 }
 
 // ─── Inquiries ────────────────────────────────────────────────────────
@@ -291,22 +296,25 @@ model BlackoutDate {
 // ─── Messaging ────────────────────────────────────────────────────────
 
 model BookingMessage {
-  id         String   @id @default(cuid())
-  bookingId  String
-  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  senderRole String   // "admin" | "client"
-  body       String
-  createdAt  DateTime @default(now())
+  id           String   @id @default(cuid())
+  bookingId    String
+  booking      Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  senderRole   String   // "admin" | "client"
+  body         String
+  readByAdmin  Boolean  @default(false)
+  createdAt    DateTime @default(now())
 }
 
 // ─── Client Accounts ─────────────────────────────────────────────────
 
 model Client {
-  id             String   @id @default(cuid())
-  name           String
-  email          String   @unique
-  hashedPassword String
-  createdAt      DateTime @default(now())
+  id                String    @id @default(cuid())
+  name              String
+  email             String    @unique
+  hashedPassword    String
+  emailVerified     Boolean   @default(false)
+  emailVerifyToken  String?   @unique @default(cuid())
+  createdAt         DateTime  @default(now())
 }
 
 // ─── Discount Codes ──────────────────────────────────────────────────
@@ -331,6 +339,17 @@ model SiteSettings {
   watermarkOpacity  Int    @default(60)
   watermarkPosition String @default("south_east")
   watermarkFontSize Int    @default(24)
+}
+
+// ─── Audit Log ────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  action     String   // e.g. "booking.status_changed", "booking.deleted", "invoice.marked_paid"
+  targetId   String?  // ID of the affected record
+  meta       Json?    // extra context (old status → new status, etc.)
+  createdAt  DateTime @default(now())
 }
 
 // ─── Admin ────────────────────────────────────────────────────────────

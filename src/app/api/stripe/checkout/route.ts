@@ -3,6 +3,8 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 
+const PORTAL_TOKEN_COOKIE = "lep_portal_token";
+
 const BASE_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
 export async function POST(req: NextRequest) {
@@ -80,7 +82,8 @@ export async function POST(req: NextRequest) {
         ? `${BASE_URL}/portal/${portalToken}`
         : `${BASE_URL}/account`;
 
-      const successUrl = `${BASE_URL}/stripe/success?type=deposit&portalToken=${portalToken ?? ""}&bookingId=${bookingId}&session_id={CHECKOUT_SESSION_ID}`;
+      // Portal token is stored in a cookie, not the URL, to keep it out of logs/history
+      const successUrl = `${BASE_URL}/stripe/success?type=deposit&bookingId=${bookingId}&session_id={CHECKOUT_SESSION_ID}`;
 
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
@@ -102,7 +105,17 @@ export async function POST(req: NextRequest) {
         cancel_url: cancelUrl,
       });
 
-      return NextResponse.json({ url: session.url });
+      const res = NextResponse.json({ url: session.url });
+      if (portalToken) {
+        res.cookies.set(PORTAL_TOKEN_COOKIE, portalToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 30 * 60, // 30 minutes — enough for Stripe checkout
+        });
+      }
+      return res;
     }
 
     if (type === "invoice") {
@@ -118,7 +131,8 @@ export async function POST(req: NextRequest) {
         ? `${BASE_URL}/portal/${portalToken}`
         : `${BASE_URL}/account`;
 
-      const successUrl = `${BASE_URL}/stripe/success?type=invoice&portalToken=${portalToken ?? ""}&invoiceId=${invoiceId}&session_id={CHECKOUT_SESSION_ID}`;
+      // Portal token in cookie, not URL
+      const successUrl = `${BASE_URL}/stripe/success?type=invoice&invoiceId=${invoiceId}&session_id={CHECKOUT_SESSION_ID}`;
 
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
@@ -139,7 +153,17 @@ export async function POST(req: NextRequest) {
         cancel_url: cancelUrl,
       });
 
-      return NextResponse.json({ url: session.url });
+      const res = NextResponse.json({ url: session.url });
+      if (portalToken) {
+        res.cookies.set(PORTAL_TOKEN_COOKIE, portalToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 30 * 60,
+        });
+      }
+      return res;
     }
 
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });

@@ -1,12 +1,15 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import type { Metadata } from "next";
+import { ClearPortalCookie } from "./ClearPortalCookie";
 
 export const metadata: Metadata = { title: "Payment confirmed — Lucy Evans Photography" };
+
+const PORTAL_TOKEN_COOKIE = "lep_portal_token";
 
 interface Props {
   searchParams: Promise<{
     type?: string;
-    portalToken?: string;
     bookingId?: string;
     invoiceId?: string;
     session_id?: string;
@@ -14,7 +17,11 @@ interface Props {
 }
 
 export default async function StripeSuccessPage({ searchParams }: Props) {
-  const { type, portalToken, bookingId, invoiceId } = await searchParams;
+  const { type, bookingId, invoiceId } = await searchParams;
+
+  // Read portal token from HttpOnly cookie (not URL) to keep it out of logs
+  const cookieStore = await cookies();
+  const portalToken = cookieStore.get(PORTAL_TOKEN_COOKIE)?.value ?? null;
 
   const backHref = portalToken
     ? `/portal/${portalToken}`
@@ -35,6 +42,7 @@ export default async function StripeSuccessPage({ searchParams }: Props) {
 
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center px-4">
+      <ClearPortalCookie />
       <div className="max-w-md w-full text-center space-y-6">
         <div className="border border-border rounded-sm p-10 space-y-4">
           <h1 className="font-display text-3xl text-ink">Payment received — thank you!</h1>
