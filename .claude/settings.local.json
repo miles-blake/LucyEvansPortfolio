@@ -15,7 +15,15 @@
       "Bash(npx shadcn@latest init --defaults)",
       "Bash(npx prisma *)",
       "Bash(npx tsx *)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(git config *)",
+      "Bash(gh pr create --title 'Phase 1: Project scaffold, design tokens, Prisma schema + seed' --body ' *)",
+      "Bash(brew install *)",
+      "Bash(gh repo *)",
+      "Bash(npx shadcn@latest add input badge separator)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(kill %1)"
     ]
   }
 }
