@@ -10,6 +10,18 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { getQuestionsForEventType } from "@/lib/booking-questionnaire";
 
+function formatQuestionnaireValue(key: string, value: string): string {
+  if (key === "ceremony_time" && /^\d{2}:\d{2}$/.test(value)) {
+    const [h, m] = value.split(":").map(Number);
+    const ampm = h >= 12 ? "PM" : "AM";
+    const hour = h % 12 || 12;
+    return `${hour}:${String(m).padStart(2, "0")} ${ampm}`;
+  }
+  if (key === "hours_coverage") return `${value} hour${value === "1" ? "" : "s"}`;
+  if (key === "guest_count") return `${value} guests`;
+  return value;
+}
+
 export const dynamic = "force-dynamic";
 
 interface Props {
@@ -199,7 +211,7 @@ export default async function BookingDetailPage({ params }: Props) {
                 {answered.map((q) => (
                   <div key={q.key}>
                     <p className="font-meta text-xs text-muted-foreground mb-1">{q.label}</p>
-                    <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap">{raw[q.key]}</p>
+                    <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap">{formatQuestionnaireValue(q.key, raw[q.key])}</p>
                   </div>
                 ))}
                 {/* Any answers for keys not in the current question set (future-proofing) */}

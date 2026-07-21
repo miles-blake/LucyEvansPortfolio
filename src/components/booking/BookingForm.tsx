@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getQuestionsForEventType } from "@/lib/booking-questionnaire";
+import { AddressInput } from "./AddressInput";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
@@ -13,6 +14,7 @@ type ServicePackage = {
   description: string | null;
   rollsIncluded: number;
   photosIncluded: number;
+  hoursIncluded: number | null;
   basePrice: number;
   eventTypes: string[];
   addOnPricing: Record<string, number> | null;
@@ -123,6 +125,16 @@ export default function BookingForm() {
       setValue("eventType", selectedPackage.eventTypes[0]);
     }
   }, [selectedPackageId, selectedPackage, setValue]);
+
+  // Pre-populate hours_coverage from package when package changes
+  useEffect(() => {
+    if (selectedPackage?.hoursIncluded) {
+      setAnswers((prev) => ({
+        ...prev,
+        hours_coverage: String(selectedPackage.hoursIncluded),
+      }));
+    }
+  }, [selectedPackageId, selectedPackage]);
 
   useEffect(() => {
     Promise.all([
@@ -290,39 +302,73 @@ export default function BookingForm() {
               <legend className="font-display text-lg text-ink mb-1">4. About your shoot</legend>
               <p className="text-sm text-muted-foreground mb-5">All fields are optional — answer what you can and leave the rest blank.</p>
               <div className="space-y-5">
-                {questions.map((q) => (
-                  <div key={q.key}>
-                    <label className="block text-sm text-muted-foreground mb-1.5">{q.label}</label>
-                    {q.type === "select" ? (
-                      <select
-                        value={answers[q.key] ?? ""}
-                        onChange={(e) => setAnswers((prev) => ({ ...prev, [q.key]: e.target.value }))}
-                        className="w-full sm:w-auto border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm"
-                      >
-                        <option value="">Select…</option>
-                        {q.options?.map((opt) => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    ) : q.type === "textarea" ? (
-                      <textarea
-                        value={answers[q.key] ?? ""}
-                        onChange={(e) => setAnswers((prev) => ({ ...prev, [q.key]: e.target.value }))}
-                        placeholder={q.placeholder}
-                        rows={3}
-                        className="w-full border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm resize-none"
-                      />
-                    ) : (
-                      <input
-                        type="text"
-                        value={answers[q.key] ?? ""}
-                        onChange={(e) => setAnswers((prev) => ({ ...prev, [q.key]: e.target.value }))}
-                        placeholder={q.placeholder}
-                        className="w-full border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm"
-                      />
-                    )}
-                  </div>
-                ))}
+                {questions.map((q) => {
+                  const inputCls = "w-full border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm";
+                  const val = answers[q.key] ?? "";
+                  const set = (v: string) => setAnswers((prev) => ({ ...prev, [q.key]: v }));
+                  return (
+                    <div key={q.key}>
+                      <label className="block text-sm text-muted-foreground mb-1.5">
+                        {q.label}
+                        {q.key === "hours_coverage" && selectedPackage?.hoursIncluded && (
+                          <span className="ml-2 font-meta text-xs text-sky">
+                            ({selectedPackage.hoursIncluded}h included with your package)
+                          </span>
+                        )}
+                      </label>
+                      {q.type === "address" ? (
+                        <AddressInput value={val} onChange={set} placeholder={q.placeholder} className={inputCls} />
+                      ) : q.type === "time" ? (
+                        <input
+                          type="time"
+                          value={val}
+                          onChange={(e) => set(e.target.value)}
+                          className="border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm"
+                        />
+                      ) : q.type === "number" ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            value={val}
+                            onChange={(e) => set(e.target.value)}
+                            min={q.min}
+                            max={q.max}
+                            className="w-28 border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm"
+                          />
+                          {q.key === "hours_coverage" && <span className="text-sm text-muted-foreground">hours</span>}
+                          {q.key === "guest_count" && <span className="text-sm text-muted-foreground">guests</span>}
+                        </div>
+                      ) : q.type === "select" ? (
+                        <select
+                          value={val}
+                          onChange={(e) => set(e.target.value)}
+                          className="w-full sm:w-auto border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm"
+                        >
+                          <option value="">Select…</option>
+                          {q.options?.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      ) : q.type === "textarea" ? (
+                        <textarea
+                          value={val}
+                          onChange={(e) => set(e.target.value)}
+                          placeholder={q.placeholder}
+                          rows={3}
+                          className={`${inputCls} resize-none`}
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          value={val}
+                          onChange={(e) => set(e.target.value)}
+                          placeholder={q.placeholder}
+                          className={inputCls}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </fieldset>
           )}
