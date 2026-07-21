@@ -12,7 +12,13 @@ function formatDate(d: Date) {
 export default async function AdminOrdersPage() {
   const orders = await prisma.order.findMany({
     orderBy: { createdAt: "desc" },
-    include: {
+    select: {
+      id: true,
+      customerEmail: true,
+      customerName: true,
+      totalAmount: true,
+      status: true,
+      createdAt: true,
       items: {
         include: {
           photo: { select: { title: true } },
@@ -44,11 +50,9 @@ export default async function AdminOrdersPage() {
             {orders.map((o) => (
               <tr key={o.id} className="hover:bg-ink/5">
                 <td className="px-3 md:px-4 py-3">
-                  <Link
-                    href={`/admin/orders/${o.id}`}
-                    className="text-ink hover:opacity-70 transition-opacity truncate block max-w-[140px] sm:max-w-none"
-                  >
-                    {o.customerEmail || "—"}
+                  <Link href={`/admin/orders/${o.id}`} className="hover:opacity-70 transition-opacity">
+                    <p className="text-ink truncate max-w-[140px] sm:max-w-none">{o.customerName || o.customerEmail || "—"}</p>
+                    {o.customerName && <p className="font-meta text-xs text-muted-foreground hidden sm:block">{o.customerEmail}</p>}
                   </Link>
                 </td>
                 <td className="px-3 md:px-4 py-3 text-muted-foreground hidden sm:table-cell">

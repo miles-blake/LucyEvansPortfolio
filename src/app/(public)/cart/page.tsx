@@ -17,6 +17,9 @@ export default function CartPage() {
   const [discount, setDiscount] = useState<{ type: string; amount: number } | null>(null);
   const [codeError, setCodeError] = useState<string | null>(null);
   const [codeLoading, setCodeLoading] = useState(false);
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
 
   const photoCount = items.filter((i) => i.type === "photo").length;
   const bundlePct = getBundleDiscountPct(photoCount);
@@ -59,13 +62,24 @@ export default function CartPage() {
   }
 
   async function handleCheckout() {
+    if (!customerName.trim()) { setError("Please enter your name."); return; }
+    if (!customerEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+      setError("Please enter a valid email address."); return;
+    }
     setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, discountCode: appliedCode ?? undefined, bundlePct: bundlePct > 0 ? bundlePct : undefined }),
+        body: JSON.stringify({
+          items,
+          discountCode: appliedCode ?? undefined,
+          bundlePct: bundlePct > 0 ? bundlePct : undefined,
+          customerName: customerName.trim(),
+          customerEmail: customerEmail.trim(),
+          customerPhone: customerPhone.trim() || undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Checkout failed.");
@@ -218,6 +232,40 @@ export default function CartPage() {
               <span className="font-display text-lg text-ink">Total</span>
               <span className="font-display text-lg text-ink">${(finalTotal() / 100).toFixed(2)}</span>
             </div>
+            {/* Customer details */}
+            <div className="border-t border-border pt-4 space-y-2">
+              <p className="font-meta text-xs text-muted-foreground uppercase tracking-widest">Your details</p>
+              <input
+                type="text"
+                placeholder="Full name *"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                autoComplete="name"
+                required
+                className="w-full border border-border rounded-sm px-3 py-2 text-sm bg-cream text-ink focus:outline-none focus:ring-1 focus:ring-ink/30"
+              />
+              <input
+                type="email"
+                placeholder="Email address *"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                autoComplete="email"
+                required
+                className="w-full border border-border rounded-sm px-3 py-2 text-sm bg-cream text-ink focus:outline-none focus:ring-1 focus:ring-ink/30"
+              />
+              <input
+                type="tel"
+                placeholder="Phone (optional)"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                autoComplete="tel"
+                className="w-full border border-border rounded-sm px-3 py-2 text-sm bg-cream text-ink focus:outline-none focus:ring-1 focus:ring-ink/30"
+              />
+              <p className="font-meta text-[11px] text-muted-foreground">
+                Your download links will be emailed here after purchase.
+              </p>
+            </div>
+
             <p className="font-meta text-muted-foreground text-xs">
               Digital downloads only — no physical shipping. Delivered instantly after purchase.
             </p>
@@ -226,7 +274,7 @@ export default function CartPage() {
             )}
             <Button
               onClick={handleCheckout}
-              disabled={loading}
+              disabled={loading || !customerName.trim() || !customerEmail.trim()}
               className="w-full"
               size="lg"
             >

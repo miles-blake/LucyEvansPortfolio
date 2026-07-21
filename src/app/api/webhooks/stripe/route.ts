@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { resend } from "@/lib/resend";
+import { signDownloadToken } from "@/lib/download-token";
 import Stripe from "stripe";
 
 // In Next.js App Router, the raw body is always accessible via req.text() — no bodyParser config needed
@@ -92,12 +93,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No orderId." }, { status: 400 });
     }
 
-    // Mark order paid and record customer email
+    // Mark order paid and record customer email (name/phone may already be set from checkout)
     const order = await prisma.order.update({
       where: { id: orderId },
       data: {
         status: "PAID",
-        customerEmail,
+        customerEmail: customerEmail || undefined,
         stripePaymentIntentId: session.payment_intent as string,
       },
       include: {
@@ -107,15 +108,12 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Generate signed download URLs for each item
-    // TODO: Replace with real Cloudinary signed URLs once CLOUDINARY_* env vars are set
-    // Example: cloudinary.utils.private_download_url(publicId, "zip", { expires_at: ... })
+    // Generate HMAC-signed download URLs — each token is tied to a specific order item ID
     const downloadLinks = order.items.map((item) => {
       const name = item.photo?.title ?? item.bundle?.title ?? "Download";
-      const fileUrl = item.photo?.fullResFileUrl ?? "https://placeholder.lucyevans.com/download";
-      // In production: generate a time-expiring signed URL from Cloudinary
-      const signedUrl = `${process.env.NEXTAUTH_URL}/api/download/${item.id}?token=TODO_SIGNED_TOKEN`;
-      return { name, signedUrl, fileUrl, orderItemId: item.id };
+      const token = signDownloadToken(item.id);
+      const signedUrl = `${process.env.NEXTAUTH_URL}/api/download/${item.id}?token=${token}`;
+      return { name, signedUrl, orderItemId: item.id };
     });
 
     // Store signed URLs on order items

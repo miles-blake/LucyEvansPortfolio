@@ -16,12 +16,15 @@ const schema = z.object({
   items: z.array(itemSchema).min(1),
   discountCode: z.string().optional(),
   bundlePct: z.number().int().min(0).max(20).optional(),
+  customerName: z.string().min(1, "Name is required"),
+  customerEmail: z.string().email("Valid email is required"),
+  customerPhone: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { items, discountCode, bundlePct: clientBundlePct } = schema.parse(body);
+    const { items, discountCode, bundlePct: clientBundlePct, customerName, customerEmail, customerPhone } = schema.parse(body);
 
     // Verify prices server-side — never trust client-sent prices
     const verifiedLineItems = await Promise.all(
@@ -81,7 +84,9 @@ export async function POST(req: NextRequest) {
     // Create a pending Order record before redirecting to Stripe
     const order = await prisma.order.create({
       data: {
-        customerEmail: "", // filled in by webhook after payment
+        customerEmail,
+        customerName,
+        customerPhone: customerPhone || null,
         totalAmount: totalAfterDiscount,
         status: "PENDING",
         items: {
@@ -140,6 +145,8 @@ export async function POST(req: NextRequest) {
       payment_method_types: ["card"],
       line_items: lineItemsForStripe,
       metadata: { orderId: order.id },
+      customer_email: customerEmail, // pre-fills Stripe's email field
+      phone_number_collection: { enabled: true },
       success_url: `${process.env.NEXTAUTH_URL}/order/${order.id}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXTAUTH_URL}/cart`,
       customer_creation: "always",

@@ -111,6 +111,8 @@ enum BookingStatus {
 model Order {
   id                    String      @id @default(cuid())
   customerEmail         String
+  customerName          String      @default("")
+  customerPhone         String?
   totalAmount           Int         // in cents
   stripePaymentIntentId String?     @unique
   status                OrderStatus @default(PENDING)
