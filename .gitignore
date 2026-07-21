@@ -49,3 +49,8 @@ next-env.d.ts
 /src/generated/prisma
 .env*
 .claude/settings.local.json
+
+# Local photo folders — uploaded to Cloudinary, don't need to be in git
+/Lucy Film Photos/
+.claude/worktrees/
+/scripts/
