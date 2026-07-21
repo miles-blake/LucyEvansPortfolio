@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
   url.searchParams.set("language", "en");
   // Bias toward US but don't restrict — venues may be destination weddings
   url.searchParams.set("components", "country:us");
+  url.searchParams.set("types", "establishment");
 
   const res = await fetch(url.toString());
   const data = await res.json();
