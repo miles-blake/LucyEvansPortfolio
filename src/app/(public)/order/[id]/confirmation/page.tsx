@@ -3,9 +3,10 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { signDownloadToken } from "@/lib/download-token";
-import { CheckCircle, Download, ArrowRight } from "lucide-react";
+import { CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ClearCartOnSuccess from "@/components/cart/ClearCartOnSuccess";
+import DownloadButton from "@/components/DownloadButton";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -83,6 +84,7 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
         {order.items.map((item) => {
           const name = item.photo?.title ?? item.bundle?.title ?? "Download";
           const remaining = item.downloadLimit - item.downloadCount;
+          const filename = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + ".jpg";
           return (
             <div
               key={item.id}
@@ -95,13 +97,7 @@ export default async function OrderConfirmationPage({ params, searchParams }: Pr
                 </p>
               </div>
               {item.signedDownloadUrl ? (
-                <a
-                  href={item.signedDownloadUrl}
-                  download
-                  className="inline-flex items-center gap-2 bg-ink text-cream px-4 py-2 text-sm font-medium hover:bg-ink/80 transition-colors rounded-sm focus-visible:outline-2 focus-visible:outline-ring shrink-0"
-                >
-                  <Download size={14} /> Download
-                </a>
+                <DownloadButton href={item.signedDownloadUrl} filename={filename} />
               ) : (
                 <span className="font-meta text-muted-foreground text-sm shrink-0">Preparing…</span>
               )}
