@@ -5,15 +5,70 @@ import type { Metadata } from "next";
 export const metadata: Metadata = { title: "Admin Dashboard" };
 export const dynamic = "force-dynamic";
 
+function buildMonthKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function formatRevenue(cents: number) {
+  return `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+}
+
 export default async function AdminDashboardPage() {
-  const [photos, bundles, bookings, orders, subscribers, portfolio] = await Promise.all([
+  const now = new Date();
+  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+  const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+  const [photos, bundles, bookings, orders, subscribers, portfolio, paidOrders, paidInvoices, allTimeOrders, allTimeInvoices] = await Promise.all([
     prisma.photo.count(),
     prisma.bundle.count(),
     prisma.booking.count(),
     prisma.order.count({ where: { status: "PAID" } }),
     prisma.subscriber.count(),
     prisma.portfolioPiece.count(),
+    prisma.order.findMany({
+      where: { status: "PAID", createdAt: { gte: sixMonthsAgo } },
+      select: { totalAmount: true, createdAt: true },
+    }),
+    prisma.invoice.findMany({
+      where: { status: "PAID", createdAt: { gte: sixMonthsAgo } },
+      select: { amountDue: true, createdAt: true },
+    }),
+    prisma.order.aggregate({ where: { status: "PAID" }, _sum: { totalAmount: true } }),
+    prisma.invoice.aggregate({ where: { status: "PAID" }, _sum: { amountDue: true } }),
   ]);
+
+  // Build 6-month bar chart data
+  const months: { key: string; label: string; orders: number; invoices: number }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({
+      key: buildMonthKey(d),
+      label: d.toLocaleDateString("en-US", { month: "short" }),
+      orders: 0,
+      invoices: 0,
+    });
+  }
+  for (const o of paidOrders) {
+    const k = buildMonthKey(new Date(o.createdAt));
+    const m = months.find((m) => m.key === k);
+    if (m) m.orders += o.totalAmount;
+  }
+  for (const inv of paidInvoices) {
+    const k = buildMonthKey(new Date(inv.createdAt));
+    const m = months.find((m) => m.key === k);
+    if (m) m.invoices += inv.amountDue;
+  }
+  const maxMonth = Math.max(...months.map((m) => m.orders + m.invoices), 1);
+
+  // Summary numbers
+  const allTimeRevenue = (allTimeOrders._sum.totalAmount ?? 0) + (allTimeInvoices._sum.amountDue ?? 0);
+  const thisMonthKey = buildMonthKey(startOfThisMonth);
+  const lastMonthKey = buildMonthKey(startOfLastMonth);
+  const thisMonth = months.find((m) => m.key === thisMonthKey);
+  const lastMonth = months.find((m) => m.key === lastMonthKey);
+  const revenueThisMonth = (thisMonth?.orders ?? 0) + (thisMonth?.invoices ?? 0);
+  const revenueLastMonth = (lastMonth?.orders ?? 0) + (lastMonth?.invoices ?? 0);
 
   const recentBookings = await prisma.booking.findMany({
     take: 5,
@@ -68,6 +123,55 @@ export default async function AdminDashboardPage() {
           </Link>
         ))}
       </div>
+
+      {/* Revenue */}
+      <section className="border border-border rounded-sm p-6 mb-10">
+        <h2 className="font-display text-lg text-ink mb-4">Revenue</h2>
+
+        <div className="grid grid-cols-3 gap-6 mb-6">
+          {[
+            { label: "All time", value: formatRevenue(allTimeRevenue) },
+            { label: "This month", value: formatRevenue(revenueThisMonth) },
+            { label: "Last month", value: formatRevenue(revenueLastMonth) },
+          ].map(({ label, value }) => (
+            <div key={label}>
+              <p className="font-display text-2xl text-ink">{value}</p>
+              <p className="font-meta text-xs text-muted-foreground mt-0.5">{label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Bar chart */}
+        <div className="flex items-end gap-2 h-24">
+          {months.map((m) => {
+            const total = m.orders + m.invoices;
+            const orderPct = total === 0 ? 0 : Math.round((m.orders / maxMonth) * 100);
+            const invoicePct = total === 0 ? 0 : Math.round((m.invoices / maxMonth) * 100);
+            return (
+              <div key={m.key} className="flex-1 flex flex-col items-center gap-1">
+                <div className="w-full flex flex-col justify-end h-20" title={`${m.label}: ${formatRevenue(total)}`}>
+                  {invoicePct > 0 && (
+                    <div className="w-full bg-sage/50 rounded-t-sm" style={{ height: `${invoicePct}%` }} />
+                  )}
+                  {orderPct > 0 && (
+                    <div className={`w-full bg-sky/50 ${invoicePct === 0 ? "rounded-t-sm" : ""}`} style={{ height: `${orderPct}%` }} />
+                  )}
+                  {total === 0 && <div className="w-full bg-border/50 rounded-sm" style={{ height: "4px" }} />}
+                </div>
+                <span className="font-meta text-xs text-muted-foreground">{m.label}</span>
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex items-center gap-4 mt-3">
+          <span className="flex items-center gap-1.5 font-meta text-xs text-muted-foreground">
+            <span className="w-2.5 h-2.5 rounded-sm bg-sky/50 inline-block" /> Orders
+          </span>
+          <span className="flex items-center gap-1.5 font-meta text-xs text-muted-foreground">
+            <span className="w-2.5 h-2.5 rounded-sm bg-sage/50 inline-block" /> Invoices
+          </span>
+        </div>
+      </section>
 
       <div className="grid md:grid-cols-2 gap-8">
         {/* Recent bookings */}
