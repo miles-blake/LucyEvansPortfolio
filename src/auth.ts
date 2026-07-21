@@ -24,7 +24,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
         if (!valid) return null;
 
-        return { id: admin.id, name: admin.name, email: admin.email };
+        return {
+          id: admin.id,
+          name: admin.name,
+          email: admin.email,
+          isTestClient: admin.isTestClient,
+        };
       },
     }),
   ],
@@ -34,11 +39,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   callbacks: {
     jwt({ token, user }) {
-      if (user) token.id = user.id;
+      if (user) {
+        token.id = user.id;
+        token.isTestClient = (user as { isTestClient?: boolean }).isTestClient ?? false;
+      }
       return token;
     },
     session({ session, token }) {
       if (token.id) session.user.id = token.id as string;
+      session.user.isTestClient = (token.isTestClient as boolean) ?? false;
       return session;
     },
   },

@@ -256,5 +256,6 @@ model AdminUser {
   name           String
   email          String   @unique
   hashedPassword String
+  isTestClient   Boolean  @default(false)
   createdAt      DateTime @default(now())
 }
