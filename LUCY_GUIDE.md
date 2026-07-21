@@ -235,12 +235,39 @@ Real visitors will never see the preview bar — it only appears for you during 
 
 ---
 
+## Client Accounts
+
+Clients can now create their own accounts on the site and log in to see everything in one place — no magic link required.
+
+**How clients sign up:**
+1. They click **Sign in** in the top right corner of any page
+2. They click **Create one** to make a new account with their name, email, and a password
+3. They land on their **My Account** page automatically
+
+**What clients see after logging in (My Account page):**
+- All their bookings on file, with the status of each (Inquiry received, Confirmed, Completed)
+- A **View portal →** button on any booking where you've sent them a portal link
+- Their invoices and the amount due on each
+- A prompt to browse services if they don't have any bookings yet
+
+**How bookings get linked to their account:**
+The email they use to register must match the email you entered when their booking was created. If it matches, their bookings appear automatically — nothing extra needed.
+
+**What clients see in the nav:**
+- Not logged in → **Sign in** button
+- Logged in → **My Account** button (takes them back to their dashboard)
+
+> **Note:** The admin panel is separate and still only accessible to you. Clients cannot see anything in the admin area.
+
+---
+
 ## Before Going Live
 
-These features are built and ready, but need accounts and settings configured before they'll fully work:
+Most things are connected and ready. The remaining two need accounts and settings:
 
-- **Stripe** — for taking payments online (photo shop, deposits)
-- **Cloudinary** — for storing and watermarking your photos
-- **Resend** — for sending emails (newsletters, invoice PDFs, portal links, booking confirmations)
+- **Stripe** — for taking payments online (photo shop, deposits). Not yet connected.
+- **Resend** — for sending emails (newsletters, invoice PDFs, portal links, booking confirmations). Not yet connected.
 
-Ask your developer to help set these up — each one takes about 10 minutes once you have the accounts.
+**Already connected:** Cloudinary (photo uploads and storage) is live — you can upload photos right now.
+
+Ask your developer to help with Stripe and Resend when you're ready to go live — each takes about 10 minutes once you have the accounts.
