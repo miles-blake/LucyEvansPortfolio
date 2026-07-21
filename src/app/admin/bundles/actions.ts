@@ -21,11 +21,7 @@ export async function deleteBundle(formData: FormData) {
 export async function createBundle(formData: FormData) {
   await requireAdmin();
   const price = Math.round(parseFloat(formData.get("priceDisplay") as string) * 100);
-  // photoIds is a comma-separated list
-  const photoIds = (formData.get("photoIds") as string)
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const photoIds = (formData.getAll("photo_check") as string[]).filter(Boolean);
 
   await prisma.bundle.create({
     data: {
@@ -49,10 +45,7 @@ export async function updateBundle(formData: FormData) {
   await requireAdmin();
   const id = formData.get("id") as string;
   const price = Math.round(parseFloat(formData.get("priceDisplay") as string) * 100);
-  const photoIds = (formData.get("photoIds") as string)
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const photoIds = (formData.getAll("photo_check") as string[]).filter(Boolean);
 
   await prisma.bundle.update({
     where: { id },
