@@ -217,6 +217,17 @@ export default async function BookingDetailPage({ params }: Props) {
           </form>
         </section>
 
+        {/* Email customer */}
+        <section className="border border-border rounded-sm p-6">
+          <h2 className="font-display text-lg text-ink mb-4">Email customer</h2>
+          <Link
+            href={`/admin/email?to=${encodeURIComponent(booking.customerEmail)}&subject=${encodeURIComponent(`Re: your ${booking.eventType} booking`)}`}
+            className="border border-border text-muted-foreground px-3 py-1.5 rounded-sm text-xs font-meta hover:text-ink transition-colors inline-flex"
+          >
+            Compose email →
+          </Link>
+        </section>
+
         {/* Invoice */}
         <section className="border border-border rounded-sm p-6">
           <h2 className="font-display text-lg text-ink mb-4">Invoice</h2>

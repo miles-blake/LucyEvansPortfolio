@@ -16,6 +16,7 @@ import {
   ExternalLink,
   Mail,
   FileText,
+  Send,
 } from "lucide-react";
 
 const NAV = [
@@ -30,6 +31,7 @@ const NAV = [
   { href: "/admin/newsletter", label: "Newsletter", icon: Mail },
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
   { href: "/admin/invoices", label: "Invoices", icon: FileText },
+  { href: "/admin/email", label: "Email", icon: Send },
 ];
 
 export function AdminSidebar() {

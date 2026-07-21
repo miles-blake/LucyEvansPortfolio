@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { nextInvoiceNumber } from "@/lib/invoice-number";
 import { revalidatePath } from "next/cache";
+import { resend } from "@/lib/resend";
 
 export async function createInvoiceFromBooking(bookingId: string) {
   const session = await auth();
@@ -120,6 +121,44 @@ export async function createCustomInvoice(data: {
 
   revalidatePath("/admin/invoices");
   return { invoiceId: invoice.id };
+}
+
+export async function sendInvoiceEmail(formData: FormData) {
+  const session = await auth();
+  if (!session) return;
+  const id = formData.get("id") as string;
+  if (!id) return;
+
+  const inv = await prisma.invoice.findUnique({ where: { id } });
+  if (!inv) return;
+
+  const { renderToBuffer } = await import("@react-pdf/renderer");
+  const React = await import("react");
+  const { InvoicePDF } = await import("@/components/InvoicePDF");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const el = React.default.createElement(InvoicePDF, { invoice: inv as any }) as any;
+  const buffer: Buffer = await renderToBuffer(el);
+
+  const from = process.env.RESEND_FROM_EMAIL ?? "hello@lucyevans.com";
+  const dueStr = inv.dueDate
+    ? ` — due ${new Date(inv.dueDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`
+    : "";
+
+  try {
+    await resend.emails.send({
+      from,
+      to: inv.customerEmail,
+      subject: `Invoice ${inv.number} from Lucy Evans Photography`,
+      html: `<div style="font-family:sans-serif;max-width:600px;color:#2E2A24"><p>Hi ${inv.customerName},</p><p>Please find your invoice ${inv.number} attached.</p>${inv.notes ? `<p>${inv.notes}</p>` : ""}<p><strong>Amount due: $${(inv.amountDue / 100).toFixed(2)}${dueStr}</strong></p><p>— Lucy Evans<br/><a href="https://lucyevans.com" style="color:#A9C6D8">lucyevans.com</a></p></div>`,
+      attachments: [{ filename: `${inv.number}.pdf`, content: buffer }],
+    });
+  } catch (err) {
+    console.error("[sendInvoiceEmail]", err);
+  }
+
+  await prisma.invoice.update({ where: { id }, data: { status: "SENT" } });
+  revalidatePath(`/admin/invoices/${id}`);
+  revalidatePath("/admin/invoices");
 }
 
 export async function markInvoicePaid(formData: FormData) {

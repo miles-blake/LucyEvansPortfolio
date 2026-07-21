@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { markInvoicePaid, deleteInvoice } from "../actions";
+import { markInvoicePaid, deleteInvoice, sendInvoiceEmail } from "../actions";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -156,31 +156,59 @@ export default async function InvoiceDetailPage({ params }: Props) {
         )}
 
         {/* Actions */}
-        {inv.status !== "PAID" && inv.status !== "CANCELLED" && (
-          <section className="border border-border rounded-sm p-6">
-            <h2 className="font-display text-lg text-ink mb-4">Actions</h2>
-            <div className="flex items-center gap-3">
-              <form action={markInvoicePaid}>
-                <input type="hidden" name="id" value={inv.id} />
-                <button
-                  type="submit"
-                  className="text-xs bg-sage text-white px-3 py-1.5 rounded-sm hover:opacity-80 transition-opacity font-meta"
-                >
-                  Mark as paid
-                </button>
-              </form>
-              <form action={deleteInvoice}>
-                <input type="hidden" name="id" value={inv.id} />
-                <button
-                  type="submit"
-                  className="text-xs border border-border text-muted-foreground px-3 py-1.5 rounded-sm hover:text-rose hover:border-rose transition-colors font-meta"
-                >
-                  Delete invoice
-                </button>
-              </form>
-            </div>
-          </section>
-        )}
+        <section className="border border-border rounded-sm p-6">
+          <h2 className="font-display text-lg text-ink mb-4">Actions</h2>
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Always available */}
+            <a
+              href={`/api/invoices/${inv.id}/pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="border border-border text-muted-foreground px-3 py-1.5 rounded-sm text-xs font-meta hover:text-ink transition-colors"
+            >
+              Download PDF
+            </a>
+            <form action={sendInvoiceEmail}>
+              <input type="hidden" name="id" value={inv.id} />
+              <button
+                type="submit"
+                className="border border-border text-muted-foreground px-3 py-1.5 rounded-sm text-xs font-meta hover:text-ink transition-colors"
+              >
+                {inv.status === "SENT" ? "Resend invoice" : "Send invoice"}
+              </button>
+            </form>
+            <Link
+              href={`/admin/email?to=${encodeURIComponent(inv.customerEmail)}&subject=${encodeURIComponent(`Invoice ${inv.number}`)}`}
+              className="border border-border text-muted-foreground px-3 py-1.5 rounded-sm text-xs font-meta hover:text-ink transition-colors"
+            >
+              Email customer →
+            </Link>
+
+            {/* Status-gated */}
+            {inv.status !== "PAID" && inv.status !== "CANCELLED" && (
+              <>
+                <form action={markInvoicePaid}>
+                  <input type="hidden" name="id" value={inv.id} />
+                  <button
+                    type="submit"
+                    className="text-xs bg-sage text-white px-3 py-1.5 rounded-sm hover:opacity-80 transition-opacity font-meta"
+                  >
+                    Mark as paid
+                  </button>
+                </form>
+                <form action={deleteInvoice}>
+                  <input type="hidden" name="id" value={inv.id} />
+                  <button
+                    type="submit"
+                    className="text-xs border border-border text-muted-foreground px-3 py-1.5 rounded-sm hover:text-rose hover:border-rose transition-colors font-meta"
+                  >
+                    Delete invoice
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );
