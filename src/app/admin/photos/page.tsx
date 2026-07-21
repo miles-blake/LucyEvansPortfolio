@@ -50,8 +50,11 @@ export default async function AdminPhotosPage() {
               </tr>
             )}
             {photos.map((photo) => (
-              <tr key={photo.id} className="hover:bg-ink/5">
-                <td className="px-4 py-3 text-ink">{photo.title}</td>
+              <tr key={photo.id} className="relative hover:bg-ink/5 cursor-pointer">
+                <td className="px-4 py-3 text-ink">
+                  <Link href={`/admin/photos/${photo.id}/edit`} className="absolute inset-0 z-0" aria-label={`Edit ${photo.title}`} />
+                  {photo.title}
+                </td>
                 <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
                   {photo.collectionTag ?? "—"}
                 </td>
@@ -66,7 +69,7 @@ export default async function AdminPhotosPage() {
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-3 justify-end">
+                  <div className="relative z-10 flex items-center gap-3 justify-end">
                     <Link
                       href={`/admin/photos/${photo.id}/edit`}
                       className="text-xs text-muted-foreground hover:text-ink"

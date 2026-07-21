@@ -59,14 +59,10 @@ export default async function AdminInvoicesPage() {
               </tr>
             )}
             {invoices.map((inv) => (
-              <tr key={inv.id} className="hover:bg-ink/5">
+              <tr key={inv.id} className="relative hover:bg-ink/5 cursor-pointer">
                 <td className="px-3 md:px-4 py-3">
-                  <Link
-                    href={`/admin/invoices/${inv.id}`}
-                    className="font-meta text-sm text-ink hover:opacity-70 transition-opacity"
-                  >
-                    {inv.number}
-                  </Link>
+                  <Link href={`/admin/invoices/${inv.id}`} className="absolute inset-0 z-0" aria-label={`View invoice ${inv.number}`} />
+                  <span className="font-meta text-sm text-ink">{inv.number}</span>
                 </td>
                 <td className="px-3 md:px-4 py-3">
                   <p className="text-ink truncate max-w-[120px] sm:max-w-none">{inv.customerName}</p>

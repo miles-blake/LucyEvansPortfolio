@@ -43,12 +43,11 @@ export default async function AdminBookingsPage() {
               <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No bookings yet.</td></tr>
             )}
             {bookings.map((b) => (
-              <tr key={b.id} className="hover:bg-ink/5">
+              <tr key={b.id} className="relative hover:bg-ink/5 cursor-pointer">
                 <td className="px-3 md:px-4 py-3">
-                  <Link href={`/admin/bookings/${b.id}`} className="hover:opacity-70 transition-opacity">
-                    <p className="text-ink">{b.customerName}</p>
-                    <p className="font-meta text-xs text-muted-foreground">{b.customerEmail}</p>
-                  </Link>
+                  <Link href={`/admin/bookings/${b.id}`} className="absolute inset-0 z-0" aria-label={`View booking for ${b.customerName}`} />
+                  <p className="relative z-10 text-ink">{b.customerName}</p>
+                  <p className="relative z-10 font-meta text-xs text-muted-foreground">{b.customerEmail}</p>
                 </td>
                 <td className="px-3 md:px-4 py-3 text-muted-foreground hidden sm:table-cell">{b.package.name}</td>
                 <td className="px-3 md:px-4 py-3 font-meta text-muted-foreground hidden sm:table-cell">{formatDate(b.eventDate)}</td>
@@ -60,7 +59,7 @@ export default async function AdminBookingsPage() {
                   </span>
                 </td>
                 <td className="px-3 md:px-4 py-3">
-                  <form action={updateBookingStatus} className="flex items-center gap-1.5">
+                  <form action={updateBookingStatus} className="relative z-10 flex items-center gap-1.5">
                     <input type="hidden" name="id" value={b.id} />
                     <select
                       name="status"
