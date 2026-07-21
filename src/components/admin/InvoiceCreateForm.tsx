@@ -15,11 +15,19 @@ interface LineItem {
   amount: string; // dollars, as string for input
 }
 
-interface Props {
-  customers: Customer[];
+interface CatalogItem {
+  label: string;
+  description: string;
+  amount: number; // cents
+  group: string;
 }
 
-export function InvoiceCreateForm({ customers }: Props) {
+interface Props {
+  customers: Customer[];
+  catalogItems?: CatalogItem[];
+}
+
+export function InvoiceCreateForm({ customers, catalogItems = [] }: Props) {
   const router = useRouter();
 
   const [customerSearch, setCustomerSearch] = useState("");
@@ -208,13 +216,44 @@ export function InvoiceCreateForm({ customers }: Props) {
           ))}
         </div>
 
-        <button
-          type="button"
-          onClick={addLineItem}
-          className="border border-border text-muted-foreground px-3 py-1.5 rounded-sm text-xs font-meta hover:text-ink transition-colors"
-        >
-          + Add line item
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {catalogItems.length > 0 && (
+            <select
+              onChange={(e) => {
+                if (!e.target.value) return;
+                const item = catalogItems.find((c) => c.label === e.target.value);
+                if (item) {
+                  setLineItems((prev) => [
+                    ...prev,
+                    { description: item.description, amount: (item.amount / 100).toFixed(2) },
+                  ]);
+                }
+                e.target.value = "";
+              }}
+              className="text-sm border border-border rounded-sm px-3 py-1.5 bg-cream text-muted-foreground focus:outline-none focus:ring-1 focus:ring-sky/40"
+            >
+              <option value="">Add from catalog…</option>
+              {Array.from(new Set(catalogItems.map((c) => c.group))).map((group) => (
+                <optgroup key={group} label={group}>
+                  {catalogItems
+                    .filter((c) => c.group === group)
+                    .map((c) => (
+                      <option key={c.label} value={c.label}>
+                        {c.label} — ${(c.amount / 100).toFixed(0)}
+                      </option>
+                    ))}
+                </optgroup>
+              ))}
+            </select>
+          )}
+          <button
+            type="button"
+            onClick={addLineItem}
+            className="border border-border text-muted-foreground px-3 py-1.5 rounded-sm text-xs font-meta hover:text-ink transition-colors"
+          >
+            + Custom line item
+          </button>
+        </div>
       </section>
 
       {/* Due date & notes */}
