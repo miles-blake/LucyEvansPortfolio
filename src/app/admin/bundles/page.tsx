@@ -1,0 +1,65 @@
+import { prisma } from "@/lib/prisma";
+import Link from "next/link";
+import { deleteBundle } from "./actions";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Admin — Bundles" };
+export const dynamic = "force-dynamic";
+
+export default async function AdminBundlesPage() {
+  const bundles = await prisma.bundle.findMany({
+    orderBy: { createdAt: "desc" },
+    include: { photos: true },
+  });
+
+  return (
+    <div className="max-w-4xl">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="font-display text-2xl text-ink">Bundles</h1>
+        <Link href="/admin/bundles/new" className="bg-ink text-cream text-sm px-4 py-2 rounded-sm hover:opacity-80 transition-opacity">
+          + New bundle
+        </Link>
+      </div>
+
+      <div className="border border-border rounded-sm overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-ink/5 border-b border-border">
+            <tr>
+              <th className="text-left px-4 py-3 font-display text-ink font-normal">Title</th>
+              <th className="text-left px-4 py-3 font-display text-ink font-normal hidden md:table-cell">Photos</th>
+              <th className="text-left px-4 py-3 font-display text-ink font-normal hidden md:table-cell">Price</th>
+              <th className="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {bundles.length === 0 && (
+              <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">No bundles yet.</td></tr>
+            )}
+            {bundles.map((b) => (
+              <tr key={b.id} className="hover:bg-ink/5">
+                <td className="px-4 py-3 text-ink">{b.title}</td>
+                <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{b.photos.length}</td>
+                <td className="px-4 py-3 font-meta text-muted-foreground hidden md:table-cell">${(b.price / 100).toFixed(0)}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3 justify-end">
+                    <Link href={`/admin/bundles/${b.id}/edit`} className="text-xs text-muted-foreground hover:text-ink">Edit</Link>
+                    <form action={deleteBundle}>
+                      <input type="hidden" name="id" value={b.id} />
+                      <button
+                        type="submit"
+                        className="text-xs text-rose hover:opacity-70"
+                        onClick={(e) => { if (!confirm(`Delete "${b.title}"?`)) e.preventDefault(); }}
+                      >
+                        Delete
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
