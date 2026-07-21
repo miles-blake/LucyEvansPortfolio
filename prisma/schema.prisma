@@ -202,6 +202,40 @@ model Newsletter {
   createdAt      DateTime  @default(now())
 }
 
+// ─── Invoices ────────────────────────────────────────────────────────
+
+model Invoice {
+  id             String        @id @default(cuid())
+  number         String        @unique // e.g. INV-2026-001
+  type           InvoiceType
+  bookingId      String?
+  orderId        String?
+  customerName   String
+  customerEmail  String
+  customerPhone  String?
+  lineItems      Json          // [{ description: string, amount: number }]
+  subtotal       Int           // cents
+  depositPaid    Int           @default(0) // cents already paid
+  amountDue      Int           // cents remaining
+  status         InvoiceStatus @default(DRAFT)
+  notes          String?
+  dueDate        DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+enum InvoiceType {
+  BOOKING
+  ORDER
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  CANCELLED
+}
+
 // ─── Admin ────────────────────────────────────────────────────────────
 
 model AdminUser {
