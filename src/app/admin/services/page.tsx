@@ -35,13 +35,16 @@ export default async function AdminServicesPage() {
               <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No packages yet.</td></tr>
             )}
             {packages.map((p) => (
-              <tr key={p.id} className="hover:bg-ink/5">
-                <td className="px-4 py-3 text-ink">{p.name}</td>
+              <tr key={p.id} className="relative hover:bg-ink/5 cursor-pointer">
+                <td className="px-4 py-3 text-ink">
+                  <Link href={`/admin/services/${p.id}/edit`} className="absolute inset-0 z-0" aria-label={`Edit ${p.name}`} />
+                  {p.name}
+                </td>
                 <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{p.rollsIncluded}</td>
                 <td className="px-4 py-3 font-meta text-muted-foreground hidden md:table-cell">${(p.basePrice / 100).toFixed(0)}</td>
                 <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{p.eventTypes.join(", ")}</td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-3 justify-end">
+                  <div className="relative z-10 flex items-center gap-3 justify-end">
                     <Link href={`/admin/services/${p.id}/edit`} className="text-xs text-muted-foreground hover:text-ink">Edit</Link>
                     <DeleteButton action={deleteService} id={p.id} label={p.name} />
                   </div>

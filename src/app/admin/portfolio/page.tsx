@@ -34,8 +34,11 @@ export default async function AdminPortfolioPage() {
               <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">No portfolio pieces yet.</td></tr>
             )}
             {pieces.map((p) => (
-              <tr key={p.id} className="hover:bg-ink/5">
-                <td className="px-4 py-3 text-ink">{p.title}</td>
+              <tr key={p.id} className="relative hover:bg-ink/5 cursor-pointer">
+                <td className="px-4 py-3 text-ink">
+                  <Link href={`/admin/portfolio/${p.id}/edit`} className="absolute inset-0 z-0" aria-label={`Edit ${p.title}`} />
+                  {p.title}
+                </td>
                 <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{p.brandName}</td>
                 <td className="px-4 py-3">
                   {p.featured ? (
@@ -45,7 +48,7 @@ export default async function AdminPortfolioPage() {
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-3 justify-end">
+                  <div className="relative z-10 flex items-center gap-3 justify-end">
                     <Link href={`/admin/portfolio/${p.id}/edit`} className="text-xs text-muted-foreground hover:text-ink">Edit</Link>
                     <DeleteButton action={deletePortfolioPiece} id={p.id} label={p.title} />
                   </div>

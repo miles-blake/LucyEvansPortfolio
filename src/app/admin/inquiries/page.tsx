@@ -53,20 +53,22 @@ export default async function AdminInquiriesPage() {
               <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal">Subject</th>
               <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal">Status</th>
               <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal hidden md:table-cell">Date</th>
-              <th className="px-3 md:px-4 py-3"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {inquiries.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
                   No inquiries yet.
                 </td>
               </tr>
             )}
             {inquiries.map((inq) => (
-              <tr key={inq.id} className="hover:bg-ink/5">
-                <td className="px-3 md:px-4 py-3 text-ink">{inq.name}</td>
+              <tr key={inq.id} className="relative hover:bg-ink/5 cursor-pointer">
+                <td className="px-3 md:px-4 py-3 text-ink">
+                  <Link href={`/admin/inquiries/${inq.id}`} className="absolute inset-0 z-0" aria-label={`View inquiry from ${inq.name}`} />
+                  {inq.name}
+                </td>
                 <td className="px-3 md:px-4 py-3 text-muted-foreground hidden md:table-cell">{inq.email}</td>
                 <td className="px-3 md:px-4 py-3 text-muted-foreground">
                   <span className="line-clamp-1">{inq.subject}</span>
@@ -74,14 +76,6 @@ export default async function AdminInquiriesPage() {
                 <td className="px-3 md:px-4 py-3">{statusBadge(inq.status)}</td>
                 <td className="px-3 md:px-4 py-3 font-meta text-muted-foreground hidden md:table-cell">
                   {formatDate(inq.createdAt)}
-                </td>
-                <td className="px-3 md:px-4 py-3 text-right">
-                  <Link
-                    href={`/admin/inquiries/${inq.id}`}
-                    className="text-xs text-muted-foreground hover:text-ink"
-                  >
-                    View →
-                  </Link>
                 </td>
               </tr>
             ))}

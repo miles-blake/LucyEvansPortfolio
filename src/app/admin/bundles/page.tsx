@@ -37,12 +37,15 @@ export default async function AdminBundlesPage() {
               <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">No bundles yet.</td></tr>
             )}
             {bundles.map((b) => (
-              <tr key={b.id} className="hover:bg-ink/5">
-                <td className="px-4 py-3 text-ink">{b.title}</td>
+              <tr key={b.id} className="relative hover:bg-ink/5 cursor-pointer">
+                <td className="px-4 py-3 text-ink">
+                  <Link href={`/admin/bundles/${b.id}/edit`} className="absolute inset-0 z-0" aria-label={`Edit ${b.title}`} />
+                  {b.title}
+                </td>
                 <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{b.photos.length}</td>
                 <td className="px-4 py-3 font-meta text-muted-foreground hidden md:table-cell">${(b.price / 100).toFixed(0)}</td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-3 justify-end">
+                  <div className="relative z-10 flex items-center gap-3 justify-end">
                     <Link href={`/admin/bundles/${b.id}/edit`} className="text-xs text-muted-foreground hover:text-ink">Edit</Link>
                     <DeleteButton action={deleteBundle} id={b.id} label={b.title} />
                   </div>

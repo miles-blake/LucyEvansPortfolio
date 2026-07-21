@@ -95,7 +95,7 @@ export default async function AdminDashboardPage() {
     ...recentInquiries.map((i) => ({ id: i.id, type: "inquiry" as const, label: `New inquiry from ${i.name}`, sub: i.subject, href: `/admin/inquiries/${i.id}`, date: i.createdAt })),
     ...recentSubscribers.map((s) => ({ id: s.id, type: "subscriber" as const, label: `New subscriber`, sub: s.email, href: `/admin/subscribers`, date: s.subscribedAt })),
     ...recentBookingsAll.map((b) => ({ id: b.id, type: "booking" as const, label: `Booking ${b.status.toLowerCase()} — ${b.customerName}`, sub: b.package.name, href: `/admin/bookings/${b.id}`, date: b.createdAt })),
-    ...recentOrdersAll.map((o) => ({ id: o.id, type: "order" as const, label: `Order paid — ${o.customerEmail}`, sub: `$${(o.totalAmount / 100).toFixed(0)}`, href: `/admin/orders`, date: o.createdAt })),
+    ...recentOrdersAll.map((o) => ({ id: o.id, type: "order" as const, label: `Order paid — ${o.customerEmail}`, sub: `$${(o.totalAmount / 100).toFixed(0)}`, href: `/admin/orders/${o.id}`, date: o.createdAt })),
   ].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 10);
 
   const stats = [
@@ -187,7 +187,7 @@ export default async function AdminDashboardPage() {
               <p className="text-sm text-muted-foreground">No bookings yet.</p>
             )}
             {recentBookings.map((b) => (
-              <div key={b.id} className="flex items-center justify-between text-sm border border-border rounded-sm px-3 py-2">
+              <Link key={b.id} href={`/admin/bookings/${b.id}`} className="flex items-center justify-between text-sm border border-border rounded-sm px-3 py-2 hover:bg-ink/5 transition-colors">
                 <div>
                   <p className="text-ink">{b.customerName}</p>
                   <p className="font-meta text-xs text-muted-foreground">{b.package.name}</p>
@@ -199,7 +199,7 @@ export default async function AdminDashboardPage() {
                 }`}>
                   {b.status.toLowerCase()}
                 </span>
-              </div>
+              </Link>
             ))}
           </div>
         </section>
@@ -217,12 +217,12 @@ export default async function AdminDashboardPage() {
               <p className="text-sm text-muted-foreground">No paid orders yet.</p>
             )}
             {recentOrders.map((o) => (
-              <div key={o.id} className="flex items-center justify-between text-sm border border-border rounded-sm px-3 py-2">
+              <Link key={o.id} href={`/admin/orders/${o.id}`} className="flex items-center justify-between text-sm border border-border rounded-sm px-3 py-2 hover:bg-ink/5 transition-colors">
                 <p className="text-ink truncate max-w-[60%]">{o.customerEmail || "—"}</p>
                 <span className="font-meta text-xs text-muted-foreground">
                   ${(o.totalAmount / 100).toFixed(0)}
                 </span>
-              </div>
+              </Link>
             ))}
           </div>
         </section>
