@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
 const photoLinks = [
@@ -16,13 +17,11 @@ const marketingLinks = [
   { href: "/media-kit", label: "Media Kit" },
 ];
 
-type NavProps = {
-  adminUser?: { name: string | null } | null;
-};
-
-export default function Nav({ adminUser }: NavProps = {}) {
+export default function Nav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { data: session } = useSession();
+  const isAdmin = !!session?.user;
 
   const isMarketing =
     pathname.startsWith("/work") || pathname.startsWith("/media-kit");
@@ -74,7 +73,7 @@ export default function Nav({ adminUser }: NavProps = {}) {
             <CartIcon />
           </Link>
 
-          {adminUser ? (
+          {isAdmin ? (
             <Link
               href="/admin"
               className="font-meta text-xs bg-ink text-cream px-3 py-1.5 rounded-sm hover:opacity-80 transition-opacity"
@@ -127,7 +126,7 @@ export default function Nav({ adminUser }: NavProps = {}) {
             Cart
           </MobileLink>
           <div className="h-px bg-border my-2" />
-          {adminUser ? (
+          {isAdmin ? (
             <MobileLink href="/admin" onClick={() => setOpen(false)}>
               Admin panel
             </MobileLink>
