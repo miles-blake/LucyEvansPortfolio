@@ -26,15 +26,15 @@ export default async function AdminOrdersPage() {
     <div className="max-w-5xl">
       <h1 className="font-display text-2xl text-ink mb-6">Orders</h1>
 
-      <div className="border border-border rounded-sm overflow-x-auto">
-        <table className="w-full text-sm min-w-[600px]">
+      <div className="border border-border rounded-sm">
+        <table className="w-full text-sm">
           <thead className="bg-ink/5 border-b border-border">
             <tr>
-              <th className="text-left px-4 py-3 font-display text-ink font-normal">Customer</th>
-              <th className="text-left px-4 py-3 font-display text-ink font-normal">Items</th>
-              <th className="text-left px-4 py-3 font-display text-ink font-normal">Total</th>
-              <th className="text-left px-4 py-3 font-display text-ink font-normal">Status</th>
-              <th className="text-left px-4 py-3 font-display text-ink font-normal">Date</th>
+              <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal">Customer</th>
+              <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal hidden sm:table-cell">Items</th>
+              <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal">Total</th>
+              <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal">Status</th>
+              <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal hidden md:table-cell">Date</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -43,21 +43,23 @@ export default async function AdminOrdersPage() {
             )}
             {orders.map((o) => (
               <tr key={o.id} className="hover:bg-ink/5">
-                <td className="px-4 py-3">
+                <td className="px-3 md:px-4 py-3">
                   <Link
                     href={`/admin/orders/${o.id}`}
-                    className="text-ink hover:opacity-70 transition-opacity"
+                    className="text-ink hover:opacity-70 transition-opacity truncate block max-w-[140px] sm:max-w-none"
                   >
                     {o.customerEmail || "—"}
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {o.items.map((item) => item.photo?.title ?? item.bundle?.title ?? "—").join(", ")}
+                <td className="px-3 md:px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                  <span className="line-clamp-1">
+                    {o.items.map((item) => item.photo?.title ?? item.bundle?.title ?? "—").join(", ")}
+                  </span>
                 </td>
-                <td className="px-4 py-3 font-meta text-muted-foreground">
+                <td className="px-3 md:px-4 py-3 font-meta text-muted-foreground">
                   ${(o.totalAmount / 100).toFixed(0)}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-3 md:px-4 py-3">
                   <span className={`font-meta text-xs px-2 py-0.5 rounded-sm ${
                     o.status === "PAID" ? "bg-sage/20 text-sage" :
                     o.status === "PENDING" ? "bg-sky/20 text-sky" :
@@ -67,7 +69,7 @@ export default async function AdminOrdersPage() {
                     {o.status.toLowerCase()}
                   </span>
                 </td>
-                <td className="px-4 py-3 font-meta text-xs text-muted-foreground">
+                <td className="px-3 md:px-4 py-3 font-meta text-xs text-muted-foreground hidden md:table-cell">
                   {formatDate(o.createdAt)}
                 </td>
               </tr>

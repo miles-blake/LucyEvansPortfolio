@@ -44,16 +44,16 @@ export default async function AdminInquiriesPage() {
     <div className="max-w-5xl">
       <h1 className="font-display text-2xl text-ink mb-6">Inquiries</h1>
 
-      <div className="border border-border rounded-sm overflow-x-auto">
-        <table className="w-full text-sm min-w-[600px]">
+      <div className="border border-border rounded-sm">
+        <table className="w-full text-sm">
           <thead className="bg-ink/5 border-b border-border">
             <tr>
-              <th className="text-left px-4 py-3 font-display text-ink font-normal">Name</th>
-              <th className="text-left px-4 py-3 font-display text-ink font-normal hidden md:table-cell">Email</th>
-              <th className="text-left px-4 py-3 font-display text-ink font-normal">Subject</th>
-              <th className="text-left px-4 py-3 font-display text-ink font-normal">Status</th>
-              <th className="text-left px-4 py-3 font-display text-ink font-normal hidden md:table-cell">Date</th>
-              <th className="px-4 py-3"></th>
+              <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal">Name</th>
+              <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal hidden md:table-cell">Email</th>
+              <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal">Subject</th>
+              <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal">Status</th>
+              <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal hidden md:table-cell">Date</th>
+              <th className="px-3 md:px-4 py-3"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -66,14 +66,16 @@ export default async function AdminInquiriesPage() {
             )}
             {inquiries.map((inq) => (
               <tr key={inq.id} className="hover:bg-ink/5">
-                <td className="px-4 py-3 text-ink">{inq.name}</td>
-                <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{inq.email}</td>
-                <td className="px-4 py-3 text-muted-foreground">{inq.subject}</td>
-                <td className="px-4 py-3">{statusBadge(inq.status)}</td>
-                <td className="px-4 py-3 font-meta text-muted-foreground hidden md:table-cell">
+                <td className="px-3 md:px-4 py-3 text-ink">{inq.name}</td>
+                <td className="px-3 md:px-4 py-3 text-muted-foreground hidden md:table-cell">{inq.email}</td>
+                <td className="px-3 md:px-4 py-3 text-muted-foreground">
+                  <span className="line-clamp-1">{inq.subject}</span>
+                </td>
+                <td className="px-3 md:px-4 py-3">{statusBadge(inq.status)}</td>
+                <td className="px-3 md:px-4 py-3 font-meta text-muted-foreground hidden md:table-cell">
                   {formatDate(inq.createdAt)}
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-3 md:px-4 py-3 text-right">
                   <Link
                     href={`/admin/inquiries/${inq.id}`}
                     className="text-xs text-muted-foreground hover:text-ink"

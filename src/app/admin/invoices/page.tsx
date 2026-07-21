@@ -38,16 +38,16 @@ export default async function AdminInvoicesPage() {
         </Link>
       </div>
 
-      <div className="border border-border rounded-sm overflow-x-auto">
-        <table className="w-full text-sm min-w-[700px]">
+      <div className="border border-border rounded-sm">
+        <table className="w-full text-sm">
           <thead className="bg-ink/5 border-b border-border">
             <tr>
-              <th className="text-left px-4 py-3 font-display text-ink font-normal">Number</th>
-              <th className="text-left px-4 py-3 font-display text-ink font-normal">Customer</th>
-              <th className="text-left px-4 py-3 font-display text-ink font-normal">Type</th>
-              <th className="text-left px-4 py-3 font-display text-ink font-normal">Amount due</th>
-              <th className="text-left px-4 py-3 font-display text-ink font-normal">Due date</th>
-              <th className="text-left px-4 py-3 font-display text-ink font-normal">Status</th>
+              <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal">Number</th>
+              <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal">Customer</th>
+              <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal hidden sm:table-cell">Type</th>
+              <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal">Amount</th>
+              <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal hidden md:table-cell">Due date</th>
+              <th className="text-left px-3 md:px-4 py-3 font-display text-ink font-normal">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -60,7 +60,7 @@ export default async function AdminInvoicesPage() {
             )}
             {invoices.map((inv) => (
               <tr key={inv.id} className="hover:bg-ink/5">
-                <td className="px-4 py-3">
+                <td className="px-3 md:px-4 py-3">
                   <Link
                     href={`/admin/invoices/${inv.id}`}
                     className="font-meta text-sm text-ink hover:opacity-70 transition-opacity"
@@ -68,16 +68,16 @@ export default async function AdminInvoicesPage() {
                     {inv.number}
                   </Link>
                 </td>
-                <td className="px-4 py-3">
-                  <p className="text-ink">{inv.customerName}</p>
-                  <p className="font-meta text-xs text-muted-foreground">{inv.customerEmail}</p>
+                <td className="px-3 md:px-4 py-3">
+                  <p className="text-ink truncate max-w-[120px] sm:max-w-none">{inv.customerName}</p>
+                  <p className="font-meta text-xs text-muted-foreground hidden sm:block">{inv.customerEmail}</p>
                 </td>
-                <td className="px-4 py-3 text-muted-foreground capitalize">{inv.type.toLowerCase()}</td>
-                <td className="px-4 py-3 font-meta text-muted-foreground">{formatPrice(inv.amountDue)}</td>
-                <td className="px-4 py-3 font-meta text-xs text-muted-foreground">
+                <td className="px-3 md:px-4 py-3 text-muted-foreground capitalize hidden sm:table-cell">{inv.type.toLowerCase()}</td>
+                <td className="px-3 md:px-4 py-3 font-meta text-muted-foreground">{formatPrice(inv.amountDue)}</td>
+                <td className="px-3 md:px-4 py-3 font-meta text-xs text-muted-foreground hidden md:table-cell">
                   {inv.dueDate ? formatDate(inv.dueDate) : "—"}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-3 md:px-4 py-3">
                   <span className={`font-meta text-xs px-2 py-0.5 rounded-sm ${STATUS_COLOR[inv.status] ?? "bg-ink/10 text-ink"}`}>
                     {inv.status.toLowerCase()}
                   </span>
