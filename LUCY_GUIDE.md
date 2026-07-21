@@ -1,241 +1,246 @@
 # Lucy Evans — Site Guide
 
-This document explains everything your website can do and how to get to each feature. It's written for everyday use — no technical knowledge needed.
+This document explains everything your website can do and how to get to each feature. No technical knowledge needed — just plain English.
 
-> **Living document:** Every time a new feature is added to the site, it should be added here.
+> **Living document:** Every time a new feature is added to the site, it will be added here.
 
 ---
 
 ## Getting into the admin panel
 
-Go to **`/admin/login`** and sign in with your email and password. Once you're in, you'll see the sidebar on the left with links to everything.
+Open your website and add **/admin/login** to the end of your address bar, then sign in with your email and password. Once you're in, you'll see a sidebar on the left with links to everything.
 
 ---
 
-## Dashboard (`/admin`)
+## Dashboard
 
-The first thing you see after logging in. At a glance it shows:
+**How to get there:** It's the first thing you see after logging in. Click the site logo or "Dashboard" in the sidebar to come back to it anytime.
+
+At a glance it shows:
 
 - **Stats** — how many photos, bundles, bookings, paid orders, subscribers, and portfolio pieces you have
-- **Revenue** — your all-time total, this month, and last month, plus a 6-month bar chart broken down by orders (blue) and invoices (green)
+- **Revenue** — your all-time total, this month, and last month, plus a 6-month bar chart broken down by orders and invoices
 - **Recent bookings and orders** — a quick snapshot of what's come in lately
 - **Activity feed** — a running log of recent inquiries, sign-ups, bookings, and orders
 
 ---
 
-## Photos (`/admin/photos`)
+## Photos
+
+**How to get there:** Click **Photos** in the left sidebar.
 
 Everything related to your film photo shop.
 
 **What you can do:**
 - See all your photos in a table
-- Click **+ New photo** to add a single photo (title, description, film stock, camera, location, price, etc.)
-- Click **Bulk upload** to upload many photos at once — drag and drop image files, set shared metadata (film stock, camera, collection, location) for the whole batch, then save them all to your library in one click. After uploading, you can edit each photo individually to set the price and any unique details.
-- Click on any photo to edit or delete it
+- Click **+ New photo** to add a single photo — fill in the title, description, film stock, camera, location, price, and upload the image
+- Click **Bulk upload** to upload many photos at once — drag and drop image files (JPG, PNG, NEF, CR2, and all common photo formats), set shared details like film stock and camera for the whole batch, then save them all at once. You can edit each photo individually afterwards to set unique prices or details.
+- Click on any photo in the list to edit or delete it
 
-**Where it shows up publicly:** `/gallery` and `/gallery/[photo-slug]`
+**Where photos appear publicly:** Your photo gallery page and each individual photo's detail page — customers can browse and purchase prints there.
 
 ---
 
-## Bundles (`/admin/bundles`)
+## Bundles
+
+**How to get there:** Click **Bundles** in the left sidebar.
 
 Curated sets of photos sold together at a single price.
 
 **What you can do:**
 - See all bundles
-- Click **+ New bundle** to create one — give it a title, slug, description, price, and check the boxes next to whichever photos you want to include
+- Click **+ New bundle** to create one — give it a title, description, and price, then check the boxes next to whichever photos you want to include
 - Edit or delete existing bundles
 
-**Where it shows up publicly:** `/bundles` and `/bundles/[bundle-slug]`
+**Where bundles appear publicly:** Your bundles page, where customers can browse and purchase sets.
 
 ---
 
-## Services (`/admin/services`)
+## Services
 
-Your photography service packages (weddings, portraits, events, etc.).
+**How to get there:** Click **Services** in the left sidebar.
+
+Your photography service packages — things like weddings, portraits, and events.
 
 **What you can do:**
 - See all service packages
-- Add, edit, or delete packages — set the name, description, how many rolls/photos are included, base price, and which event types it applies to
+- Add, edit, or delete packages — set the name, description, how many rolls and photos are included, base price, and which types of events it applies to
 
-**Where it shows up publicly:** `/services`
+**Where services appear publicly:** Your services page, where clients can learn about your packages and book a session.
 
 ---
 
-## Bookings (`/admin/bookings`)
+## Bookings
 
-Booking requests that come in when someone fills out your booking form.
+**How to get there:** Click **Bookings** in the left sidebar.
+
+Booking requests that come in when someone fills out your booking form on the site.
 
 **What you can do:**
-- See all bookings in a table view, or switch to **Calendar →** in the top right for a 3-month calendar view (color-coded by status)
+- See all bookings in a list, or click **Calendar →** in the top right to see a 3-month calendar view (color-coded by status — green for confirmed, blue for inquiry, grey for completed, red for cancelled)
 - Click on any booking to see full details:
-  - Customer name, email, phone
+  - Customer name, email, and phone
   - Event date, type, and package
   - Pricing and deposit status
   - Internal notes (only you see these)
-  - Update the booking status (Inquiry → Confirmed → Completed / Cancelled)
-  - **Create invoice** — one click to generate an invoice from this booking's details; once created, shows a "View invoice" link instead
-  - **Email customer** — opens the email composer pre-filled with the customer's address
-  - **Send portal link** — emails the client a private link to their personal booking portal (see Client Portal below); once sent, you can resend or preview it
+  - Update the booking status (Inquiry → Confirmed → Completed, or Cancelled)
+  - **Create invoice** — generates an invoice from this booking's details in one click; once created, shows a link to view it instead
+  - **Email customer** — opens the email tool with the customer's address already filled in
+  - **Send portal link** — emails the client a private link to their personal booking page (see Client Portal below); once sent, you can resend or preview it
 
 ---
 
-## Inquiries (`/admin/inquiries`)
+## Inquiries
 
-General contact form submissions from your `/contact` page.
+**How to get there:** Click **Inquiries** in the left sidebar.
+
+General contact form submissions from people visiting your site.
 
 **What you can do:**
-- See all inquiries and their status (new, read, replied)
-- Click on one to read it, add internal notes, and reply directly by email
+- See all messages and their status (new, read, replied)
+- Click on any message to read it, add your own internal notes, and reply by email
 
 ---
 
-## Orders (`/admin/orders`)
+## Orders
 
-Digital download orders (photo and bundle purchases).
+**How to get there:** Click **Orders** in the left sidebar.
+
+Digital download orders — when someone buys a photo print or bundle from your shop.
 
 **What you can do:**
-- See all paid orders in a table; click any row to open the full order
-- On the order detail page, edit the customer's email, order status, and the items in the order (add photos/bundles from your catalog, change prices, edit download limits, remove items)
-- **Email customer →** link at the bottom opens the email composer pre-filled for that customer
+- See all paid orders in a list; click any row to open the full order details
+- Edit the customer's email, order status, and the items in the order (add photos or bundles from your catalog, change prices, adjust download limits, or remove items)
+- Click **Email customer →** at the bottom to open the email tool with that customer's address already filled in
 
 ---
 
-## Invoices (`/admin/invoices`)
+## Invoices
 
-Invoices you create and send to clients.
+**How to get there:** Click **Invoices** in the left sidebar.
+
+Invoices you create and send to clients — separate from automated shop receipts.
 
 **What you can do:**
 - See all invoices and their status (Draft, Sent, Paid, Cancelled)
 - Click **New invoice →** to create a fully custom invoice:
-  - Search for an existing customer (auto-fills their name, email, phone) or enter a new one manually
-  - Add line items from your photo/bundle/package catalog with **Add from catalog…**, or write a custom description with **+ Custom line item**
-  - Set an optional due date and notes
+  - Enter a client's name, email, and phone (or pull from an existing booking)
+  - Add line items by choosing from your existing photos, bundles, and packages with **Add from catalog…**, or write a completely custom description with **+ Custom line item**
+  - Set an optional due date and any notes for the client
 - From any invoice detail page:
-  - **Download PDF** — opens a professionally designed PDF in a new tab
-  - **Send invoice / Resend invoice** — emails the PDF directly to the client and marks the invoice as Sent
-  - **Email customer →** — opens the email composer for a custom message
-  - **Mark as paid** — updates the invoice status
-  - **Delete invoice** — removes it
+  - **Download PDF** — opens a professionally designed PDF invoice in a new tab
+  - **Send invoice / Resend invoice** — emails the PDF directly to the client and marks it as Sent
+  - **Email customer →** — opens the email tool for a custom message
+  - **Mark as paid** — updates the invoice status when payment comes in
+  - **Delete invoice** — removes it permanently
 
 ---
 
-## Portfolio (`/admin/portfolio`)
+## Portfolio
 
-Your marketing case studies (the `/work` section of the site).
+**How to get there:** Click **Portfolio** in the left sidebar.
+
+Your marketing work case studies — the section of the site that showcases brand collaborations and content campaigns.
 
 **What you can do:**
-- Add, edit, and delete case study pieces — brand name, your role, deliverables, metrics, video URLs, cover image, testimonial quote
+- Add, edit, and delete case study pieces — brand name, your role, deliverables, results/metrics, video links, a cover image, and a testimonial quote
 
-**Where it shows up publicly:** `/work` and `/work/[slug]`
+**Where portfolio pieces appear publicly:** Your work page and each individual campaign's detail page.
 
 ---
 
-## Subscribers (`/admin/subscribers`)
+## Subscribers
 
-People who've signed up for your newsletter.
+**How to get there:** Click **Subscribers** in the left sidebar.
+
+Everyone who's signed up for your newsletter through the site.
 
 **What you can do:**
-- See all subscribers with their sign-up date and source
-- Export to CSV for use in other tools
+- See all subscribers with their sign-up date and where they signed up from
+- Export to a spreadsheet (CSV) to use in other tools
 
 ---
 
-## Newsletter (`/admin/newsletter`)
+## Newsletter
+
+**How to get there:** Click **Newsletter** in the left sidebar.
 
 Write and send newsletters to your subscriber list.
 
 **What you can do:**
 - Click **New newsletter** to open the composer
-- Hit **Draft with AI** and Claude will write a draft based on your subject and prompt — you can edit it freely before sending
-- Set the subject line and send to all confirmed subscribers
+- Hit **Draft with AI** and Claude will write a draft based on your subject and any notes you give it — you can edit it freely before sending
+- Set the subject line and send to all confirmed subscribers in one click
 
 ---
 
-## Email (`/admin/email`)
+## Email
 
-Send a one-off email to anyone, directly from the site.
+**How to get there:** Click **Email** in the left sidebar.
+
+Send a one-off email to anyone directly from the site — useful for following up with a client, sending a quick note, or anything that isn't a newsletter.
 
 **What you can do:**
-- Type in any email address, subject, and message body and hit **Send email**
-- The "Email customer →" buttons on booking, order, and invoice pages all link here with the address and subject pre-filled — so you can jump straight to writing the message
+- Type in any email address, a subject, and your message, then hit **Send email**
+- The **Email customer →** buttons on booking, order, and invoice pages all take you here with the address and subject already filled in — so you can jump straight to writing
 
 ---
 
 ## Client Portal
 
-A private, magic-link page you can send to booking clients so they can check their own booking status, invoice, and balance — without needing to log in.
+A private page you can send to booking clients so they can check their booking details, invoice, and balance — without needing an account or password.
 
 **How to use it:**
-1. Go to a booking detail page (`/admin/bookings/[id]`)
-2. Scroll to the **Client portal** section at the bottom
-3. Click **Send portal link** — the client gets an email with their personal link, valid for 30 days
-4. You can click **Preview portal** to see exactly what they'll see
-5. Click **Resend portal link** at any time to refresh the link's expiry
+1. Go to any booking (click **Bookings** in the sidebar, then click the booking you want)
+2. Scroll to the **Client portal** section
+3. Click **Send portal link** — the client gets an email with their personal link, which stays active for 30 days
+4. Click **Preview portal** to see exactly what they'll see
+5. Click **Resend portal link** at any time to refresh the link and reset the 30-day clock
 
-**What the client sees at their portal (`/portal/[token]`):**
-- Their booking details (package, event type, date, status)
-- Their invoice with line items and amount due (if you've created one)
-- A contact prompt to reach you by email
+**What the client sees on their portal page:**
+- Their booking details (package, event type, date, and current status)
+- Their invoice with line items and the amount still due (if you've created one)
+- A way to contact you by email
 
 ---
 
-## Booking Calendar (`/admin/bookings/calendar`)
+## Booking Calendar
 
-A 3-month calendar view of all bookings, color-coded by status.
+**How to get there:** Click **Bookings** in the sidebar, then click **Calendar →** in the top right corner.
+
+A 3-month calendar view showing all bookings, color-coded by status:
 
 - **Green** = Confirmed
-- **Blue** = Inquiry
+- **Blue** = Inquiry (not yet confirmed)
 - **Grey** = Completed
 - **Red** = Cancelled
 
-Click any booking chip to go straight to that booking's detail page. Get here via the **Calendar →** link on the Bookings list page.
+Click any booking name on the calendar to go straight to that booking's detail page.
 
 ---
 
-## Public-facing pages
+## Preview as Visitor
 
-These are the pages your visitors and customers see:
-
-| Page | URL |
-|------|-----|
-| Homepage | `/` |
-| Photo gallery | `/gallery` |
-| Photo detail | `/gallery/[slug]` |
-| Bundles | `/bundles` |
-| Services | `/services` |
-| Book a session | `/services/book` |
-| Marketing portfolio | `/work` |
-| Case study detail | `/work/[slug]` |
-| About | `/about` |
-| Contact | `/contact` |
-| Media kit | `/media-kit` |
-| Cart | `/cart` |
-
----
-
-## Preview as visitor
-
-A way to see and use your site exactly as a customer would — useful for testing the shop, cart, and booking flow without leaving your admin account.
+A way to see and use your site exactly as a customer would — useful for testing the shop, cart, booking flow, and client portal before a client does.
 
 **How to use it:**
-1. In the admin sidebar (bottom left), click **Preview as visitor**
-2. You'll land on the homepage with a dark banner across the top reading *"Admin preview mode — you're seeing the site as a visitor would"*
-3. Browse the shop, add photos to cart, go through checkout, fill out the booking form — everything works exactly as it would for a real customer
-4. When you're done, click **Return to admin →** in the banner to go straight back to the admin panel
+1. Look in the bottom of the left sidebar for **Preview as visitor** and click it
+2. You'll land on the homepage with a dark bar across the top that says *"Admin preview mode — you're seeing the site as a visitor would"*
+3. Browse the shop, add photos to your cart, go through checkout, fill out the booking form — everything works exactly as it would for a real customer
+4. When you're done, click **Return to admin →** in that bar to go straight back to your admin panel
 
-The banner is only visible to you (it's tied to a private cookie). Real visitors will never see it. The preview session lasts up to 4 hours.
+Real visitors will never see the preview bar — it only appears for you during a preview session. Sessions last up to 4 hours.
 
-> **Also in the sidebar:** "View site" opens the public homepage in the same tab without starting preview mode — handy if you just want a quick look without the banner.
+> **Also in the sidebar:** "View site" opens the public homepage in the same tab without starting preview mode — handy for a quick look without the bar appearing.
 
 ---
 
-## Things that still need to be set up before going live
+## Before Going Live
 
-These features are built but require accounts and API keys to work fully:
+These features are built and ready, but need accounts and settings configured before they'll fully work:
 
-- **Stripe** (taking payments online) — add `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` to your environment
-- **Cloudinary** (photo storage and watermarking) — add `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
-- **Resend** (sending emails — newsletters, invoices, portal links, confirmations) — add `RESEND_API_KEY` and set `RESEND_FROM_EMAIL` to your address
+- **Stripe** — for taking payments online (photo shop, deposits)
+- **Cloudinary** — for storing and watermarking your photos
+- **Resend** — for sending emails (newsletters, invoice PDFs, portal links, booking confirmations)
 
-Ask your developer to help with these — they each take about 10 minutes to set up once you have the accounts.
+Ask your developer to help set these up — each one takes about 10 minutes once you have the accounts.
