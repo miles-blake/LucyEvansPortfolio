@@ -11,14 +11,20 @@ async function getFeaturedContent() {
     prisma.photo.findFirst({ where: { featured: true } }),
     prisma.portfolioPiece.findFirst({ where: { featured: true } }),
     prisma.photo.findFirst({
-      where: { tags: { hasSome: ["Landscape", "Mountains", "Coastal", "Nature"] } },
+      where: {
+        tags: { hasSome: ["Mountains", "Coastal", "Landscape"] },
+        NOT: { tags: { hasSome: ["People", "Portrait", "Urban", "Abstract"] } },
+      },
       select: { fullResFileUrl: true, title: true },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "asc" },
     }),
     prisma.photo.findFirst({
-      where: { tags: { hasSome: ["People", "Portrait", "Wedding"] } },
+      where: {
+        tags: { hasSome: ["Portrait", "Wedding", "People"] },
+        NOT: { tags: { hasSome: ["Abstract", "Urban", "Architecture"] } },
+      },
       select: { fullResFileUrl: true, title: true },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "asc" },
     }),
   ]);
   return { photo, piece, heroLandscape, heroPeople };

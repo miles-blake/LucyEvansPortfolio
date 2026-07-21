@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useCart } from "@/lib/cart-store";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, Check } from "lucide-react";
+import { toast } from "sonner";
 
 interface Props {
   photoId: string;
@@ -23,6 +24,10 @@ export default function AddToCartButton({ photoId, title, price, imageUrl, disab
     add({ id: photoId, type: "photo", title, price, imageUrl });
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 2000);
+    toast.success("Added to cart", {
+      description: title,
+      action: { label: "View cart", onClick: () => { window.location.href = "/cart"; } },
+    });
   }
 
   if (disabled) {

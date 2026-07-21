@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/lib/wishlist-store";
+import { useCart } from "@/lib/cart-store";
 
 const photoLinks = [
   { href: "/gallery", label: "Gallery" },
@@ -28,6 +29,7 @@ export default function Nav() {
   const isTestClient = role === "admin" && session?.user?.isTestClient === true;
   const isClient = role === "client";
   const wishlistCount = useWishlist((s) => s.items.length);
+  const cartCount = useCart((s) => s.items.length);
 
   const isMarketing =
     pathname.startsWith("/work") || pathname.startsWith("/media-kit");
@@ -87,9 +89,14 @@ export default function Nav() {
           <Link
             href="/cart"
             aria-label="Cart"
-            className="text-ink hover:opacity-70 transition-opacity"
+            className="relative text-ink hover:opacity-70 transition-opacity"
           >
             <CartIcon />
+            {cartCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 flex items-center justify-center rounded-full bg-ink text-cream font-meta text-[9px] leading-none">
+                {cartCount}
+              </span>
+            )}
           </Link>
 
           {isAdmin && (
