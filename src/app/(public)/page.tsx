@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import NewsletterForm from "@/components/newsletter/NewsletterForm";
 import { ArrowRight } from "lucide-react";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 async function getFeaturedContent() {
   const [photo, piece, heroLandscape, heroPeople] = await Promise.all([
