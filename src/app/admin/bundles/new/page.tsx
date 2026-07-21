@@ -86,14 +86,6 @@ function BundleForm({
             </label>
           ))}
         </div>
-        <p className="text-xs text-muted-foreground mt-1">Photo IDs (auto-populated):</p>
-        <input
-          type="text"
-          name="photoIds"
-          defaultValue={selectedPhotoIds.join(", ")}
-          placeholder="Photo IDs, comma-separated"
-          className={`${cls} mt-1`}
-        />
       </div>
 
       <label className="flex items-center gap-2.5 cursor-pointer text-sm text-ink">
