@@ -68,13 +68,13 @@ export function AdminSidebar() {
       </nav>
 
       <div className="p-4 border-t border-border space-y-2">
-        <Link
-          href="/"
+        <a
+          href="/api/admin/preview"
           className="flex items-center gap-2.5 text-sm text-muted-foreground hover:text-ink transition-colors"
         >
           <ExternalLink size={15} />
-          View site
-        </Link>
+          Preview as visitor
+        </a>
         <button
           onClick={() => signOut({ callbackUrl: "/admin/login" })}
           className="flex items-center gap-2.5 text-sm text-muted-foreground hover:text-ink w-full transition-colors"
