@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 import { Prisma } from "@prisma/client";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
   packageId: z.string().min(1),
@@ -11,6 +12,7 @@ const schema = z.object({
   customerName: z.string().min(1),
   customerEmail: z.string().email(),
   customerPhone: z.string().optional(),
+  communicationPreference: z.enum(["email", "sms"]).default("email"),
   message: z.string().optional(),
   addOns: z.object({
     extraRoll: z.boolean(),
@@ -20,6 +22,14 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const { limited } = await rateLimit(req, "booking");
+  if (limited) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait a few minutes before trying again." },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = await req.json();
     const data = schema.parse(body);
@@ -46,7 +56,7 @@ export async function POST(req: NextRequest) {
       },
     });
     if (conflictingBooking) {
-      return NextResponse.json({ error: "That date is already booked." }, { status: 409 });
+      return NextResponse.json({ error: "That date is unavailable. Please choose another date." }, { status: 409 });
     }
 
     // Calculate total with add-ons
@@ -75,6 +85,7 @@ export async function POST(req: NextRequest) {
         customerName: data.customerName,
         customerEmail: data.customerEmail,
         customerPhone: data.customerPhone ?? null,
+        communicationPreference: data.communicationPreference,
         eventDate: eventDateObj,
         eventType: data.eventType,
         packageId: data.packageId,

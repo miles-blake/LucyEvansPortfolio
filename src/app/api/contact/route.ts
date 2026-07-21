@@ -2,15 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { prisma } from "@/lib/prisma";
 import { resend } from "@/lib/resend";
+import { rateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
-  name: z.string().min(1),
+  name: z.string().min(1).max(200),
   email: z.email(),
-  subject: z.string().min(1),
-  message: z.string().min(1),
+  subject: z.string().min(1).max(300),
+  message: z.string().min(1).max(4000),
 });
 
 export async function POST(req: NextRequest) {
+  const { limited } = await rateLimit(req, "contact");
+  if (limited) {
+    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+  }
+
   try {
     const body = await req.json();
     const { name, email, subject, message } = schema.parse(body);

@@ -8,6 +8,10 @@ import type { Metadata } from "next";
 export const metadata: Metadata = { title: "My Account" };
 export const dynamic = "force-dynamic";
 
+interface Props {
+  searchParams: Promise<{ verified?: string }>;
+}
+
 const statusLabel: Record<string, string> = {
   INQUIRY: "Inquiry received",
   CONFIRMED: "Confirmed",
@@ -22,9 +26,17 @@ const statusColor: Record<string, string> = {
   CANCELLED: "text-rose-500",
 };
 
-export default async function AccountPage() {
+export default async function AccountPage({ searchParams }: Props) {
   const session = await auth();
   const email = session!.user.email!;
+  const { verified } = await searchParams;
+
+  // Check verification status
+  const client = await prisma.client.findUnique({
+    where: { email },
+    select: { emailVerified: true },
+  });
+  const isVerified = client?.emailVerified ?? true; // true fallback = don't show banner for non-Client accounts
 
   const bookings = await prisma.booking.findMany({
     where: { customerEmail: email },
@@ -39,6 +51,18 @@ export default async function AccountPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">
+      {/* Email verification banners */}
+      {verified === "1" && (
+        <div className="mb-6 p-4 bg-sage/10 border border-sage/30 rounded-sm text-sm text-sage">
+          Your email address has been verified. Welcome!
+        </div>
+      )}
+      {!isVerified && verified !== "1" && (
+        <div className="mb-6 p-4 bg-sky/10 border border-sky/30 rounded-sm text-sm text-ink">
+          <strong>Please verify your email address.</strong> Check your inbox for a verification link from Lucy Evans Photography. Your booking and invoice details will appear once you&rsquo;ve verified.
+        </div>
+      )}
+
       <div className="flex items-start justify-between mb-10">
         <div>
           <h1 className="font-display text-3xl text-ink">My Account</h1>
@@ -62,7 +86,9 @@ export default async function AccountPage() {
       {/* Bookings */}
       <section className="mb-10">
         <h2 className="font-display text-xl text-ink mb-4">Bookings</h2>
-        {bookings.length === 0 ? (
+        {!isVerified ? (
+          <p className="font-meta text-sm text-muted-foreground">Verify your email address to see your bookings.</p>
+        ) : bookings.length === 0 ? (
           <p className="font-meta text-sm text-muted-foreground">No bookings on file yet.</p>
         ) : (
           <div className="space-y-3">
@@ -111,7 +137,7 @@ export default async function AccountPage() {
       </section>
 
       {/* Invoices */}
-      {invoices.length > 0 && (
+      {isVerified && invoices.length > 0 && (
         <section>
           <h2 className="font-display text-xl text-ink mb-4">Invoices</h2>
           <div className="space-y-3">

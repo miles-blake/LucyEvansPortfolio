@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { logAdminAction } from "@/lib/audit";
 
 async function requireAdmin() {
   const session = await auth();
@@ -21,8 +22,9 @@ export async function updateBookingStatus(formData: FormData) {
   });
 
   await prisma.booking.update({ where: { id }, data: { status } });
+  await logAdminAction("booking.status_changed", id, { from: prev?.status, to: status });
 
-  // Send confirmation email the first time a booking is confirmed
+  // Send confirmation when a booking is confirmed for the first time
   if (status === "CONFIRMED" && prev && prev.status !== "CONFIRMED") {
     const siteUrl = process.env.NEXTAUTH_URL ?? "https://lucyevans.com";
     const from = process.env.RESEND_FROM_EMAIL ?? "hello@lucyevans.com";
@@ -33,29 +35,41 @@ export async function updateBookingStatus(formData: FormData) {
       ? `${siteUrl}/portal/${prev.portalToken.token}`
       : `${siteUrl}/account`;
 
-    const { resend } = await import("@/lib/resend");
-    try {
-      await resend.emails.send({
-        from,
-        to: prev.customerEmail,
-        subject: "Your booking is confirmed — Lucy Evans Photography",
-        html: `<div style="font-family:sans-serif;max-width:600px;color:#2E2A24">
-          <p>Hi ${prev.customerName},</p>
-          <p>Great news — your booking is confirmed! Here are your details:</p>
-          <table style="border-collapse:collapse;width:100%;margin:16px 0">
-            <tr><td style="padding:6px 0;color:#888;font-size:13px">Package</td><td style="padding:6px 0;font-size:13px">${prev.package.name}</td></tr>
-            <tr><td style="padding:6px 0;color:#888;font-size:13px">Event type</td><td style="padding:6px 0;font-size:13px;text-transform:capitalize">${prev.eventType}</td></tr>
-            <tr><td style="padding:6px 0;color:#888;font-size:13px">Date</td><td style="padding:6px 0;font-size:13px">${eventDate}</td></tr>
-            <tr><td style="padding:6px 0;color:#888;font-size:13px">Deposit</td><td style="padding:6px 0;font-size:13px">$${(prev.depositAmount / 100).toFixed(2)}</td></tr>
-          </table>
-          <p>You can view full details and pay your deposit at your booking portal:</p>
-          <p><a href="${portalUrl}" style="color:#A9C6D8">${portalUrl}</a></p>
-          <p>Questions? Just reply to this email.</p>
-          <p>— Lucy Evans<br/><a href="https://lucyevans.com" style="color:#A9C6D8">lucyevans.com</a></p>
-        </div>`,
-      });
-    } catch (err) {
-      console.error("[confirmation email]", err);
+    if (prev.communicationPreference === "sms" && prev.customerPhone) {
+      const { sendSMS } = await import("@/lib/twilio");
+      try {
+        await sendSMS(
+          prev.customerPhone,
+          `Hi ${prev.customerName.split(" ")[0]}! Your ${prev.eventType} booking with Lucy Evans Photography is confirmed for ${eventDate}. View details: ${portalUrl}`
+        );
+      } catch (err) {
+        console.error("[confirmation sms]", err);
+      }
+    } else {
+      const { resend } = await import("@/lib/resend");
+      try {
+        await resend.emails.send({
+          from,
+          to: prev.customerEmail,
+          subject: "Your booking is confirmed — Lucy Evans Photography",
+          html: `<div style="font-family:sans-serif;max-width:600px;color:#2E2A24">
+            <p>Hi ${prev.customerName},</p>
+            <p>Great news — your booking is confirmed! Here are your details:</p>
+            <table style="border-collapse:collapse;width:100%;margin:16px 0">
+              <tr><td style="padding:6px 0;color:#888;font-size:13px">Package</td><td style="padding:6px 0;font-size:13px">${prev.package.name}</td></tr>
+              <tr><td style="padding:6px 0;color:#888;font-size:13px">Event type</td><td style="padding:6px 0;font-size:13px;text-transform:capitalize">${prev.eventType}</td></tr>
+              <tr><td style="padding:6px 0;color:#888;font-size:13px">Date</td><td style="padding:6px 0;font-size:13px">${eventDate}</td></tr>
+              <tr><td style="padding:6px 0;color:#888;font-size:13px">Deposit</td><td style="padding:6px 0;font-size:13px">$${(prev.depositAmount / 100).toFixed(2)}</td></tr>
+            </table>
+            <p>You can view full details and pay your deposit at your booking portal:</p>
+            <p><a href="${portalUrl}" style="color:#A9C6D8">${portalUrl}</a></p>
+            <p>Questions? Just reply to this email.</p>
+            <p>— Lucy Evans<br/><a href="https://lucyevans.com" style="color:#A9C6D8">lucyevans.com</a></p>
+          </div>`,
+        });
+      } catch (err) {
+        console.error("[confirmation email]", err);
+      }
     }
   }
 
@@ -66,7 +80,7 @@ export async function updateBookingStatus(formData: FormData) {
 export async function sendBookingMessage(formData: FormData) {
   await requireAdmin();
   const bookingId = formData.get("bookingId") as string;
-  const body = (formData.get("body") as string)?.trim();
+  const body = (formData.get("body") as string)?.trim().slice(0, 4000);
   if (!bookingId || !body) return;
 
   await prisma.bookingMessage.create({
@@ -80,7 +94,7 @@ export async function saveBookingNotes(formData: FormData) {
   const id = formData.get("id") as string;
   const notes = formData.get("notes") as string;
   if (!id) return;
-  await prisma.booking.update({ where: { id }, data: { message: notes } });
+  await prisma.booking.update({ where: { id }, data: { adminNotes: notes } });
   revalidatePath(`/admin/bookings/${id}`);
 }
 
@@ -137,7 +151,9 @@ export async function deleteBooking(formData: FormData) {
   await requireAdmin();
   const id = formData.get("id") as string;
   if (!id) return;
+  const booking = await prisma.booking.findUnique({ where: { id }, select: { customerName: true, customerEmail: true } });
   await prisma.booking.delete({ where: { id } });
+  await logAdminAction("booking.deleted", id, { customerName: booking?.customerName, customerEmail: booking?.customerEmail });
   redirect("/admin/bookings");
 }
 

@@ -14,7 +14,8 @@ export async function POST(req: NextRequest) {
   }
 
   const subscribers = await prisma.subscriber.findMany({
-    select: { email: true },
+    where: { confirmed: true },
+    select: { email: true, unsubscribeToken: true },
   });
 
   if (subscribers.length === 0) {
@@ -33,13 +34,24 @@ export async function POST(req: NextRequest) {
     </div>
   `;
 
+  const siteUrl = process.env.NEXTAUTH_URL ?? "https://lucyevans.com";
+
   // Resend batch: max 100 per call — chunk if needed
-  const emails = subscribers.map((s) => ({
-    from: process.env.RESEND_FROM_EMAIL ?? "Lucy Evans <hello@lucyevans.com>",
-    to: s.email,
-    subject,
-    html: htmlBody,
-  }));
+  const emails = subscribers.map((s) => {
+    const unsubUrl = s.unsubscribeToken
+      ? `${siteUrl}/api/unsubscribe/${s.unsubscribeToken}`
+      : `${siteUrl}/unsubscribe`;
+    const personalizedHtml = htmlBody.replace(
+      '<a href="#" style="color:#8b7f78">Unsubscribe</a>',
+      `<a href="${unsubUrl}" style="color:#8b7f78">Unsubscribe</a>`
+    );
+    return {
+      from: process.env.RESEND_FROM_EMAIL ?? "Lucy Evans <hello@lucyevans.com>",
+      to: s.email,
+      subject,
+      html: personalizedHtml,
+    };
+  });
 
   let sent = 0;
   const chunkSize = 100;

@@ -45,6 +45,12 @@ export default async function BookingDetailPage({ params }: Props) {
     prisma.bookingContract.findUnique({ where: { bookingId: id } }),
   ]);
 
+  // Mark all unread client messages as read now that admin has opened this booking
+  await prisma.bookingMessage.updateMany({
+    where: { bookingId: id, senderRole: "client", readByAdmin: false },
+    data: { readByAdmin: true },
+  });
+
   if (!booking) notFound();
 
   // Parse add-ons JSON if present
@@ -101,6 +107,8 @@ export default async function BookingDetailPage({ params }: Props) {
                 <dd className="text-sm text-ink">{booking.customerPhone}</dd>
               </>
             )}
+            <dt className="font-meta text-sm text-muted-foreground">Prefers</dt>
+            <dd className="text-sm text-ink capitalize">{booking.communicationPreference}</dd>
           </dl>
         </section>
 
@@ -179,14 +187,14 @@ export default async function BookingDetailPage({ params }: Props) {
 
         {/* Notes (editable) */}
         <section className="border border-border rounded-sm p-6">
-          <h2 className="font-display text-lg text-ink mb-4">Notes</h2>
+          <h2 className="font-display text-lg text-ink mb-4">Internal notes</h2>
           <form action={saveBookingNotes} className="space-y-3">
             <input type="hidden" name="id" value={booking.id} />
             <textarea
               name="notes"
-              defaultValue={booking.message ?? ""}
+              defaultValue={booking.adminNotes ?? ""}
               rows={4}
-              placeholder="Internal notes about this booking…"
+              placeholder="Internal notes about this booking — only you see these…"
               className="w-full text-sm border border-border rounded-sm px-3 py-2 bg-cream text-ink placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-sky/40 resize-none"
             />
             <button
@@ -221,15 +229,30 @@ export default async function BookingDetailPage({ params }: Props) {
           </form>
         </section>
 
-        {/* Email customer */}
+        {/* Contact customer */}
         <section className="border border-border rounded-sm p-6">
-          <h2 className="font-display text-lg text-ink mb-4">Email customer</h2>
-          <Link
-            href={`/admin/email?to=${encodeURIComponent(booking.customerEmail)}&subject=${encodeURIComponent(`Re: your ${booking.eventType} booking`)}`}
-            className="border border-border text-muted-foreground px-3 py-1.5 rounded-sm text-xs font-meta hover:text-ink transition-colors inline-flex"
-          >
-            Compose email →
-          </Link>
+          <h2 className="font-display text-lg text-ink mb-4">Contact customer</h2>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href={`/admin/email?to=${encodeURIComponent(booking.customerEmail)}&subject=${encodeURIComponent(`Re: your ${booking.eventType} booking`)}`}
+              className="border border-border text-muted-foreground px-3 py-1.5 rounded-sm text-xs font-meta hover:text-ink transition-colors inline-flex items-center gap-1.5"
+            >
+              Compose email →
+            </Link>
+            {booking.customerPhone && (
+              <a
+                href={`sms:${booking.customerPhone}`}
+                className="border border-border text-muted-foreground px-3 py-1.5 rounded-sm text-xs font-meta hover:text-ink transition-colors inline-flex items-center gap-1.5"
+              >
+                Send text →
+              </a>
+            )}
+            {booking.communicationPreference === "sms" && (
+              <span className="font-meta text-xs text-sky">
+                This client prefers text
+              </span>
+            )}
+          </div>
         </section>
 
         {/* Invoice */}

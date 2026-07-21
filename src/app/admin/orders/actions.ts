@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { logAdminAction } from "@/lib/audit";
 
 export async function saveOrder(data: {
   orderId: string;
@@ -54,6 +55,7 @@ export async function saveOrder(data: {
     return { error: "Failed to save order." };
   }
 
+  await logAdminAction("order.updated", data.orderId, { status: data.status, customerEmail: data.customerEmail });
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${data.orderId}`);
   return {};

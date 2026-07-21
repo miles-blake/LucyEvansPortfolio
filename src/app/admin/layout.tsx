@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Menu } from "lucide-react";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { CommandPalette } from "@/components/admin/CommandPalette";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -10,6 +11,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen flex bg-cream">
       <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <CommandPalette />
 
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile top bar */}

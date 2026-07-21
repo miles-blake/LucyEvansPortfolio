@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
 import {
   Camera,
   Package,
@@ -22,6 +23,7 @@ import {
   Tag,
   Settings,
   X,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -53,6 +55,14 @@ export function AdminSidebar({ open = false, onClose }: Props) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const userName = session?.user?.name ?? "Admin";
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/admin/unread-messages")
+      .then((r) => r.json())
+      .then((d) => setUnreadCount(d.count ?? 0))
+      .catch(() => {});
+  }, [pathname]); // re-check whenever admin navigates
 
   function isActive(href: string, exact?: boolean) {
     return exact ? pathname === href : pathname.startsWith(href);
@@ -90,13 +100,29 @@ export function AdminSidebar({ open = false, onClose }: Props) {
             }`}
           >
             <Icon size={15} />
-            {label}
+            <span className="flex-1">{label}</span>
+            {href === "/admin/bookings" && unreadCount > 0 && (
+              <span className="ml-auto bg-rose text-cream text-[10px] font-meta font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
           </Link>
         ))}
       </nav>
 
       {/* Footer */}
       <div className="p-4 border-t border-border space-y-2">
+        <button
+          onClick={() => {
+            onClose?.();
+            window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }));
+          }}
+          className="flex items-center gap-2.5 text-sm text-muted-foreground hover:text-ink transition-colors w-full"
+        >
+          <Search size={15} />
+          <span className="flex-1 text-left">Search</span>
+          <kbd className="font-meta text-[10px] bg-ink/8 px-1.5 py-0.5 rounded hidden md:block">⌘K</kbd>
+        </button>
         <Link
           href="/"
           onClick={onClose}
