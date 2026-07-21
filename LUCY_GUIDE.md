@@ -131,8 +131,8 @@ General contact form submissions from people visiting your site.
 Digital download orders — when someone buys a photo or bundle from your shop.
 
 **What you can do:**
-- See all paid orders in a list; click any row to open the full order details
-- Edit the customer's email, order status, and the items in the order (add photos or bundles from your catalog, change prices, adjust download limits, or remove items)
+- See all paid orders in a list; click any row to open the full order details — each item shows a thumbnail of the photo purchased
+- Edit the customer's email, order status, and the items in the order (add photos or bundles from your catalog, change prices, or remove items)
 - Click **Email customer →** to open the email tool with that customer's address filled in
 
 ---
@@ -237,7 +237,9 @@ The discount is shown clearly in the cart before checkout and applied automatica
 
 **Saved photos (wishlist):** Customers can bookmark photos by clicking the bookmark icon on any photo. Their saved photos appear on the Wishlist page. Prices always reflect the current price in your shop, even if the price changed after they saved it.
 
-**After purchase:** Customers get a confirmation email with their download links immediately after paying. The links never expire — they can re-download anytime if they lose the file.
+**Checkout:** Before being sent to Stripe to pay, customers fill in their name (required), email address (required), and phone number (optional) on the cart page. This means the Orders tab in your admin shows who bought immediately after payment — you don't have to wait for anything.
+
+**After purchase:** Customers land on a confirmation page with download buttons and receive the same links by email. The links never expire — they can re-download anytime if they lose the file. On iPhone, tapping Download opens the native share sheet with a "Save to Photos" option.
 
 ---
 
