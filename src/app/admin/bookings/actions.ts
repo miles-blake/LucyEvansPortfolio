@@ -15,9 +15,64 @@ export async function updateBookingStatus(formData: FormData) {
   const id = formData.get("id") as string;
   const status = formData.get("status") as "INQUIRY" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
 
+  const prev = await prisma.booking.findUnique({
+    where: { id },
+    include: { package: true, portalToken: { select: { token: true } } },
+  });
+
   await prisma.booking.update({ where: { id }, data: { status } });
+
+  // Send confirmation email the first time a booking is confirmed
+  if (status === "CONFIRMED" && prev && prev.status !== "CONFIRMED") {
+    const siteUrl = process.env.NEXTAUTH_URL ?? "https://lucyevans.com";
+    const from = process.env.RESEND_FROM_EMAIL ?? "hello@lucyevans.com";
+    const eventDate = prev.eventDate.toLocaleDateString("en-US", {
+      month: "long", day: "numeric", year: "numeric", timeZone: "UTC",
+    });
+    const portalUrl = prev.portalToken
+      ? `${siteUrl}/portal/${prev.portalToken.token}`
+      : `${siteUrl}/account`;
+
+    const { resend } = await import("@/lib/resend");
+    try {
+      await resend.emails.send({
+        from,
+        to: prev.customerEmail,
+        subject: "Your booking is confirmed — Lucy Evans Photography",
+        html: `<div style="font-family:sans-serif;max-width:600px;color:#2E2A24">
+          <p>Hi ${prev.customerName},</p>
+          <p>Great news — your booking is confirmed! Here are your details:</p>
+          <table style="border-collapse:collapse;width:100%;margin:16px 0">
+            <tr><td style="padding:6px 0;color:#888;font-size:13px">Package</td><td style="padding:6px 0;font-size:13px">${prev.package.name}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;font-size:13px">Event type</td><td style="padding:6px 0;font-size:13px;text-transform:capitalize">${prev.eventType}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;font-size:13px">Date</td><td style="padding:6px 0;font-size:13px">${eventDate}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;font-size:13px">Deposit</td><td style="padding:6px 0;font-size:13px">$${(prev.depositAmount / 100).toFixed(2)}</td></tr>
+          </table>
+          <p>You can view full details and pay your deposit at your booking portal:</p>
+          <p><a href="${portalUrl}" style="color:#A9C6D8">${portalUrl}</a></p>
+          <p>Questions? Just reply to this email.</p>
+          <p>— Lucy Evans<br/><a href="https://lucyevans.com" style="color:#A9C6D8">lucyevans.com</a></p>
+        </div>`,
+      });
+    } catch (err) {
+      console.error("[confirmation email]", err);
+    }
+  }
+
   revalidatePath("/admin/bookings");
   revalidatePath(`/admin/bookings/${id}`);
+}
+
+export async function sendBookingMessage(formData: FormData) {
+  await requireAdmin();
+  const bookingId = formData.get("bookingId") as string;
+  const body = (formData.get("body") as string)?.trim();
+  if (!bookingId || !body) return;
+
+  await prisma.bookingMessage.create({
+    data: { bookingId, senderRole: "admin", body },
+  });
+  revalidatePath(`/admin/bookings/${bookingId}`);
 }
 
 export async function saveBookingNotes(formData: FormData) {
