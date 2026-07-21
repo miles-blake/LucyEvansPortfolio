@@ -1,14 +1,12 @@
-import { auth } from "@/auth";
-import { redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
-  if (!session) redirect("/admin/login");
-
+// Auth protection is handled by middleware (src/middleware.ts).
+// The layout itself stays Prisma-free so Turbopack never bundles server-only
+// modules into the client chunk for the login page.
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex bg-cream">
-      <AdminSidebar userName={session.user?.name ?? "Admin"} />
+      <AdminSidebar />
       <main className="flex-1 min-w-0 p-6 lg:p-8">{children}</main>
     </div>
   );

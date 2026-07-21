@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import {
   Camera,
   Package,
@@ -25,8 +25,10 @@ const NAV = [
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
 ];
 
-export function AdminSidebar({ userName }: { userName: string }) {
+export function AdminSidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const userName = session?.user?.name ?? "Admin";
 
   function isActive(href: string, exact?: boolean) {
     return exact ? pathname === href : pathname.startsWith(href);
