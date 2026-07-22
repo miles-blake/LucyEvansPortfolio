@@ -66,7 +66,7 @@ export async function createInvoiceFromOrder(orderId: string) {
       number,
       type: "ORDER",
       orderId,
-      customerName: order.customerEmail,
+      customerName: order.customerName || order.customerEmail,
       customerEmail: order.customerEmail,
       lineItems,
       subtotal: order.totalAmount,
