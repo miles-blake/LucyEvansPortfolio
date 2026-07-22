@@ -6,7 +6,7 @@ import AddToCartButton from "@/components/cart/AddToCartButton";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -17,11 +17,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const bundle = await prisma.bundle.findUnique({ where: { slug } });
   if (!bundle) return {};
   return { title: bundle.title, description: bundle.description ?? undefined };
-}
-
-export async function generateStaticParams() {
-  const bundles = await prisma.bundle.findMany({ select: { slug: true } });
-  return bundles.map((b) => ({ slug: b.slug }));
 }
 
 export default async function BundleDetailPage({ params }: Props) {

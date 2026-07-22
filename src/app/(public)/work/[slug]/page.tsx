@@ -6,7 +6,7 @@ import VideoPlayer from "@/components/work/VideoPlayer";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -27,10 +27,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export async function generateStaticParams() {
-  const pieces = await prisma.portfolioPiece.findMany({ select: { slug: true } });
-  return pieces.map((p) => ({ slug: p.slug }));
-}
 
 export default async function CaseStudyPage({ params }: Props) {
   const { slug } = await params;
