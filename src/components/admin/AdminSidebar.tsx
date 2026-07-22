@@ -37,6 +37,7 @@ const NAV = [
   { href: "/admin/bookings", label: "Bookings", icon: CalendarDays },
   { href: "/admin/availability", label: "Availability", icon: CalendarOff },
   { href: "/admin/inquiries", label: "Inquiries", icon: MessageSquare },
+  { href: "/admin/clients", label: "Clients", icon: Users },
   { href: "/admin/portfolio", label: "Portfolio", icon: Briefcase },
   { href: "/admin/subscribers", label: "Subscribers", icon: Users },
   { href: "/admin/newsletter", label: "Newsletter", icon: Mail },
