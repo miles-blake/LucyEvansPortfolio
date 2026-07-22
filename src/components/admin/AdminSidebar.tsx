@@ -26,6 +26,7 @@ import {
   Search,
   Star,
   ScrollText,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +36,7 @@ const NAV = [
   { href: "/admin/bundles", label: "Bundles", icon: Package },
   { href: "/admin/services", label: "Services", icon: CalendarDays },
   { href: "/admin/bookings", label: "Bookings", icon: CalendarDays },
+  { href: "/admin/mini-sessions", label: "Mini sessions", icon: Clock },
   { href: "/admin/availability", label: "Availability", icon: CalendarOff },
   { href: "/admin/inquiries", label: "Inquiries", icon: MessageSquare },
   { href: "/admin/clients", label: "Clients", icon: Users },

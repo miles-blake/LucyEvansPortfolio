@@ -418,6 +418,39 @@ model ClientProfile {
   updatedAt DateTime @updatedAt
 }
 
+// ─── Mini Sessions ───────────────────────────────────────────────────
+
+model MiniSessionDay {
+  id          String   @id @default(cuid())
+  title       String
+  date        DateTime // the calendar date of the event
+  location    String?
+  description String?
+  duration    Int      // minutes per slot
+  price       Int      // cents per slot
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  slots MiniSessionSlot[]
+}
+
+model MiniSessionSlot {
+  id                    String          @id @default(cuid())
+  dayId                 String
+  day                   MiniSessionDay  @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  startTime             DateTime        // exact start datetime
+  status                String          @default("available") // "available" | "held" | "booked"
+  heldUntil             DateTime?       // set during checkout to prevent double-booking
+  clientName            String?
+  clientEmail           String?
+  clientPhone           String?
+  stripePaymentIntentId String?
+  notes                 String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+}
+
 // ─── Admin ────────────────────────────────────────────────────────────
 
 model AdminUser {
