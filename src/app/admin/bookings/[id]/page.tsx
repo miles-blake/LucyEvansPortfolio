@@ -6,6 +6,7 @@ import { deleteDeliveredAsset, uploadContract, deleteContract } from "../deliver
 import { DeleteBookingButton } from "./DeleteBookingButton";
 import { MessageThread } from "@/components/MessageThread";
 import { DeliveryGalleryUpload } from "@/components/admin/DeliveryGalleryUpload";
+import { OfflinePaymentForm } from "@/components/admin/OfflinePaymentForm";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { getQuestionsForEventType } from "@/lib/booking-questionnaire";
@@ -225,6 +226,42 @@ export default async function BookingDetailPage({ params }: Props) {
                     </div>
                   ))}
               </div>
+            </section>
+          );
+        })()}
+
+        {/* Offline payments */}
+        {(() => {
+          type Payment = { id: string; method: string; amount: number; note: string | null; proofUrl: string; recordedAt: string };
+          const payments = ((booking.offlinePayments as unknown[] | null) ?? []) as Payment[];
+          return (
+            <section className="border border-border rounded-sm p-6">
+              <h2 className="font-display text-lg text-ink mb-4">Offline payments</h2>
+
+              {payments.length > 0 && (
+                <ul className="space-y-3 mb-6">
+                  {payments.map((p) => (
+                    <li key={p.id} className="flex items-start justify-between gap-4 text-sm border-b border-border/50 pb-3 last:border-0 last:pb-0">
+                      <div>
+                        <p className="text-ink font-medium">{formatPrice(p.amount)} · {p.method}</p>
+                        {p.note && <p className="font-meta text-xs text-muted-foreground mt-0.5">{p.note}</p>}
+                        <p className="font-meta text-xs text-muted-foreground mt-0.5">
+                          {new Date(p.recordedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </p>
+                      </div>
+                      <a href={p.proofUrl} target="_blank" rel="noopener noreferrer"
+                        className="font-meta text-xs text-sky hover:opacity-70 whitespace-nowrap">
+                        View proof →
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <p className="font-meta text-xs text-muted-foreground mb-4">
+                Record a payment received outside of Stripe (cash, Venmo, etc.). Proof upload is required.
+              </p>
+              <OfflinePaymentForm bookingId={booking.id} />
             </section>
           );
         })()}
