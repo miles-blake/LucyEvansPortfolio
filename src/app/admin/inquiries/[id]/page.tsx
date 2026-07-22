@@ -61,6 +61,26 @@ export default async function AdminInquiryDetailPage({
             {inquiry.email}
           </a>
         </dd>
+        {inquiry.phone && (
+          <>
+            <dt className="text-muted-foreground">Phone</dt>
+            <dd className="text-ink">{inquiry.phone}</dd>
+          </>
+        )}
+        {inquiry.packageInterest && (
+          <>
+            <dt className="text-muted-foreground">Package interest</dt>
+            <dd className="text-ink">{inquiry.packageInterest}</dd>
+          </>
+        )}
+        {inquiry.reason && (
+          <>
+            <dt className="text-muted-foreground">Reason</dt>
+            <dd className="text-ink">{inquiry.reason}</dd>
+          </>
+        )}
+        <dt className="text-muted-foreground">Prefers</dt>
+        <dd className="text-ink capitalize">{inquiry.commPref}</dd>
         <dt className="text-muted-foreground">Status</dt>
         <dd>
           {inquiry.status === "NEW" && (
