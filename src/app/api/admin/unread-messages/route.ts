@@ -6,9 +6,14 @@ export async function GET() {
   const session = await auth();
   if (!session) return NextResponse.json({ count: 0 }, { status: 401 });
 
-  const count = await prisma.bookingMessage.count({
-    where: { senderRole: "client", readByAdmin: false },
-  });
+  const [messages, inquiries] = await Promise.all([
+    prisma.bookingMessage.count({
+      where: { senderRole: "client", readByAdmin: false },
+    }),
+    prisma.inquiry.count({
+      where: { status: "NEW" },
+    }),
+  ]);
 
-  return NextResponse.json({ count });
+  return NextResponse.json({ count: messages + inquiries });
 }

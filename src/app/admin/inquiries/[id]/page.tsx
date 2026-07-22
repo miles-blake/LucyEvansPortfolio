@@ -37,10 +37,10 @@ export default async function AdminInquiryDetailPage({
   return (
     <div className="max-w-2xl">
       <Link
-        href="/admin/inquiries"
+        href="/admin/inbox"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-ink mb-6"
       >
-        ← Back to inquiries
+        ← Back to inbox
       </Link>
 
       {/* Header */}
