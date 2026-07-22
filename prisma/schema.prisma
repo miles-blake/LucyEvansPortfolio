@@ -401,6 +401,18 @@ model Review {
   createdAt   DateTime @default(now())
 }
 
+// ─── Client Profiles (merged identities) ────────────────────────────
+
+model ClientProfile {
+  id        String   @id @default(cuid())
+  name      String
+  emails    String[] // all known emails — used to group records
+  phones    String[] // all known phones
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // ─── Admin ────────────────────────────────────────────────────────────
 
 model AdminUser {

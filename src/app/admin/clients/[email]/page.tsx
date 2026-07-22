@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -41,9 +40,16 @@ function statusBadge(status: string) {
 export default async function ClientProfilePage({ params }: Props) {
   const email = decodeURIComponent((await params).email);
 
+  // Check if this email belongs to a merged ClientProfile
+  const profile = await prisma.clientProfile.findFirst({
+    where: { emails: { has: email } },
+  });
+
+  const allEmails = profile ? profile.emails : [email];
+
   const [bookings, orders, invoices, inquiries, account] = await Promise.all([
     prisma.booking.findMany({
-      where: { customerEmail: email },
+      where: { customerEmail: { in: allEmails } },
       include: {
         package: { select: { name: true } },
         contract: { select: { pdfUrl: true, signedAt: true } },
@@ -51,7 +57,7 @@ export default async function ClientProfilePage({ params }: Props) {
       orderBy: { eventDate: "desc" },
     }),
     prisma.order.findMany({
-      where: { customerEmail: email },
+      where: { customerEmail: { in: allEmails } },
       include: {
         items: {
           include: {
@@ -63,15 +69,15 @@ export default async function ClientProfilePage({ params }: Props) {
       orderBy: { createdAt: "desc" },
     }),
     prisma.invoice.findMany({
-      where: { customerEmail: email },
+      where: { customerEmail: { in: allEmails } },
       orderBy: { createdAt: "desc" },
     }),
     prisma.inquiry.findMany({
-      where: { email },
+      where: { email: { in: allEmails } },
       orderBy: { createdAt: "desc" },
     }),
-    prisma.client.findUnique({
-      where: { email },
+    prisma.client.findFirst({
+      where: { email: { in: allEmails } },
       select: { name: true, emailVerified: true, createdAt: true },
     }),
   ]);
@@ -91,13 +97,22 @@ export default async function ClientProfilePage({ params }: Props) {
   }
 
   const name =
+    profile?.name ||
     account?.name ||
     bookings[0]?.customerName ||
     orders[0]?.customerName ||
     inquiries[0]?.name ||
     email;
 
-  const phone = bookings.find((b) => b.customerPhone)?.customerPhone;
+  // Collect all phones across all emails
+  const phoneSet = new Set<string>();
+  if (profile) {
+    for (const p of profile.phones) phoneSet.add(p);
+  }
+  for (const b of bookings) {
+    if (b.customerPhone) phoneSet.add(b.customerPhone);
+  }
+  const phones = Array.from(phoneSet);
 
   const totalSpent =
     orders.filter((o) => o.status === "PAID").reduce((s, o) => s + o.totalAmount, 0) +
@@ -118,11 +133,22 @@ export default async function ClientProfilePage({ params }: Props) {
 
       <div className="flex items-start justify-between mb-8 gap-4">
         <div>
-          <h1 className="font-display text-2xl text-ink">{name}</h1>
-          <p className="font-meta text-sm text-muted-foreground mt-1">{email}</p>
-          {phone && (
-            <p className="font-meta text-sm text-muted-foreground">{phone}</p>
-          )}
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="font-display text-2xl text-ink">{name}</h1>
+            {profile && (
+              <span className="font-meta text-xs px-2 py-0.5 rounded-sm bg-amber-50 border border-amber-200 text-amber-800">
+                Merged profile
+              </span>
+            )}
+          </div>
+          <div className="mt-1 space-y-0.5">
+            {allEmails.map((e) => (
+              <p key={e} className="font-meta text-sm text-muted-foreground">{e}</p>
+            ))}
+          </div>
+          {phones.map((p) => (
+            <p key={p} className="font-meta text-sm text-muted-foreground">{p}</p>
+          ))}
         </div>
         <div className="flex flex-col items-end gap-2 shrink-0">
           {account && (
@@ -131,7 +157,7 @@ export default async function ClientProfilePage({ params }: Props) {
             </span>
           )}
           <Link
-            href={`/admin/email?to=${encodeURIComponent(email)}&subject=${encodeURIComponent(`Hi ${name}`)}`}
+            href={`/admin/email?to=${encodeURIComponent(allEmails[0] ?? email)}&subject=${encodeURIComponent(`Hi ${name}`)}`}
             className="border border-border text-muted-foreground px-3 py-1.5 rounded-sm text-xs font-meta hover:text-ink transition-colors inline-flex items-center gap-1.5"
           >
             Send email →
@@ -185,6 +211,9 @@ export default async function ClientProfilePage({ params }: Props) {
                         </span>
                       )}
                     </div>
+                    {allEmails.length > 1 && (
+                      <p className="font-meta text-xs text-muted-foreground/70">{b.customerEmail}</p>
+                    )}
                   </div>
                   <p className="font-meta text-sm text-muted-foreground shrink-0">{formatMoney(b.totalPrice)}</p>
                 </Link>
@@ -227,6 +256,9 @@ export default async function ClientProfilePage({ params }: Props) {
                       </li>
                     ))}
                   </ul>
+                  {allEmails.length > 1 && (
+                    <p className="font-meta text-xs text-muted-foreground/70 mt-1">{o.customerEmail}</p>
+                  )}
                 </Link>
               ))}
             </div>
