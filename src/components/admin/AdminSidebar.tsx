@@ -45,6 +45,7 @@ const NAV = [
   { href: "/admin/discounts", label: "Discounts", icon: Tag },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart2 },
   { href: "/admin/reviews", label: "Reviews", icon: Star },
+  { href: "/admin/venmo-payments", label: "Venmo", icon: Tag },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
@@ -58,13 +59,18 @@ export function AdminSidebar({ open = false, onClose }: Props) {
   const { data: session } = useSession();
   const userName = session?.user?.name ?? "Admin";
   const [unreadCount, setUnreadCount] = useState(0);
+  const [pendingVenmo, setPendingVenmo] = useState(0);
 
   useEffect(() => {
     fetch("/api/admin/unread-messages")
       .then((r) => r.json())
       .then((d) => setUnreadCount(d.count ?? 0))
       .catch(() => {});
-  }, [pathname]); // re-check whenever admin navigates
+    fetch("/api/admin/venmo-pending")
+      .then((r) => r.json())
+      .then((d) => setPendingVenmo(d.count ?? 0))
+      .catch(() => {});
+  }, [pathname]);
 
   function isActive(href: string, exact?: boolean) {
     return exact ? pathname === href : pathname.startsWith(href);
@@ -106,6 +112,11 @@ export function AdminSidebar({ open = false, onClose }: Props) {
             {href === "/admin/bookings" && unreadCount > 0 && (
               <span className="ml-auto bg-rose text-cream text-[10px] font-meta font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
                 {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+            {href === "/admin/venmo-payments" && pendingVenmo > 0 && (
+              <span className="ml-auto bg-rose text-cream text-[10px] font-meta font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+                {pendingVenmo}
               </span>
             )}
           </Link>

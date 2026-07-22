@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PayButton } from "@/components/PayButton";
+import { VenmoPaymentFlow } from "@/components/VenmoPaymentFlow";
 import { MessageThread } from "@/components/MessageThread";
 import { ContractSigner } from "@/components/ContractSigner";
 import { sendPortalMessage } from "@/app/account/messages/actions";
@@ -104,16 +105,32 @@ export default async function ClientPortalPage({ params }: Props) {
           </dl>
 
           {!booking.depositPaid && booking.status !== "CANCELLED" && (
-            <div className="mt-5 pt-4 border-t border-border">
-              <p className="font-meta text-xs text-muted-foreground mb-3">
+            <div className="mt-5 pt-4 border-t border-border space-y-4">
+              <p className="font-meta text-xs text-muted-foreground">
                 Deposit of {formatPrice(booking.depositAmount)} required to confirm your date.
               </p>
-              <PayButton
-                type="deposit"
-                bookingId={booking.id}
-                portalToken={token}
-                label={`Pay deposit — ${formatPrice(booking.depositAmount)}`}
-              />
+              <div className="space-y-3">
+                <PayButton
+                  type="deposit"
+                  bookingId={booking.id}
+                  portalToken={token}
+                  label={`Pay with card — ${formatPrice(booking.depositAmount)}`}
+                />
+                <details className="group">
+                  <summary className="cursor-pointer font-meta text-xs text-muted-foreground hover:text-ink transition-colors list-none flex items-center gap-1">
+                    <span className="group-open:hidden">▸</span>
+                    <span className="hidden group-open:inline">▾</span>
+                    Pay with Venmo instead
+                  </summary>
+                  <VenmoPaymentFlow
+                    bookingId={booking.id}
+                    portalToken={token}
+                    amount={booking.depositAmount}
+                    type="deposit"
+                    customerName={booking.customerName}
+                  />
+                </details>
+              </div>
             </div>
           )}
         </section>
