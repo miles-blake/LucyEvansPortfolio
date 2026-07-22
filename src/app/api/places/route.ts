@@ -7,16 +7,34 @@ export async function GET(req: NextRequest) {
   const key = process.env.GOOGLE_PLACES_API_KEY;
   if (!key) return NextResponse.json({ predictions: [] });
 
-  const url = new URL("https://maps.googleapis.com/maps/api/place/autocomplete/json");
-  url.searchParams.set("input", q);
-  url.searchParams.set("key", key);
-  url.searchParams.set("language", "en");
-  // Bias toward US but don't restrict — venues may be destination weddings
-  url.searchParams.set("components", "country:us");
-  url.searchParams.set("types", "establishment");
+  const res = await fetch("https://places.googleapis.com/v1/places:autocomplete", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": key,
+      "X-Goog-FieldMask": "suggestions.placePrediction.placeId,suggestions.placePrediction.text,suggestions.placePrediction.structuredFormat",
+    },
+    body: JSON.stringify({
+      input: q,
+      languageCode: "en",
+      includedRegionCodes: ["us"],
+    }),
+  });
 
-  const res = await fetch(url.toString());
   const data = await res.json();
+  const suggestions = data.suggestions ?? [];
 
-  return NextResponse.json({ predictions: data.predictions ?? [] });
+  const predictions = suggestions
+    .map((s: { placePrediction?: { placeId?: string; text?: { text: string }; structuredFormat?: { mainText?: { text: string }; secondaryText?: { text: string } } } }) => s.placePrediction)
+    .filter(Boolean)
+    .map((p: { placeId?: string; text?: { text: string }; structuredFormat?: { mainText?: { text: string }; secondaryText?: { text: string } } }) => ({
+      place_id: p.placeId ?? "",
+      description: p.text?.text ?? "",
+      structured_formatting: {
+        main_text: p.structuredFormat?.mainText?.text ?? p.text?.text ?? "",
+        secondary_text: p.structuredFormat?.secondaryText?.text ?? "",
+      },
+    }));
+
+  return NextResponse.json({ predictions });
 }
