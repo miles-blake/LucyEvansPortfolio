@@ -104,6 +104,7 @@ model Booking {
   messages         BookingMessage[]
   deliveredAssets  DeliveredAsset[]
   contract         BookingContract?
+  venmoPayments    VenmoPayment[]
 }
 
 enum BookingStatus {
@@ -357,6 +358,22 @@ model AuditLog {
   targetId   String?  // ID of the affected record
   meta       Json?    // extra context (old status → new status, etc.)
   createdAt  DateTime @default(now())
+}
+
+// ─── Venmo Payments ──────────────────────────────────────────────────
+
+model VenmoPayment {
+  id          String   @id @default(cuid())
+  bookingId   String
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amount      Int      // expected amount in cents
+  type        String   // "deposit" | "invoice"
+  clientProofUrl String // screenshot uploaded by client
+  adminProofUrl  String? // confirmation screenshot uploaded by Lucy
+  status      String   @default("pending") // "pending" | "confirmed" | "rejected"
+  rejectionNote String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 // ─── Client Reviews ──────────────────────────────────────────────────
