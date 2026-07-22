@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
   });
 
   const amount = parseInt(amountStr);
-  await prisma.venmoPayment.create({
+  const venmoPayment = await prisma.venmoPayment.create({
     data: {
       bookingId,
       amount,
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
         <h2>New Venmo payment to verify</h2>
         <p><strong>${pt.booking.customerName}</strong> has submitted a Venmo payment of <strong>$${dollars}</strong> (${type}).</p>
         <p>They've uploaded a screenshot as proof. Please verify the payment was received and confirm or reject:</p>
-        <p><a href="${siteUrl}/admin/venmo-payments" style="color:#A9C6D8">Review in admin →</a></p>
+        <p><a href="${siteUrl}/admin/venmo-payments#${venmoPayment.id}" style="color:#A9C6D8">Review this payment →</a></p>
       `,
     });
   } catch (err) {

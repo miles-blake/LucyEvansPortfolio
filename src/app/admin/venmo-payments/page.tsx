@@ -48,7 +48,7 @@ export default async function VenmoPaymentsPage() {
         ) : (
           <ul className="space-y-4">
             {pending.map((p) => (
-              <li key={p.id} className="border border-border rounded-sm p-5 space-y-4">
+              <li key={p.id} id={p.id} className="border border-border rounded-sm p-5 space-y-4 scroll-mt-8">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-medium text-ink">
