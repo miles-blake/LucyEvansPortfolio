@@ -27,11 +27,13 @@ import {
   Star,
   ScrollText,
   Clock,
+  Inbox,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/admin/inbox", label: "Inbox", icon: Inbox },
   { href: "/admin/photos", label: "Photos", icon: Camera },
   { href: "/admin/bundles", label: "Bundles", icon: Package },
   { href: "/admin/services", label: "Services", icon: CalendarDays },
@@ -114,7 +116,7 @@ export function AdminSidebar({ open = false, onClose }: Props) {
           >
             <Icon size={15} />
             <span className="flex-1">{label}</span>
-            {href === "/admin/bookings" && unreadCount > 0 && (
+            {href === "/admin/inbox" && unreadCount > 0 && (
               <span className="ml-auto bg-rose text-cream text-[10px] font-meta font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>

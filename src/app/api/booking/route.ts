@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
+import { resend } from "@/lib/resend";
 
 const schema = z.object({
   packageId: z.string().min(1),
@@ -104,6 +105,36 @@ export async function POST(req: NextRequest) {
         totalPrice,
       },
     });
+
+    // Send auto-responder email to client
+    try {
+      const firstName = data.customerName.split(" ")[0];
+      const siteUrl = process.env.NEXTAUTH_URL ?? "https://lucyevans.com";
+      const from = process.env.RESEND_FROM_EMAIL ?? "hello@lucyevans.com";
+      const eventDateFormatted = new Date(data.eventDate + "T12:00:00Z").toLocaleDateString("en-US", {
+        month: "long", day: "numeric", year: "numeric", timeZone: "UTC",
+      });
+      await resend.emails.send({
+        from,
+        to: data.customerEmail,
+        subject: "We received your inquiry — Lucy Evans Photography",
+        html: `<div style="font-family:sans-serif;max-width:600px;color:#2E2A24">
+  <p>Hi ${firstName},</p>
+  <p>Thank you for reaching out! We've received your booking inquiry for your <strong>${data.eventType}</strong> session and will be in touch within 1–2 business days to confirm details.</p>
+  <p>Here's what you submitted:</p>
+  <table style="border-collapse:collapse;width:100%;margin:16px 0">
+    <tr><td style="padding:6px 0;color:#888;font-size:13px">Event type</td><td style="padding:6px 0;font-size:13px;text-transform:capitalize">${data.eventType}</td></tr>
+    <tr><td style="padding:6px 0;color:#888;font-size:13px">Date</td><td style="padding:6px 0;font-size:13px">${eventDateFormatted}</td></tr>
+    <tr><td style="padding:6px 0;color:#888;font-size:13px">Package</td><td style="padding:6px 0;font-size:13px">${pkg.name}</td></tr>
+    <tr><td style="padding:6px 0;color:#888;font-size:13px">Deposit</td><td style="padding:6px 0;font-size:13px">$${(depositAmount / 100).toFixed(2)}</td></tr>
+  </table>
+  <p>Questions? Just reply to this email.</p>
+  <p>— Lucy Evans<br/><a href="${siteUrl}" style="color:#A9C6D8">lucyevans.com</a></p>
+</div>`,
+      });
+    } catch (err) {
+      console.error("[inquiry auto-responder]", err);
+    }
 
     // Venmo path — skip Stripe, return bookingId for inline payment flow
     if (data.paymentMethod === "venmo") {

@@ -98,6 +98,9 @@ model Booking {
   reminderSent7Day Boolean      @default(false)
   reminderSent2Day Boolean      @default(false)
   followUpSent     Boolean      @default(false)
+  prepEmailSent    Boolean      @default(false)
+  balanceDueSent   Boolean      @default(false)
+  reEngagementSent Boolean      @default(false)
   offlinePayments  Json?        // array of { id, method, amount, note, proofUrl, recordedAt }
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -415,6 +418,7 @@ model ClientProfile {
   emails    String[] // all known emails — used to group records
   phones    String[] // all known phones
   notes     String?
+  tags      String[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

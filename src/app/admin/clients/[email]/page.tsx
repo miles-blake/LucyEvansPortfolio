@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { revalidatePath } from "next/cache";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Admin — Client Profile" };
@@ -35,6 +36,35 @@ function statusBadge(status: string) {
     SENT: "bg-sky/20 text-sky",
   };
   return map[status] ?? "bg-muted text-muted-foreground";
+}
+
+async function addClientTag(formData: FormData) {
+  "use server";
+  const profileId = formData.get("profileId") as string;
+  const tag = (formData.get("tag") as string)?.trim();
+  if (!profileId || !tag) return;
+  await prisma.clientProfile.update({
+    where: { id: profileId },
+    data: { tags: { push: tag } },
+  });
+  revalidatePath(`/admin/clients/${encodeURIComponent(formData.get("email") as string)}`);
+}
+
+async function removeClientTag(formData: FormData) {
+  "use server";
+  const profileId = formData.get("profileId") as string;
+  const tagToRemove = formData.get("tag") as string;
+  if (!profileId || !tagToRemove) return;
+  const current = await prisma.clientProfile.findUnique({
+    where: { id: profileId },
+    select: { tags: true },
+  });
+  if (!current) return;
+  await prisma.clientProfile.update({
+    where: { id: profileId },
+    data: { tags: current.tags.filter((t) => t !== tagToRemove) },
+  });
+  revalidatePath(`/admin/clients/${encodeURIComponent(formData.get("email") as string)}`);
 }
 
 export default async function ClientProfilePage({ params }: Props) {
@@ -179,6 +209,50 @@ export default async function ClientProfilePage({ params }: Props) {
           <p className="font-meta text-xs text-muted-foreground mt-1">total spent</p>
         </div>
       </div>
+
+      {/* Tags — only shown for merged profiles */}
+      {profile && (
+        <section className="border border-border rounded-sm p-5 mb-6">
+          <h2 className="font-display text-base text-ink mb-3">Tags</h2>
+          {profile.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {profile.tags.map((tag) => (
+                <form key={tag} action={removeClientTag} className="inline-flex items-center">
+                  <input type="hidden" name="profileId" value={profile.id} />
+                  <input type="hidden" name="tag" value={tag} />
+                  <input type="hidden" name="email" value={email} />
+                  <button
+                    type="submit"
+                    className="inline-flex items-center gap-1 font-meta text-xs px-2.5 py-1 rounded-full bg-ink/8 text-ink hover:bg-rose/10 hover:text-rose transition-colors"
+                  >
+                    {tag}
+                    <span className="ml-0.5 opacity-50">×</span>
+                  </button>
+                </form>
+              ))}
+            </div>
+          )}
+          {profile.tags.length === 0 && (
+            <p className="font-meta text-xs text-muted-foreground mb-4">No tags yet.</p>
+          )}
+          <form action={addClientTag} className="flex items-center gap-2">
+            <input type="hidden" name="profileId" value={profile.id} />
+            <input type="hidden" name="email" value={email} />
+            <input
+              type="text"
+              name="tag"
+              placeholder="Add tag…"
+              className="text-xs border border-border rounded-sm px-3 py-1.5 bg-cream text-ink placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-sky/40 w-40"
+            />
+            <button
+              type="submit"
+              className="text-xs bg-ink text-cream px-3 py-1.5 rounded-sm hover:opacity-80 transition-opacity font-meta"
+            >
+              Add
+            </button>
+          </form>
+        </section>
+      )}
 
       <div className="space-y-6">
         <section className="border border-border rounded-sm p-5 space-y-3">

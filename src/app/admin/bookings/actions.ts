@@ -73,6 +73,53 @@ export async function updateBookingStatus(formData: FormData) {
     }
   }
 
+  // Auto-generate contract if template exists and no contract yet
+  if (status === "CONFIRMED" && prev && prev.status !== "CONFIRMED") {
+    try {
+      const [template, existingContract] = await Promise.all([
+        prisma.contractTemplate.findFirst(),
+        prisma.bookingContract.findFirst({ where: { bookingId: id } }),
+      ]);
+      if (template && !existingContract) {
+        const { renderToBuffer } = await import("@react-pdf/renderer");
+        const React = await import("react");
+        const { ContractPDF } = await import("@/components/ContractPDF");
+        const booking = await prisma.booking.findUnique({ where: { id }, include: { package: { select: { name: true } } } });
+        if (booking) {
+          const el = React.default.createElement(ContractPDF, { booking, templateBody: template.body }) as any;
+          const buffer: Buffer = await renderToBuffer(el);
+          const { cloudinary } = await import("@/lib/cloudinary");
+          const pdfUrl = await new Promise<string>((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+              { resource_type: "raw", folder: "contracts", public_id: id, format: "pdf" },
+              (err, result) => { if (err || !result) return reject(err ?? new Error("Upload failed")); resolve(result.secure_url); }
+            );
+            stream.end(buffer);
+          });
+          await prisma.bookingContract.create({ data: { bookingId: id, pdfUrl } });
+          const { resend } = await import("@/lib/resend");
+          const from = process.env.RESEND_FROM_EMAIL ?? "hello@lucyevans.com";
+          const siteUrl = process.env.NEXTAUTH_URL ?? "https://lucyevans.com";
+          const portalToken = prev.portalToken;
+          const portalUrl = portalToken ? `${siteUrl}/portal/${portalToken.token}` : `${siteUrl}/account`;
+          await resend.emails.send({
+            from,
+            to: prev.customerEmail,
+            subject: "Your contract is ready to sign — Lucy Evans Photography",
+            html: `<div style="font-family:sans-serif;max-width:600px;color:#2E2A24">
+          <p>Hi ${prev.customerName},</p>
+          <p>Your booking contract is ready. Please review and sign it at your portal to complete your booking:</p>
+          <p><a href="${portalUrl}" style="display:inline-block;background:#2E2A24;color:#F5F0EA;padding:10px 20px;border-radius:3px;text-decoration:none;font-size:14px">Sign your contract →</a></p>
+          <p>— Lucy Evans<br/><a href="${siteUrl}" style="color:#A9C6D8">lucyevans.com</a></p>
+        </div>`,
+          });
+        }
+      }
+    } catch (err) {
+      console.error("[auto-contract]", err);
+    }
+  }
+
   // Send review request when booking is completed for the first time
   if (status === "COMPLETED" && prev && prev.status !== "COMPLETED") {
     const siteUrl = process.env.NEXTAUTH_URL ?? "https://lucyevans.com";

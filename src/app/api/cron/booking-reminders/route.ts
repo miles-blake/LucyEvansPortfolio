@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     };
   }
 
-  const [bookings7, bookings2, bookingsFollowUp] = await Promise.all([
+  const [bookings7, bookings2, bookingsFollowUp, bookingsPrepEmail, bookingsBalanceDue, bookingsReEngagement] = await Promise.all([
     prisma.booking.findMany({
       where: {
         status: "CONFIRMED",
@@ -58,6 +58,21 @@ export async function GET(req: NextRequest) {
         eventType: true,
         portalToken: { select: { token: true } },
       },
+    }),
+    // Prep email: 7 days before the shoot
+    prisma.booking.findMany({
+      where: { status: "CONFIRMED", prepEmailSent: false, eventDate: dayWindow(7) },
+      select: { id: true, customerName: true, customerEmail: true, customerPhone: true, communicationPreference: true, eventType: true, portalToken: { select: { token: true } } },
+    }),
+    // Balance due reminder: 7 days before, deposit not yet paid
+    prisma.booking.findMany({
+      where: { status: "CONFIRMED", balanceDueSent: false, depositPaid: false, eventDate: dayWindow(7) },
+      select: { id: true, customerName: true, customerEmail: true, customerPhone: true, communicationPreference: true, eventType: true, depositAmount: true, eventDate: true, portalToken: { select: { token: true } } },
+    }),
+    // Re-engagement: ~180 days after completed shoot
+    prisma.booking.findMany({
+      where: { status: "COMPLETED", reEngagementSent: false, eventDate: dayWindow(-180) },
+      select: { id: true, customerName: true, customerEmail: true, customerPhone: true, communicationPreference: true, eventType: true, portalToken: { select: { token: true } } },
     }),
   ]);
 
@@ -189,11 +204,96 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Prep email loop
+  for (const booking of bookingsPrepEmail) {
+    try {
+      const firstName = booking.customerName.split(" ")[0];
+      const portalUrl = booking.portalToken
+        ? `${siteUrl}/portal/${booking.portalToken.token}`
+        : `${siteUrl}/account`;
+      await resend.emails.send({
+        from,
+        to: booking.customerEmail,
+        subject: "Get ready for your shoot — Lucy Evans Photography",
+        html: `<div style="font-family:sans-serif;max-width:600px;color:#2E2A24">
+          <p>Hi ${firstName},</p>
+          <p>Your <strong>${booking.eventType}</strong> shoot is just one week away — how exciting! Here are a few tips to make the most of your session:</p>
+          <ul style="padding-left:20px;color:#2E2A24;font-size:14px;line-height:1.8">
+            <li>Plan your outfits ahead of time — solids and neutrals photograph beautifully</li>
+            <li>Get a good night's sleep the night before</li>
+            <li>Bring any props or meaningful items you'd like in your photos</li>
+            <li>Don't stress — just show up and have fun!</li>
+          </ul>
+          <p>You can review your booking details at your portal anytime:<br/><a href="${portalUrl}" style="color:#A9C6D8">${portalUrl}</a></p>
+          <p>See you soon!<br/>— Lucy Evans</p>
+        </div>`,
+      });
+      await prisma.booking.update({ where: { id: booking.id }, data: { prepEmailSent: true } });
+      sent++;
+    } catch (err) {
+      console.error(`[cron] prep email failed for booking ${booking.id}:`, err);
+    }
+  }
+
+  // Balance due reminder loop
+  for (const booking of bookingsBalanceDue) {
+    try {
+      const firstName = booking.customerName.split(" ")[0];
+      const portalUrl = booking.portalToken
+        ? `${siteUrl}/portal/${booking.portalToken.token}`
+        : `${siteUrl}/account`;
+      const balanceFormatted = (booking.depositAmount / 100).toFixed(2);
+      const eventDateFormatted = new Date(booking.eventDate ?? Date.now()).toLocaleDateString("en-US", {
+        month: "long", day: "numeric", year: "numeric", timeZone: "UTC",
+      });
+      await resend.emails.send({
+        from,
+        to: booking.customerEmail,
+        subject: "Balance due reminder — Lucy Evans Photography",
+        html: `<div style="font-family:sans-serif;max-width:600px;color:#2E2A24">
+          <p>Hi ${firstName},</p>
+          <p>Just a friendly reminder that your remaining balance of <strong>$${balanceFormatted}</strong> is due before your <strong>${booking.eventType}</strong> session on ${eventDateFormatted}.</p>
+          <p>You can pay easily at your portal:<br/><a href="${portalUrl}" style="display:inline-block;background:#2E2A24;color:#F5F0EA;padding:10px 20px;border-radius:3px;text-decoration:none;font-size:14px">Pay balance →</a></p>
+          <p>Questions? Just reply to this email.<br/>— Lucy Evans</p>
+        </div>`,
+      });
+      await prisma.booking.update({ where: { id: booking.id }, data: { balanceDueSent: true } });
+      sent++;
+    } catch (err) {
+      console.error(`[cron] balance due reminder failed for booking ${booking.id}:`, err);
+    }
+  }
+
+  // Re-engagement loop
+  for (const booking of bookingsReEngagement) {
+    try {
+      const firstName = booking.customerName.split(" ")[0];
+      await resend.emails.send({
+        from,
+        to: booking.customerEmail,
+        subject: "It's been 6 months — let's shoot again! — Lucy Evans Photography",
+        html: `<div style="font-family:sans-serif;max-width:600px;color:#2E2A24">
+          <p>Hi ${firstName},</p>
+          <p>It's hard to believe it's been 6 months since your ${booking.eventType} session! I hope you're still loving your photos.</p>
+          <p>If you've been thinking about booking another session — a new season, a special occasion, or just because — I'd love to work with you again. Reply to this email or <a href="${siteUrl}/services/book" style="color:#A9C6D8">book online</a>.</p>
+          <p>— Lucy Evans<br/><a href="${siteUrl}" style="color:#A9C6D8">lucyevans.com</a></p>
+        </div>`,
+      });
+      await prisma.booking.update({ where: { id: booking.id }, data: { reEngagementSent: true } });
+      sent++;
+    } catch (err) {
+      console.error(`[cron] re-engagement failed for booking ${booking.id}:`, err);
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     sent,
     checked7: bookings7.length,
     checked2: bookings2.length,
     checkedFollowUp: bookingsFollowUp.length,
+    checkedPrepEmail: bookingsPrepEmail.length,
+    checkedBalanceDue: bookingsBalanceDue.length,
+    checkedReEngagement: bookingsReEngagement.length,
   });
 }
