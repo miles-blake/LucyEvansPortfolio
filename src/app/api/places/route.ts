@@ -22,6 +22,10 @@ export async function GET(req: NextRequest) {
   });
 
   const data = await res.json();
+  if (!res.ok || data.error) {
+    console.error("Places API error:", JSON.stringify(data));
+    return NextResponse.json({ predictions: [], debug: data });
+  }
   const suggestions = data.suggestions ?? [];
 
   const predictions = suggestions
