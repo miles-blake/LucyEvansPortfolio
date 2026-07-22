@@ -23,6 +23,17 @@ type ServicePackage = {
   addOnPricing: Record<string, number> | null;
 };
 
+const REFERRAL_OPTIONS = [
+  "Instagram",
+  "TikTok",
+  "Pinterest",
+  "Google",
+  "Word of mouth / friend",
+  "Past client (returning)",
+  "Wedding planner or vendor",
+  "Other",
+] as const;
+
 const schema = z.object({
   packageId: z.string().min(1, "Select a package"),
   eventType: z.string().min(1, "Select an event type"),
@@ -31,6 +42,7 @@ const schema = z.object({
   customerEmail: z.email("Valid email required"),
   customerPhone: z.string().optional(),
   communicationPreference: z.enum(["email", "sms"]),
+  referralSource: z.string().optional(),
   message: z.string().optional(),
   addOns: z.object({
     extraRoll: z.boolean(),
@@ -168,7 +180,7 @@ export default function BookingForm() {
       const res = await fetch("/api/booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...values, questionnaireAnswers: filteredAnswers, paymentMethod }),
+        body: JSON.stringify({ ...values, questionnaireAnswers: filteredAnswers, paymentMethod, referralSource: values.referralSource || undefined }),
       });
 
       const json = await res.json();
@@ -500,6 +512,21 @@ export default function BookingForm() {
                       : "You'll receive confirmations and reminders by email."}
                   </p>
                 </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-sm text-muted-foreground mb-1.5">
+                  How did you hear about us?
+                </label>
+                <select
+                  {...register("referralSource")}
+                  className="w-full border border-border rounded-sm px-3 py-2 text-ink bg-cream focus:outline-none focus:ring-2 focus:ring-sky/40 text-sm"
+                >
+                  <option value="">— Select one —</option>
+                  {REFERRAL_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
 
             </div>
           </fieldset>

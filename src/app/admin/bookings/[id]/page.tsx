@@ -124,6 +124,12 @@ export default async function BookingDetailPage({ params }: Props) {
             )}
             <dt className="font-meta text-sm text-muted-foreground">Prefers</dt>
             <dd className="text-sm text-ink capitalize">{booking.communicationPreference}</dd>
+            {booking.referralSource && (
+              <>
+                <dt className="font-meta text-sm text-muted-foreground">Found via</dt>
+                <dd className="text-sm text-ink">{booking.referralSource}</dd>
+              </>
+            )}
           </dl>
         </section>
 
