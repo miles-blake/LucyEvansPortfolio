@@ -7,12 +7,13 @@ export async function POST(req: NextRequest) {
   const fd = await req.formData();
   const bookingId = (fd.get("bookingId") as string) || null;
   const orderId = (fd.get("orderId") as string) || null;
+  const invoiceId = (fd.get("invoiceId") as string) || null;
   const portalToken = (fd.get("portalToken") as string) || null;
   const amountStr = fd.get("amount") as string;
   const type = fd.get("type") as string;
   const file = fd.get("proof") as File | null;
 
-  if ((!bookingId && !orderId) || !amountStr || !type || !file || file.size === 0) {
+  if ((!bookingId && !orderId && !invoiceId) || !amountStr || !type || !file || file.size === 0) {
     return NextResponse.json({ error: "All fields including screenshot are required." }, { status: 400 });
   }
 
@@ -55,6 +56,26 @@ export async function POST(req: NextRequest) {
     if (order.status === "PAID") return NextResponse.json({ error: "This order is already paid." }, { status: 400 });
     customerName = order.customerName;
     customerEmail = order.customerEmail;
+  } else if (invoiceId) {
+    // Portal token required for invoice payments
+    if (!portalToken) {
+      return NextResponse.json({ error: "Authentication required." }, { status: 403 });
+    }
+    const pt = await prisma.clientPortalToken.findUnique({
+      where: { token: portalToken },
+      select: { expiresAt: true, booking: { select: { customerName: true, customerEmail: true } } },
+    });
+    if (!pt || pt.expiresAt < new Date()) {
+      return NextResponse.json({ error: "Invalid or expired portal link." }, { status: 403 });
+    }
+    const invoice = await prisma.invoice.findUnique({
+      where: { id: invoiceId },
+      select: { status: true, customerName: true, customerEmail: true },
+    });
+    if (!invoice) return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
+    if (invoice.status === "PAID") return NextResponse.json({ error: "This invoice is already paid." }, { status: 400 });
+    customerName = invoice.customerName;
+    customerEmail = invoice.customerEmail;
   }
 
   // Upload client screenshot
@@ -74,6 +95,7 @@ export async function POST(req: NextRequest) {
     data: {
       bookingId: bookingId ?? undefined,
       orderId: orderId ?? undefined,
+      invoiceId: invoiceId ?? undefined,
       amount,
       type,
       clientProofUrl: uploadResult.secure_url,
@@ -88,6 +110,8 @@ export async function POST(req: NextRequest) {
   const dollars = (amount / 100).toFixed(2);
   const subject = orderId
     ? `Venmo payment submitted — order by ${customerName}`
+    : invoiceId
+    ? `Venmo invoice payment submitted — ${customerName}`
     : `Venmo deposit submitted — ${customerName}`;
 
   try {

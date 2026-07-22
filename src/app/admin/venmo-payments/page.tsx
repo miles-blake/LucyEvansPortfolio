@@ -21,6 +21,7 @@ export default async function VenmoPaymentsPage() {
     include: {
       booking: { select: { id: true, customerName: true, customerEmail: true } },
       order: { select: { id: true, customerName: true, customerEmail: true } },
+      invoice: { select: { id: true, number: true, customerName: true, customerEmail: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -63,12 +64,16 @@ export default async function VenmoPaymentsPage() {
                         <Link href={`/admin/orders/${p.order.id}`} className="hover:opacity-70 transition-opacity">
                           {p.order.customerName}
                         </Link>
+                      ) : p.invoice ? (
+                        <Link href={`/admin/invoices/${p.invoice.id}`} className="hover:opacity-70 transition-opacity">
+                          {p.invoice.customerName}
+                        </Link>
                       ) : "Unknown"}
                       {" · "}{formatPrice(p.amount)}{" · "}
                       <span className="capitalize">{p.type}</span>
                     </p>
                     <p className="font-meta text-xs text-muted-foreground mt-0.5">
-                      {p.booking?.customerEmail ?? p.order?.customerEmail ?? ""} · {formatDate(p.createdAt)}
+                      {p.booking?.customerEmail ?? p.order?.customerEmail ?? p.invoice?.customerEmail ?? ""} · {formatDate(p.createdAt)}
                     </p>
                   </div>
                   <span className="font-meta text-xs bg-sky/20 text-sky px-2 py-0.5 rounded-sm whitespace-nowrap">pending</span>
@@ -131,6 +136,8 @@ export default async function VenmoPaymentsPage() {
                       <Link href={`/admin/bookings/${p.booking.id}`} className="hover:opacity-70">{p.booking.customerName}</Link>
                     ) : p.order ? (
                       <Link href={`/admin/orders/${p.order.id}`} className="hover:opacity-70">{p.order.customerName}</Link>
+                    ) : p.invoice ? (
+                      <Link href={`/admin/invoices/${p.invoice.id}`} className="hover:opacity-70">{p.invoice.customerName}</Link>
                     ) : "Unknown"}
                     {" · "}{formatPrice(p.amount)}
                   </p>

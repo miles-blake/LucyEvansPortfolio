@@ -245,6 +245,8 @@ model Invoice {
   dueDate        DateTime?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+
+  venmoPayments  VenmoPayment[]
 }
 
 enum InvoiceType {
@@ -370,8 +372,10 @@ model VenmoPayment {
   booking        Booking? @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   orderId        String?
   order          Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  invoiceId      String?
+  invoice        Invoice? @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   amount         Int      // expected amount in cents
-  type           String   // "deposit" | "order"
+  type           String   // "deposit" | "order" | "invoice"
   clientProofUrl String   // screenshot uploaded by client
   adminProofUrl  String?  // confirmation screenshot uploaded by Lucy
   status         String   @default("pending") // "pending" | "confirmed" | "rejected"
