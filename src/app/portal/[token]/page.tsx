@@ -6,6 +6,7 @@ import { VenmoPaymentFlow } from "@/components/VenmoPaymentFlow";
 import { MessageThread } from "@/components/MessageThread";
 import { ContractSigner } from "@/components/ContractSigner";
 import { sendPortalMessage } from "@/app/account/messages/actions";
+import { PortalReviewForm } from "@/components/PortalReviewForm";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -58,11 +59,12 @@ export default async function ClientPortalPage({ params }: Props) {
 
   const booking = portalToken.booking;
 
-  const [invoice, messages, assets, contract] = await Promise.all([
+  const [invoice, messages, assets, contract, review] = await Promise.all([
     prisma.invoice.findFirst({ where: { bookingId: booking.id } }),
     prisma.bookingMessage.findMany({ where: { bookingId: booking.id }, orderBy: { createdAt: "asc" } }),
     prisma.deliveredAsset.findMany({ where: { bookingId: booking.id }, orderBy: { createdAt: "asc" } }),
     prisma.bookingContract.findUnique({ where: { bookingId: booking.id } }),
+    prisma.review.findFirst({ where: { bookingId: booking.id } }),
   ]);
 
   type LineItem = { description: string; amount: number };
@@ -249,6 +251,20 @@ export default async function ClientPortalPage({ params }: Props) {
                 </li>
               ))}
             </ul>
+          </section>
+        )}
+
+        {/* Review — shown after shoot is complete and review record exists */}
+        {booking.status === "COMPLETED" && review && (
+          <section className="border border-border rounded-sm p-6">
+            <h2 className="font-display text-lg text-ink mb-1">Leave a review</h2>
+            <p className="font-meta text-xs text-muted-foreground mb-4">
+              Your feedback helps other clients and means a lot to a small business.
+            </p>
+            <PortalReviewForm
+              reviewToken={review.token}
+              alreadySubmitted={review.rating > 0}
+            />
           </section>
         )}
 
