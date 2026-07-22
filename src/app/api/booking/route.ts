@@ -14,6 +14,7 @@ const schema = z.object({
   customerPhone: z.string().optional(),
   communicationPreference: z.enum(["email", "sms"]).default("email"),
   message: z.string().optional(),
+  referralSource: z.string().optional(),
   questionnaireAnswers: z.record(z.string(), z.string()).optional(),
   paymentMethod: z.enum(["stripe", "venmo"]).default("stripe"),
   addOns: z.object({
@@ -93,6 +94,7 @@ export async function POST(req: NextRequest) {
         packageId: data.packageId,
         addOns: Object.keys(selectedAddOns).length > 0 ? selectedAddOns : Prisma.JsonNull,
         message: data.message ?? null,
+        referralSource: data.referralSource ?? null,
         questionnaireAnswers: data.questionnaireAnswers && Object.keys(data.questionnaireAnswers).length > 0
           ? data.questionnaireAnswers as Prisma.InputJsonValue
           : Prisma.JsonNull,

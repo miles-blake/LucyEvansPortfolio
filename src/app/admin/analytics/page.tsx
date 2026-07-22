@@ -18,6 +18,7 @@ export default async function AnalyticsPage() {
     funnelCounts,
     recentRevenue,
     discountUsage,
+    referralBreakdown,
   ] = await Promise.all([
     // Top-selling photos
     prisma.orderItem.groupBy({
@@ -56,6 +57,14 @@ export default async function AnalyticsPage() {
       where: { usageCount: { gt: 0 } },
       orderBy: { usageCount: "desc" },
       take: 5,
+    }),
+
+    // Referral source breakdown
+    prisma.booking.groupBy({
+      by: ["referralSource"],
+      where: { referralSource: { not: null } },
+      _count: { referralSource: true },
+      orderBy: { _count: { referralSource: "desc" } },
     }),
   ]);
 
@@ -195,6 +204,33 @@ export default async function AnalyticsPage() {
               ))}
             </tbody>
           </table>
+        </section>
+      )}
+
+      {/* Referral source breakdown */}
+      {referralBreakdown.length > 0 && (
+        <section>
+          <h2 className="font-display text-lg text-ink mb-4">How clients found Lucy</h2>
+          {(() => {
+            const maxReferral = Math.max(...referralBreakdown.map((r) => r._count.referralSource), 1);
+            return (
+              <div className="space-y-2">
+                {referralBreakdown.map((r) => {
+                  const count = r._count.referralSource;
+                  const width = Math.round((count / maxReferral) * 100);
+                  return (
+                    <div key={r.referralSource} className="flex items-center gap-3">
+                      <div className="w-44 text-right font-meta text-xs text-muted-foreground shrink-0">{r.referralSource}</div>
+                      <div className="flex-1 h-6 bg-muted rounded-sm overflow-hidden">
+                        <div className="h-full bg-ink/20 rounded-sm" style={{ width: `${width}%` }} />
+                      </div>
+                      <div className="w-10 font-meta text-xs text-ink shrink-0">{count}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </section>
       )}
     </div>

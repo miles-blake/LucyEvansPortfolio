@@ -87,6 +87,7 @@ model Booking {
   addOns          Json?         // selected add-ons and their prices
   message               String?  // initial message from customer (legacy)
   questionnaireAnswers  Json?    // structured pre-shoot questionnaire answers
+  referralSource        String?  // "how did you hear about us?"
   adminNotes            String?  // internal notes, admin-only
   communicationPreference String @default("email") // "email" | "sms"
   status          BookingStatus @default(INQUIRY)
