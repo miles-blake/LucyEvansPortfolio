@@ -127,7 +127,26 @@ export async function POST(req: NextRequest) {
       `,
     });
   } catch (err) {
-    console.error("[venmo-payment] notification email failed:", err);
+    console.error("[venmo-payment] admin notification failed:", err);
+  }
+
+  // Confirm receipt to the customer
+  if (customerEmail) {
+    try {
+      await resend.emails.send({
+        from,
+        to: customerEmail,
+        subject: "Venmo payment received — Lucy Evans Photography",
+        html: `<div style="font-family:sans-serif;max-width:600px;color:#2E2A24">
+          <p>Hi ${customerName.split(" ")[0]},</p>
+          <p>We've received your Venmo payment of <strong>$${dollars}</strong> and your screenshot has been uploaded. We'll verify it shortly and confirm once it's approved.</p>
+          <p>Questions? Just reply to this email.</p>
+          <p>— Lucy Evans<br/><a href="${siteUrl}" style="color:#A9C6D8">lucyevans.com</a></p>
+        </div>`,
+      });
+    } catch (err) {
+      console.error("[venmo-payment] customer confirmation failed:", err);
+    }
   }
 
   return NextResponse.json({ ok: true });
