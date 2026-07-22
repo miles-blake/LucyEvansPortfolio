@@ -96,6 +96,7 @@ model Booking {
   stripeSessionId String?
   reminderSent7Day Boolean      @default(false)
   reminderSent2Day Boolean      @default(false)
+  followUpSent     Boolean      @default(false)
   offlinePayments  Json?        // array of { id, method, amount, note, proofUrl, recordedAt }
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -244,6 +245,8 @@ model Invoice {
   dueDate        DateTime?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+
+  venmoPayments  VenmoPayment[]
 }
 
 enum InvoiceType {
@@ -369,8 +372,10 @@ model VenmoPayment {
   booking        Booking? @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   orderId        String?
   order          Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  invoiceId      String?
+  invoice        Invoice? @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   amount         Int      // expected amount in cents
-  type           String   // "deposit" | "order"
+  type           String   // "deposit" | "order" | "invoice"
   clientProofUrl String   // screenshot uploaded by client
   adminProofUrl  String?  // confirmation screenshot uploaded by Lucy
   status         String   @default("pending") // "pending" | "confirmed" | "rejected"
@@ -411,6 +416,39 @@ model ClientProfile {
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ─── Mini Sessions ───────────────────────────────────────────────────
+
+model MiniSessionDay {
+  id          String   @id @default(cuid())
+  title       String
+  date        DateTime // the calendar date of the event
+  location    String?
+  description String?
+  duration    Int      // minutes per slot
+  price       Int      // cents per slot
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  slots MiniSessionSlot[]
+}
+
+model MiniSessionSlot {
+  id                    String          @id @default(cuid())
+  dayId                 String
+  day                   MiniSessionDay  @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  startTime             DateTime        // exact start datetime
+  status                String          @default("available") // "available" | "held" | "booked"
+  heldUntil             DateTime?       // set during checkout to prevent double-booking
+  clientName            String?
+  clientEmail           String?
+  clientPhone           String?
+  stripePaymentIntentId String?
+  notes                 String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
 }
 
 // ─── Admin ────────────────────────────────────────────────────────────
