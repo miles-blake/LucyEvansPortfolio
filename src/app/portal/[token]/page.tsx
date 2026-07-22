@@ -177,13 +177,27 @@ export default async function ClientPortalPage({ params }: Props) {
             </div>
 
             {invoice.amountDue > 0 && invoice.status !== "PAID" && (
-              <div className="mt-4">
+              <div className="mt-4 space-y-3">
                 <PayButton
                   type="invoice"
                   invoiceId={invoice.id}
                   portalToken={token}
                   label={`Pay now — ${formatPrice(invoice.amountDue)}`}
                 />
+                <details className="group">
+                  <summary className="cursor-pointer font-meta text-xs text-muted-foreground hover:text-ink transition-colors list-none flex items-center gap-1">
+                    <span className="group-open:hidden">▸</span>
+                    <span className="hidden group-open:inline">▾</span>
+                    Pay with Venmo instead
+                  </summary>
+                  <VenmoPaymentFlow
+                    invoiceId={invoice.id}
+                    portalToken={token}
+                    amount={invoice.amountDue}
+                    type="invoice"
+                    customerName={booking.customerName}
+                  />
+                </details>
               </div>
             )}
           </section>

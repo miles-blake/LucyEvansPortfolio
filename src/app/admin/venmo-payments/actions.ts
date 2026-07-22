@@ -36,6 +36,7 @@ export async function confirmVenmoPayment(formData: FormData) {
     include: {
       booking: true,
       order: { include: { items: { include: { photo: true, bundle: true } } } },
+      invoice: true,
     },
   });
 
@@ -108,6 +109,27 @@ export async function confirmVenmoPayment(formData: FormData) {
     revalidatePath(`/admin/orders/${order.id}`);
   }
 
+  // Invoice payment confirmation
+  if (payment.invoice) {
+    const invoice = payment.invoice;
+    await prisma.invoice.update({ where: { id: invoice.id }, data: { status: "PAID" } });
+
+    try {
+      await resend.emails.send({
+        from,
+        to: invoice.customerEmail,
+        subject: `Invoice ${invoice.number} paid — Lucy Evans Photography`,
+        html: `<div style="font-family:sans-serif;max-width:600px;color:#2E2A24">
+          <p>Hi ${invoice.customerName.split(" ")[0]},</p>
+          <p>Your Venmo payment of <strong>$${dollars}</strong> for invoice ${invoice.number} has been confirmed. Thank you!</p>
+          <p>— Lucy Evans</p>
+        </div>`,
+      });
+    } catch (err) { console.error("[venmo confirm invoice] email failed:", err); }
+
+    revalidatePath(`/admin/invoices/${invoice.id}`);
+  }
+
   revalidatePath("/admin/venmo-payments");
 }
 
@@ -120,13 +142,13 @@ export async function rejectVenmoPayment(formData: FormData) {
   const payment = await prisma.venmoPayment.update({
     where: { id },
     data: { status: "rejected", rejectionNote: note },
-    include: { booking: true, order: true },
+    include: { booking: true, order: true, invoice: true },
   });
 
   const from = process.env.RESEND_FROM_EMAIL ?? "hello@lucyevans.com";
   const dollars = (payment.amount / 100).toFixed(2);
-  const customerEmail = payment.booking?.customerEmail ?? payment.order?.customerEmail ?? "";
-  const customerFirst = (payment.booking?.customerName ?? payment.order?.customerName ?? "there").split(" ")[0];
+  const customerEmail = payment.booking?.customerEmail ?? payment.order?.customerEmail ?? payment.invoice?.customerEmail ?? "";
+  const customerFirst = (payment.booking?.customerName ?? payment.order?.customerName ?? payment.invoice?.customerName ?? "there").split(" ")[0];
 
   if (customerEmail) {
     try {

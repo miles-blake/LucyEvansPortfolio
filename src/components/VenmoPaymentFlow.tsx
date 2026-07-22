@@ -8,10 +8,11 @@ interface Props {
   bookingId?: string;
   portalToken?: string;
   orderId?: string;
-  type?: "deposit" | "order";
+  invoiceId?: string;
+  type?: "deposit" | "order" | "invoice";
 }
 
-export function VenmoPaymentFlow({ amount, customerName, bookingId, portalToken, orderId, type = "deposit" }: Props) {
+export function VenmoPaymentFlow({ amount, customerName, bookingId, portalToken, orderId, invoiceId, type = "deposit" }: Props) {
   const [step, setStep] = useState<"instructions" | "done">("instructions");
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -21,6 +22,8 @@ export function VenmoPaymentFlow({ amount, customerName, bookingId, portalToken,
   const dollars = (amount / 100).toFixed(2);
   const noteText = orderId
     ? `Payment - Lucy Evans Photography - ${customerName}`
+    : invoiceId
+    ? `Invoice Payment - Lucy Evans Photography - ${customerName}`
     : `Deposit - Lucy Evans Photography - ${customerName}`;
   const venmoNote = encodeURIComponent(noteText);
   const venmoAppUrl = `venmo://paycharge?txn=pay&recipients=Lucy-Evans99&amount=${dollars}&note=${venmoNote}`;
@@ -41,11 +44,12 @@ export function VenmoPaymentFlow({ amount, customerName, bookingId, portalToken,
 
     const fd = new FormData();
     fd.set("amount", String(amount));
-    fd.set("type", orderId ? "order" : type);
+    fd.set("type", orderId ? "order" : invoiceId ? "invoice" : type);
     fd.set("proof", file);
     if (bookingId) fd.set("bookingId", bookingId);
     if (portalToken) fd.set("portalToken", portalToken);
     if (orderId) fd.set("orderId", orderId);
+    if (invoiceId) fd.set("invoiceId", invoiceId);
 
     try {
       const res = await fetch("/api/venmo-payment", { method: "POST", body: fd });
@@ -69,6 +73,8 @@ export function VenmoPaymentFlow({ amount, customerName, bookingId, portalToken,
         <p className="text-muted-foreground">
           {orderId
             ? "Lucy will verify your payment and send your download links within 24 hours."
+            : invoiceId
+            ? "Lucy will verify your payment and mark your invoice as paid within 24 hours."
             : "Lucy will verify your payment and confirm your booking within 24 hours. You'll receive an email once confirmed."}
         </p>
       </div>
