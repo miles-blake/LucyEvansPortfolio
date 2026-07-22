@@ -18,7 +18,10 @@ const inputCls = "w-full border border-border rounded-sm px-3 py-2 text-sm bg-cr
 
 export default async function VenmoPaymentsPage() {
   const payments = await prisma.venmoPayment.findMany({
-    include: { booking: { select: { id: true, customerName: true, customerEmail: true } } },
+    include: {
+      booking: { select: { id: true, customerName: true, customerEmail: true } },
+      order: { select: { id: true, customerName: true, customerEmail: true } },
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -52,13 +55,21 @@ export default async function VenmoPaymentsPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-medium text-ink">
-                      <Link href={`/admin/bookings/${p.booking.id}`} className="hover:opacity-70 transition-opacity">
-                        {p.booking.customerName}
-                      </Link>
+                      {p.booking ? (
+                        <Link href={`/admin/bookings/${p.booking.id}`} className="hover:opacity-70 transition-opacity">
+                          {p.booking.customerName}
+                        </Link>
+                      ) : p.order ? (
+                        <Link href={`/admin/orders/${p.order.id}`} className="hover:opacity-70 transition-opacity">
+                          {p.order.customerName}
+                        </Link>
+                      ) : "Unknown"}
                       {" · "}{formatPrice(p.amount)}{" · "}
                       <span className="capitalize">{p.type}</span>
                     </p>
-                    <p className="font-meta text-xs text-muted-foreground mt-0.5">{p.booking.customerEmail} · {formatDate(p.createdAt)}</p>
+                    <p className="font-meta text-xs text-muted-foreground mt-0.5">
+                      {p.booking?.customerEmail ?? p.order?.customerEmail ?? ""} · {formatDate(p.createdAt)}
+                    </p>
                   </div>
                   <span className="font-meta text-xs bg-sky/20 text-sky px-2 py-0.5 rounded-sm whitespace-nowrap">pending</span>
                 </div>
@@ -116,7 +127,11 @@ export default async function VenmoPaymentsPage() {
               <li key={p.id} className="flex items-center justify-between gap-4 border border-border rounded-sm px-4 py-3 text-sm">
                 <div>
                   <p className="text-ink">
-                    <Link href={`/admin/bookings/${p.booking.id}`} className="hover:opacity-70">{p.booking.customerName}</Link>
+                    {p.booking ? (
+                      <Link href={`/admin/bookings/${p.booking.id}`} className="hover:opacity-70">{p.booking.customerName}</Link>
+                    ) : p.order ? (
+                      <Link href={`/admin/orders/${p.order.id}`} className="hover:opacity-70">{p.order.customerName}</Link>
+                    ) : "Unknown"}
                     {" · "}{formatPrice(p.amount)}
                   </p>
                   <p className="font-meta text-xs text-muted-foreground mt-0.5">{formatDate(p.createdAt)}</p>

@@ -1,9 +1,12 @@
 "use client";
 
+"use client";
+
 import { useEffect, useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getQuestionsForEventType } from "@/lib/booking-questionnaire";
 import { AddressInput } from "./AddressInput";
+import { VenmoPaymentFlow } from "@/components/VenmoPaymentFlow";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
@@ -68,6 +71,7 @@ export default function BookingForm() {
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [venmoBooking, setVenmoBooking] = useState<{ bookingId: string; depositAmount: number } | null>(null);
 
   const preselectedPackageId = searchParams.get("package") ?? "";
   const wasCancelled = searchParams.get("cancelled") === "1";
@@ -149,7 +153,7 @@ export default function BookingForm() {
 
   const isDateBooked = (date: string) => bookedDates.includes(date);
 
-  async function onSubmit(values: FormValues) {
+  async function submitBooking(values: FormValues, paymentMethod: "stripe" | "venmo") {
     if (isDateBooked(values.eventDate)) {
       setServerError("That date is already booked. Please choose another.");
       return;
@@ -164,7 +168,7 @@ export default function BookingForm() {
       const res = await fetch("/api/booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...values, questionnaireAnswers: filteredAnswers }),
+        body: JSON.stringify({ ...values, questionnaireAnswers: filteredAnswers, paymentMethod }),
       });
 
       const json = await res.json();
@@ -175,11 +179,26 @@ export default function BookingForm() {
         return;
       }
 
-      router.push(json.url);
+      if (paymentMethod === "venmo") {
+        setVenmoBooking({ bookingId: json.bookingId, depositAmount: json.depositAmount });
+        setSubmitting(false);
+      } else {
+        router.push(json.url);
+      }
     } catch {
       setServerError("Network error. Please try again.");
       setSubmitting(false);
     }
+  }
+
+  function onSubmit(values: FormValues) {
+    submitBooking(values, "stripe");
+  }
+
+  function onVenmoSubmit(e: React.MouseEvent) {
+    e.preventDefault();
+    // Trigger react-hook-form validation then submit with venmo
+    handleSubmit((values) => submitBooking(values, "venmo"))();
   }
 
   return (
@@ -526,16 +545,35 @@ export default function BookingForm() {
                 <p className="text-rose text-sm mb-4">{serverError}</p>
               )}
 
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full bg-ink text-cream py-3 rounded-sm font-display text-sm hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {submitting ? "Redirecting to payment…" : `Pay deposit ${formatPrice(depositAmount)}`}
-              </button>
-              <p className="text-xs text-muted-foreground text-center mt-3">
-                Secure payment via Stripe. Remaining {formatPrice(totalPrice - depositAmount)} due before shoot.
-              </p>
+              {venmoBooking ? (
+                <VenmoPaymentFlow
+                  bookingId={venmoBooking.bookingId}
+                  amount={venmoBooking.depositAmount}
+                  customerName={watch("customerName")}
+                  type="deposit"
+                />
+              ) : (
+                <div className="space-y-3">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full bg-ink text-cream py-3 rounded-sm font-display text-sm hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? "Redirecting…" : `Pay deposit with card — ${formatPrice(depositAmount)}`}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onVenmoSubmit}
+                    disabled={submitting}
+                    className="w-full bg-[#008CFF] text-white py-3 rounded-sm font-display text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? "Processing…" : `Pay deposit with Venmo — ${formatPrice(depositAmount)}`}
+                  </button>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Card: instant confirmation via Stripe · Venmo: verified within 24h
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </form>
