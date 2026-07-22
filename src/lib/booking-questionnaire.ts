@@ -28,7 +28,7 @@ export const WEDDING_QUESTIONS: Question[] = [
 
 export const GENERAL_QUESTIONS: Question[] = [
   { key: "occasion", label: "What's the occasion for this shoot?", type: "text", placeholder: "e.g. anniversary, family portraits, personal branding, graduation…" },
-  { key: "location", label: "Do you have a location in mind? If so, where?", type: "text" },
+  { key: "location", label: "Do you have a location in mind? If so, where?", type: "address", placeholder: "Search for a location or address…" },
   { key: "indoor_outdoor", label: "Indoor or outdoor preference?", type: "select", options: ["Outdoor", "Indoor", "No preference"] },
   { key: "group_size", label: "How many people will be in the shoot?", type: "text" },
   { key: "vibe", label: "What mood or vibe are you going for?", type: "textarea", placeholder: "e.g. candid and natural, editorial, romantic, moody…" },
