@@ -105,6 +105,38 @@ export async function updateBookingStatus(formData: FormData) {
     }
   }
 
+  // Send cancellation notice
+  if (status === "CANCELLED" && prev && prev.status !== "CANCELLED") {
+    const from = process.env.RESEND_FROM_EMAIL ?? "hello@lucyevans.com";
+    const eventDate = prev.eventDate.toLocaleDateString("en-US", {
+      month: "long", day: "numeric", year: "numeric", timeZone: "UTC",
+    });
+    try {
+      if (prev.communicationPreference === "sms" && prev.customerPhone) {
+        const { sendSMS } = await import("@/lib/twilio");
+        await sendSMS(
+          prev.customerPhone,
+          `Hi ${prev.customerName.split(" ")[0]}, your ${prev.eventType} booking with Lucy Evans Photography on ${eventDate} has been cancelled. Please reach out if you have questions.`
+        );
+      } else {
+        const { resend } = await import("@/lib/resend");
+        await resend.emails.send({
+          from,
+          to: prev.customerEmail,
+          subject: "Your booking has been cancelled — Lucy Evans Photography",
+          html: `<div style="font-family:sans-serif;max-width:600px;color:#2E2A24">
+            <p>Hi ${prev.customerName},</p>
+            <p>Your ${prev.eventType} booking on ${eventDate} has been cancelled.</p>
+            <p>If you have any questions or would like to reschedule, please don't hesitate to reach out — just reply to this email.</p>
+            <p>— Lucy Evans<br/><a href="${process.env.NEXTAUTH_URL ?? "https://lucyevans.com"}" style="color:#A9C6D8">lucyevans.com</a></p>
+          </div>`,
+        });
+      }
+    } catch (err) {
+      console.error("[cancellation email]", err);
+    }
+  }
+
   revalidatePath("/admin/bookings");
   revalidatePath(`/admin/bookings/${id}`);
 }

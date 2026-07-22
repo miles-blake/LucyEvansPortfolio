@@ -66,13 +66,6 @@ export async function POST(req: NextRequest) {
     }
     const total = Math.max(0, subtotal - discountAmount);
 
-    if (discount && discountCode) {
-      await prisma.discountCode.update({
-        where: { code: discountCode.trim().toUpperCase() },
-        data: { usageCount: { increment: 1 } },
-      });
-    }
-
     const order = await prisma.order.create({
       data: {
         customerEmail,
@@ -88,6 +81,13 @@ export async function POST(req: NextRequest) {
         },
       },
     });
+
+    if (discount && discountCode) {
+      await prisma.discountCode.update({
+        where: { code: discountCode.trim().toUpperCase() },
+        data: { usageCount: { increment: 1 } },
+      });
+    }
 
     return NextResponse.json({ orderId: order.id, total });
   } catch (err) {

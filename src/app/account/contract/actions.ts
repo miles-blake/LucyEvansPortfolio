@@ -37,10 +37,33 @@ export async function signContract(formData: FormData) {
   const hdrs = await headers();
   const ip = hdrs.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
 
+  const signedAt = new Date();
   await prisma.bookingContract.update({
     where: { id: contractId },
-    data: { signedAt: new Date(), signedName },
+    data: { signedAt, signedName },
   });
+
+  // Notify admin that the contract was signed
+  try {
+    const { resend } = await import("@/lib/resend");
+    const from = process.env.RESEND_FROM_EMAIL ?? "hello@lucyevans.com";
+    const adminEmail = process.env.ADMIN_NOTIFY_EMAIL ?? from;
+    const siteUrl = process.env.NEXTAUTH_URL ?? "https://lucyevans.com";
+    const eventDate = booking.eventDate.toLocaleDateString("en-US", {
+      month: "long", day: "numeric", year: "numeric", timeZone: "UTC",
+    });
+    await resend.emails.send({
+      from,
+      to: adminEmail,
+      subject: `Contract signed — ${booking.customerName}`,
+      html: `<div style="font-family:sans-serif;max-width:600px;color:#2E2A24">
+        <p><strong>${signedName}</strong> has signed the contract for their ${booking.eventType} booking on ${eventDate}.</p>
+        <p><a href="${siteUrl}/admin/bookings/${booking.id}" style="color:#A9C6D8">View booking →</a></p>
+      </div>`,
+    });
+  } catch (err) {
+    console.error("[contract signed notification]", err);
+  }
 
   revalidatePath(`/portal/${portalToken ?? ""}`);
   revalidatePath("/account");
