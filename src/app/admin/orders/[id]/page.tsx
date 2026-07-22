@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ArrowLeft } from "lucide-react";
 import { OrderEditForm } from "@/components/admin/OrderEditForm";
+import { RefundOrderButton } from "@/components/admin/RefundOrderButton";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -61,13 +62,17 @@ export default async function OrderDetailPage({ params }: Props) {
 
       <OrderEditForm order={order} photos={photos} bundles={bundles} />
 
-      <div className="mt-6">
+      <div className="mt-6 flex flex-wrap items-center gap-3">
         <Link
           href={`/admin/email?to=${encodeURIComponent(order.customerEmail)}&subject=${encodeURIComponent("Re: your order")}`}
           className="border border-border text-muted-foreground px-3 py-1.5 rounded-sm text-xs font-meta hover:text-ink transition-colors inline-flex"
         >
           Email customer →
         </Link>
+
+        {order.status === "PAID" && order.stripePaymentIntentId && (
+          <RefundOrderButton orderId={order.id} amount={order.totalAmount} />
+        )}
       </div>
     </div>
   );
