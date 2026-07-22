@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { updateBookingStatus, saveBookingNotes, createInvoiceForBooking, sendClientPortalLink, sendBookingMessage } from "../actions";
-import { deleteDeliveredAsset, uploadContract, deleteContract } from "../delivery-actions";
+import { deleteDeliveredAsset, deleteContract } from "../delivery-actions";
+import { GenerateContractButton } from "@/components/admin/GenerateContractButton";
 import { DeleteBookingButton } from "./DeleteBookingButton";
 import { MessageThread } from "@/components/MessageThread";
 import { DeliveryGalleryUpload } from "@/components/admin/DeliveryGalleryUpload";
@@ -410,20 +411,7 @@ export default async function BookingDetailPage({ params }: Props) {
               </form>
             </div>
           ) : (
-            <form action={uploadContract} className="space-y-3">
-              <input type="hidden" name="bookingId" value={booking.id} />
-              <div>
-                <label className="font-meta text-xs text-muted-foreground block mb-1">Contract PDF URL</label>
-                <input name="pdfUrl" type="url" required placeholder="https://…"
-                  className="w-full text-sm border border-border rounded-sm px-3 py-2 bg-cream text-ink focus:outline-none focus:ring-1 focus:ring-ink/30" />
-                <p className="font-meta text-[11px] text-muted-foreground mt-1">
-                  Paste a link to the contract — Google Drive, Dropbox, or any direct PDF URL.
-                </p>
-              </div>
-              <button type="submit" className="text-xs bg-ink text-cream px-3 py-1.5 rounded-sm hover:opacity-80 transition-opacity font-meta">
-                Attach contract
-              </button>
-            </form>
+            <GenerateContractButton bookingId={booking.id} />
           )}
         </section>
 

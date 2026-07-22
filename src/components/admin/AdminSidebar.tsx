@@ -25,6 +25,7 @@ import {
   X,
   Search,
   Star,
+  ScrollText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -46,6 +47,7 @@ const NAV = [
   { href: "/admin/analytics", label: "Analytics", icon: BarChart2 },
   { href: "/admin/reviews", label: "Reviews", icon: Star },
   { href: "/admin/venmo-payments", label: "Venmo", icon: Tag },
+  { href: "/admin/contract-template", label: "Contract template", icon: ScrollText },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 

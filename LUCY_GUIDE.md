@@ -124,6 +124,15 @@ General contact form submissions from people visiting your site.
 - See all messages and their status (new, read, replied)
 - Click on any message to read it, add internal notes, and reply by email
 
+**What the contact form collects:**
+- Name and email (required)
+- Phone number and communication preference (email or text)
+- Package they're interested in (pulled from your active service packages)
+- Reason for getting in touch (General question, Booking inquiry, Pricing question, or Other)
+- Their message
+
+If a client is already logged into their account when they fill out the contact form, their name and email are pre-filled automatically.
+
 ---
 
 ## Orders
@@ -164,12 +173,54 @@ Invoices you create and send to clients — separate from automated shop receipt
 
 ## Payments (Stripe)
 
-Stripe handles all online payments on the site. Clients can pay in two places:
+Stripe handles all card payments on the site. Clients can pay in two places:
 
 - **Deposit** — shown on the client portal and in their account. A "Pay deposit" button appears until the deposit is paid. Once paid, their booking is automatically updated.
 - **Invoice** — shown on the portal and account pages. A "Pay now" button appears if there's a balance due. Once paid, the invoice is automatically marked as paid.
 
 Stripe payments go directly to your connected Stripe account. No manual steps needed on your end — everything updates automatically when payment clears.
+
+---
+
+## Venmo Payments
+
+Clients can now choose to pay with Venmo instead of a card — available in three places:
+
+- **Photo shop cart** — a "Pay with Venmo" button sits alongside the "Pay with card" button at checkout
+- **Booking form deposit** — when someone requests a booking, they can choose Venmo to pay their deposit instead of entering a card
+- **Client portal** — a collapsible Venmo option appears next to the "Pay deposit" Stripe button
+
+**How it works for the client:**
+1. They click "Pay with Venmo" and follow the link straight to your Venmo (@Lucy-Evans99) with the correct amount and payment note pre-filled
+2. They complete the payment in Venmo, then return to the site
+3. They upload a screenshot of their Venmo confirmation as proof
+4. Their order or booking shows as pending until you verify it
+
+**How you verify it (Venmo Payments page):**
+1. You'll get an email notification whenever a client submits a Venmo payment with a direct link to review it
+2. Click **Venmo payments** in the left sidebar
+3. Pending payments appear at the top — you can see the client's screenshot
+4. Upload your own confirmation screenshot (your side of the transaction) and click **Confirm payment**
+5. The client gets an email — their booking is marked as deposit paid, or their photo download links are sent automatically
+6. If there's a problem, enter a reason in the rejection field and click **Reject payment** — the client gets a note explaining it
+
+Resolved payments (confirmed or rejected) move to the bottom of the page for your records.
+
+**Sidebar badge:** The Venmo payments link in your sidebar shows a red badge with the number of pending payments so you always know when something needs attention.
+
+---
+
+## Offline Payment Tracking
+
+For payments that happen outside the site (cash, check, Zelle, or direct Venmo you've already verified), you can record them directly on any booking.
+
+**How to log an offline payment:**
+1. Open the booking in question (**Bookings** → click the booking)
+2. Scroll to the **Offline payments** section
+3. Enter the amount, choose the payment method (Venmo, Cash, Check, Zelle, or Other), add an optional note, and upload a photo of the proof (receipt, screenshot, etc.)
+4. Click **Record payment**
+
+The payment appears on the booking detail page with a link to the proof image. If the payments you've recorded add up to the deposit amount or more, the deposit is automatically marked as paid.
 
 ---
 
@@ -239,7 +290,7 @@ The discount is shown clearly in the cart before checkout and applied automatica
 
 **Saved photos (wishlist):** Customers can bookmark photos by clicking the bookmark icon on any photo. Their saved photos appear on the Wishlist page. Prices always reflect the current price in your shop, even if the price changed after they saved it.
 
-**Checkout:** Before being sent to Stripe to pay, customers fill in their name (required), email address (required), and phone number (optional) on the cart page. This means the Orders tab in your admin shows who bought immediately after payment — you don't have to wait for anything.
+**Checkout:** Before paying, customers fill in their name (required), email address (required), and phone number (optional) on the cart page. They can then choose to **Pay with card** (Stripe, instant) or **Pay with Venmo** (manually verified by you within 24 hours). This means the Orders tab in your admin shows who bought immediately — you don't have to wait for anything.
 
 **After purchase:** Customers land on a confirmation page with download buttons and receive the same links by email. The links never expire — they can re-download anytime if they lose the file. On iPhone, tapping Download opens the native share sheet with a "Save to Photos" option.
 

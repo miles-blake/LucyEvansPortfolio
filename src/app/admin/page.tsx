@@ -19,7 +19,7 @@ export default async function AdminDashboardPage() {
   const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-  const [photos, bundles, bookings, orders, subscribers, portfolio, paidOrders, paidInvoices, allTimeOrders, allTimeInvoices] = await Promise.all([
+  const [photos, bundles, bookings, orders, subscribers, portfolio, paidOrders, paidInvoices, allTimeOrders, allTimeInvoices, upcomingBookings] = await Promise.all([
     prisma.photo.count(),
     prisma.bundle.count(),
     prisma.booking.count(),
@@ -36,6 +36,12 @@ export default async function AdminDashboardPage() {
     }),
     prisma.order.aggregate({ where: { status: "PAID" }, _sum: { totalAmount: true } }),
     prisma.invoice.aggregate({ where: { status: "PAID" }, _sum: { amountDue: true } }),
+    prisma.booking.findMany({
+      where: { status: { in: ["INQUIRY", "CONFIRMED"] }, eventDate: { gte: now } },
+      select: { id: true, customerName: true, eventDate: true, eventType: true, totalPrice: true, depositAmount: true, depositPaid: true, status: true },
+      orderBy: { eventDate: "asc" },
+      take: 10,
+    }),
   ]);
 
   // Build 6-month bar chart data
@@ -172,6 +178,56 @@ export default async function AdminDashboardPage() {
           </span>
         </div>
       </section>
+
+      {/* Revenue forecast */}
+      {upcomingBookings.length > 0 && (() => {
+        const forecastItems = upcomingBookings.map((b) => {
+          const remaining = b.depositPaid ? b.totalPrice - b.depositAmount : b.totalPrice;
+          return { ...b, remaining };
+        });
+        const forecastTotal = forecastItems.reduce((s, b) => s + b.remaining, 0);
+        const confirmedTotal = forecastItems.filter((b) => b.status === "CONFIRMED").reduce((s, b) => s + b.remaining, 0);
+        return (
+          <section className="border border-border rounded-sm p-6 mb-10">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h2 className="font-display text-lg text-ink">Revenue forecast</h2>
+                <p className="font-meta text-xs text-muted-foreground mt-0.5">Expected from upcoming bookings</p>
+              </div>
+              <div className="text-right">
+                <p className="font-display text-2xl text-ink">{formatRevenue(forecastTotal)}</p>
+                {confirmedTotal !== forecastTotal && (
+                  <p className="font-meta text-xs text-muted-foreground mt-0.5">{formatRevenue(confirmedTotal)} confirmed</p>
+                )}
+              </div>
+            </div>
+            <div className="space-y-2">
+              {forecastItems.map((b) => (
+                <Link key={b.id} href={`/admin/bookings/${b.id}`}
+                  className="flex items-center justify-between text-sm border border-border rounded-sm px-3 py-2 hover:bg-ink/5 transition-colors">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className={`font-meta text-xs px-1.5 py-0.5 rounded-sm shrink-0 ${
+                      b.status === "CONFIRMED" ? "bg-sage/20 text-sage" : "bg-sky/20 text-sky"
+                    }`}>{b.status.toLowerCase()}</span>
+                    <div className="min-w-0">
+                      <p className="text-ink truncate">{b.customerName}</p>
+                      <p className="font-meta text-xs text-muted-foreground">
+                        {b.eventDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · {b.eventType}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0 ml-4">
+                    <p className="text-ink">{formatRevenue(b.remaining)}</p>
+                    {b.depositPaid && (
+                      <p className="font-meta text-xs text-muted-foreground">deposit paid</p>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        );
+      })()}
 
       <div className="grid md:grid-cols-2 gap-8">
         {/* Recent bookings */}

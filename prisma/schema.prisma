@@ -379,6 +379,14 @@ model VenmoPayment {
   updatedAt      DateTime @updatedAt
 }
 
+// ─── Contract Template ───────────────────────────────────────────────
+
+model ContractTemplate {
+  id        String   @id @default(cuid())
+  body      String   @db.Text
+  updatedAt DateTime @updatedAt
+}
+
 // ─── Client Reviews ──────────────────────────────────────────────────
 
 model Review {
