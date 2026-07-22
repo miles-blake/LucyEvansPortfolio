@@ -110,40 +110,32 @@ export async function POST(req: NextRequest) {
       quantity: 1,
     }));
 
-    // Bundle savings line item
-    if (bundleSavings > 0) {
-      lineItemsForStripe.push({
-        price_data: {
-          currency: "usd",
-          unit_amount: -bundleSavings,
-          product_data: { name: `Bundle discount (${serverBundlePct}% off ${photoCount} photos)`, description: "" },
-        },
-        quantity: 1,
-      });
-    }
-
-    // Discount code line item
-    if (discount && discountAmount - bundleSavings > 0) {
-      const codeDiscount = discountAmount - bundleSavings;
-      const label = discount.type === "percent"
+    // Stripe doesn't accept negative unit_amount — use a coupon for discounts
+    const stripeCoupons: { coupon: string }[] = [];
+    if (discountAmount > 0) {
+      const couponName = bundleSavings > 0 && discount
+        ? `Bundle ${serverBundlePct}% + discount code`
+        : bundleSavings > 0
+        ? `Bundle discount (${serverBundlePct}% off ${photoCount} photos)`
+        : discount?.type === "percent"
         ? `Discount code (${discount.amount}% off)`
         : `Discount code (${discountCode})`;
-      lineItemsForStripe.push({
-        price_data: {
-          currency: "usd",
-          unit_amount: -codeDiscount,
-          product_data: { name: label, description: "" },
-        },
-        quantity: 1,
+      const coupon = await stripe.coupons.create({
+        amount_off: discountAmount,
+        currency: "usd",
+        duration: "once",
+        name: couponName,
       });
+      stripeCoupons.push({ coupon: coupon.id });
     }
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
       line_items: lineItemsForStripe,
+      ...(stripeCoupons.length > 0 ? { discounts: stripeCoupons } : {}),
       metadata: { orderId: order.id },
-      customer_email: customerEmail, // pre-fills Stripe's email field
+      customer_email: customerEmail,
       phone_number_collection: { enabled: true },
       success_url: `${process.env.NEXTAUTH_URL}/order/${order.id}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXTAUTH_URL}/cart`,
