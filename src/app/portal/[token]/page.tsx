@@ -221,9 +221,18 @@ export default async function ClientPortalPage({ params }: Props) {
         {/* Delivery gallery */}
         {assets.length > 0 && (
           <section className="border border-border rounded-sm p-6">
-            <h2 className="font-display text-lg text-ink mb-2">Your photos</h2>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="font-display text-lg text-ink">Your photos</h2>
+              <a
+                href={`/api/portal/${token}/download-all`}
+                download="photos.zip"
+                className="font-meta text-xs text-sky hover:opacity-70 transition-opacity border border-sky/30 px-3 py-1.5 rounded-sm"
+              >
+                Download all ({assets.length})
+              </a>
+            </div>
             <p className="font-meta text-xs text-muted-foreground mb-4">
-              Click any photo to open and download it.
+              Click any photo to open and download it, or download all at once as a ZIP.
             </p>
             <ul className="space-y-2">
               {assets.map((a) => (

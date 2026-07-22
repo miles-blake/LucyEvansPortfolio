@@ -419,6 +419,7 @@ model ClientProfile {
   updatedAt DateTime @updatedAt
 }
 
+<<<<<<< HEAD
 // ─── Mini Sessions ───────────────────────────────────────────────────
 
 model MiniSessionDay {
@@ -450,6 +451,38 @@ model MiniSessionSlot {
   notes                 String?
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
+=======
+// ─── Mini Sessions ────────────────────────────────────────────────────
+
+model MiniSessionDay {
+  id          String            @id @default(cuid())
+  title       String
+  description String?
+  price       Int               // in cents, per slot
+  duration    Int               // minutes per slot
+  location    String?
+  coverImageUrl String?
+  published   Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  slots       MiniSessionSlot[]
+}
+
+model MiniSessionSlot {
+  id              String          @id @default(cuid())
+  dayId           String
+  day             MiniSessionDay  @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  startTime       DateTime
+  status          String          @default("available") // "available" | "held" | "booked"
+  heldUntil       DateTime?
+  customerName    String?
+  customerEmail   String?
+  customerPhone   String?
+  stripeSessionId String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+>>>>>>> ea82aac (feat: ZIP download for client delivery gallery)
 }
 
 // ─── Admin ────────────────────────────────────────────────────────────
