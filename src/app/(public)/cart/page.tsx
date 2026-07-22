@@ -61,29 +61,57 @@ export default function CartPage() {
     return Math.max(0, total() - bundleSavings - codeDiscountAmount());
   }
 
-  async function handleCheckout() {
-    if (!customerName.trim()) { setError("Please enter your name."); return; }
+  function cartPayload() {
+    return {
+      items,
+      discountCode: appliedCode ?? undefined,
+      bundlePct: bundlePct > 0 ? bundlePct : undefined,
+      customerName: customerName.trim(),
+      customerEmail: customerEmail.trim(),
+      customerPhone: customerPhone.trim() || undefined,
+    };
+  }
+
+  function validateCustomer() {
+    if (!customerName.trim()) { setError("Please enter your name."); return false; }
     if (!customerEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
-      setError("Please enter a valid email address."); return;
+      setError("Please enter a valid email address."); return false;
     }
+    return true;
+  }
+
+  async function handleCheckout() {
+    if (!validateCustomer()) return;
     setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items,
-          discountCode: appliedCode ?? undefined,
-          bundlePct: bundlePct > 0 ? bundlePct : undefined,
-          customerName: customerName.trim(),
-          customerEmail: customerEmail.trim(),
-          customerPhone: customerPhone.trim() || undefined,
-        }),
+        body: JSON.stringify(cartPayload()),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Checkout failed.");
       window.location.href = data.url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setLoading(false);
+    }
+  }
+
+  async function handleVenmoCheckout() {
+    if (!validateCustomer()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/checkout/venmo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cartPayload()),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Checkout failed.");
+      window.location.href = `/order/${data.orderId}/venmo`;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
       setLoading(false);
@@ -280,12 +308,19 @@ export default function CartPage() {
             >
               {loading ? "Redirecting…" : (
                 <span className="inline-flex items-center gap-2">
-                  Checkout <ArrowRight size={16} />
+                  Pay with card <ArrowRight size={16} />
                 </span>
               )}
             </Button>
+            <button
+              onClick={handleVenmoCheckout}
+              disabled={loading || !customerName.trim() || !customerEmail.trim()}
+              className="w-full bg-[#008CFF] text-white py-2.5 rounded-sm font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-40"
+            >
+              {loading ? "Redirecting…" : "Pay with Venmo"}
+            </button>
             <p className="font-meta text-muted-foreground text-xs text-center">
-              Powered by Stripe · Secure checkout
+              Card: powered by Stripe · Venmo: manually verified within 24h
             </p>
           </div>
         </div>

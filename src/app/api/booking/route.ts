@@ -15,6 +15,7 @@ const schema = z.object({
   communicationPreference: z.enum(["email", "sms"]).default("email"),
   message: z.string().optional(),
   questionnaireAnswers: z.record(z.string(), z.string()).optional(),
+  paymentMethod: z.enum(["stripe", "venmo"]).default("stripe"),
   addOns: z.object({
     extraRoll: z.boolean(),
     rushDelivery: z.boolean(),
@@ -102,7 +103,12 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Create Stripe Checkout session for deposit
+    // Venmo path — skip Stripe, return bookingId for inline payment flow
+    if (data.paymentMethod === "venmo") {
+      return NextResponse.json({ bookingId: booking.id, depositAmount, venmo: true });
+    }
+
+    // Stripe path
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
@@ -125,11 +131,7 @@ export async function POST(req: NextRequest) {
       cancel_url: `${process.env.NEXTAUTH_URL}/services/book?package=${data.packageId}&cancelled=1`,
     });
 
-    // Store Stripe session ID on booking
-    await prisma.booking.update({
-      where: { id: booking.id },
-      data: { stripeSessionId: session.id },
-    });
+    await prisma.booking.update({ where: { id: booking.id }, data: { stripeSessionId: session.id } });
 
     return NextResponse.json({ url: session.url, bookingId: booking.id });
   } catch (err) {

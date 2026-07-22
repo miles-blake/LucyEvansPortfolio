@@ -127,7 +127,8 @@ model Order {
   createdAt             DateTime    @default(now())
   updatedAt             DateTime    @updatedAt
 
-  items OrderItem[]
+  items         OrderItem[]
+  venmoPayments VenmoPayment[]
 }
 
 enum OrderStatus {
@@ -363,17 +364,19 @@ model AuditLog {
 // ─── Venmo Payments ──────────────────────────────────────────────────
 
 model VenmoPayment {
-  id          String   @id @default(cuid())
-  bookingId   String
-  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  amount      Int      // expected amount in cents
-  type        String   // "deposit" | "invoice"
-  clientProofUrl String // screenshot uploaded by client
-  adminProofUrl  String? // confirmation screenshot uploaded by Lucy
-  status      String   @default("pending") // "pending" | "confirmed" | "rejected"
-  rejectionNote String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  bookingId      String?
+  booking        Booking? @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  orderId        String?
+  order          Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount         Int      // expected amount in cents
+  type           String   // "deposit" | "order"
+  clientProofUrl String   // screenshot uploaded by client
+  adminProofUrl  String?  // confirmation screenshot uploaded by Lucy
+  status         String   @default("pending") // "pending" | "confirmed" | "rejected"
+  rejectionNote  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 // ─── Client Reviews ──────────────────────────────────────────────────
