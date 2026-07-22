@@ -4,6 +4,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import { SaveButton } from "@/components/gallery/SaveButton";
+import { ProtectedImageOverlay } from "@/components/gallery/ProtectedImageOverlay";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -80,9 +81,11 @@ export default async function PhotoDetailPage({ params }: Props) {
             alt={photo.title}
             fill
             priority
-            className="object-cover"
+            draggable={false}
+            className="object-cover select-none pointer-events-none"
             sizes="(max-width: 1024px) 100vw, 50vw"
           />
+          <ProtectedImageOverlay />
           {photo.isLimitedEdition && editionRemaining !== null && (
             <div className="absolute bottom-4 left-4 font-meta text-cream bg-ink/80 px-3 py-1.5 backdrop-blur-sm">
               {soldOut

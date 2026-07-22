@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { SaveButton } from "./SaveButton";
@@ -31,16 +32,21 @@ export default function ContactSheet({ photos }: { photos: Photo[] }) {
             className="group block focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-0"
           >
             {/* Image */}
-            <div className="relative aspect-[3/4] overflow-hidden bg-muted">
+            <div
+              className="relative aspect-[3/4] overflow-hidden bg-muted"
+              onContextMenu={(e) => e.preventDefault()}
+            >
               <Image
                 src={photo.previewImageUrl}
                 alt={photo.title}
                 fill
-                className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                draggable={false}
+                className="object-cover transition-transform duration-500 group-hover:scale-[1.04] select-none pointer-events-none"
+                style={{ WebkitTouchCallout: "none", userSelect: "none" } as React.CSSProperties}
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               />
 
-              {/* Hover overlay */}
+              {/* Hover overlay — also blocks drag interactions */}
               <div className="absolute inset-0 bg-ink/0 group-hover:bg-ink/20 transition-colors duration-300" />
 
               {/* Limited edition badge */}
