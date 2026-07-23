@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
     // Balance due reminder: 7 days before, deposit not yet paid
     prisma.booking.findMany({
       where: { status: "CONFIRMED", balanceDueSent: false, depositPaid: false, eventDate: dayWindow(7) },
-      select: { id: true, customerName: true, customerEmail: true, customerPhone: true, communicationPreference: true, eventType: true, depositAmount: true, eventDate: true, portalToken: { select: { token: true } } },
+      select: { id: true, customerName: true, customerEmail: true, customerPhone: true, communicationPreference: true, eventType: true, depositAmount: true, totalPrice: true, eventDate: true, portalToken: { select: { token: true } } },
     }),
     // Re-engagement: ~180 days after completed shoot
     prisma.booking.findMany({
@@ -242,7 +242,7 @@ export async function GET(req: NextRequest) {
       const portalUrl = booking.portalToken
         ? `${siteUrl}/portal/${booking.portalToken.token}`
         : `${siteUrl}/account`;
-      const balanceFormatted = (booking.depositAmount / 100).toFixed(2);
+      const balanceFormatted = ((booking.totalPrice - booking.depositAmount) / 100).toFixed(2);
       const eventDateFormatted = new Date(booking.eventDate ?? Date.now()).toLocaleDateString("en-US", {
         month: "long", day: "numeric", year: "numeric", timeZone: "UTC",
       });

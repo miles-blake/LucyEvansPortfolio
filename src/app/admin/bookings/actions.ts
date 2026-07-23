@@ -125,15 +125,18 @@ export async function updateBookingStatus(formData: FormData) {
     const siteUrl = process.env.NEXTAUTH_URL ?? "https://lucyevans.com";
     const from = process.env.RESEND_FROM_EMAIL ?? "hello@lucyevans.com";
     try {
-      const review = await prisma.review.create({
-        data: {
-          bookingId: id,
-          clientName: prev.customerName,
-          clientEmail: prev.customerEmail,
-          rating: 0,
-          body: "",
-        },
-      });
+      let review = await prisma.review.findFirst({ where: { bookingId: id } });
+      if (!review) {
+        review = await prisma.review.create({
+          data: {
+            bookingId: id,
+            clientName: prev.customerName,
+            clientEmail: prev.customerEmail,
+            rating: 0,
+            body: "",
+          },
+        });
+      }
       const { resend } = await import("@/lib/resend");
       await resend.emails.send({
         from,
