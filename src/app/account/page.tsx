@@ -149,7 +149,7 @@ export default async function AccountPage({ searchParams }: Props) {
                   <p className={`font-meta text-xs mt-1 ${statusColor[b.status] ?? "text-muted-foreground"}`}>
                     {statusLabel[b.status] ?? b.status}
                   </p>
-                  {!b.depositPaid && b.status !== "CANCELLED" && (
+                  {!b.depositPaid && b.status !== "CANCELLED" && !isAdmin && (
                     <div className="mt-3">
                       <PayButton
                         type="deposit"
@@ -192,7 +192,7 @@ export default async function AccountPage({ searchParams }: Props) {
                       ? ` · ${new Date(inv.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
                       : ""}
                   </p>
-                  {inv.amountDue > 0 && inv.status !== "PAID" && (
+                  {inv.amountDue > 0 && inv.status !== "PAID" && !isAdmin && (
                     <div className="mt-3">
                       <PayButton
                         type="invoice"
