@@ -129,6 +129,7 @@ export default async function AccountPage({ searchParams }: Props) {
             </form>
           )}
         </div>
+      </div>
 
       {/* Bookings */}
       <section className="mb-10">
