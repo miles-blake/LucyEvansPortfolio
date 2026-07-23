@@ -160,13 +160,6 @@ export function AdminSidebar({ open = false, onClose }: Props) {
           <ExternalLink size={15} />
           Client view
         </Link>
-        <a
-          href="/api/admin/preview"
-          className="flex items-center gap-2.5 text-sm text-muted-foreground hover:text-ink transition-colors"
-        >
-          <ExternalLink size={15} />
-          Preview as visitor
-        </a>
         <button
           onClick={() => signOut({ callbackUrl: "/admin/login" })}
           className="flex items-center gap-2.5 text-sm text-muted-foreground hover:text-ink w-full transition-colors"
