@@ -59,10 +59,21 @@ export async function loginClient(_prev: unknown, formData: FormData) {
 
   if (!email || !password) return { error: "Email and password are required." };
 
+  // Admin emails always go to the admin portal, never the client portal
+  const adminUser = await prisma.adminUser.findUnique({ where: { email } });
+  if (adminUser) {
+    try {
+      await signIn("admin", { email, password, redirectTo: "/admin" });
+    } catch (err) {
+      if ((err as { digest?: string }).digest?.startsWith("NEXT_REDIRECT")) throw err;
+      return { error: "Invalid email or password." };
+    }
+    return;
+  }
+
   try {
     await signIn("client", { email, password, redirectTo: "/account" });
   } catch (err) {
-    // Re-throw Next.js redirect (successful login)
     if ((err as { digest?: string }).digest?.startsWith("NEXT_REDIRECT")) throw err;
     return { error: "Invalid email or password." };
   }
