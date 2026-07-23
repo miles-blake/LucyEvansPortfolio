@@ -22,7 +22,7 @@ const schema = z.object({
     extraRoll: z.boolean(),
     rushDelivery: z.boolean(),
     secondShooter: z.boolean(),
-  }),
+  }).optional().default({ extraRoll: false, rushDelivery: false, secondShooter: false }),
 });
 
 export async function POST(req: NextRequest) {
