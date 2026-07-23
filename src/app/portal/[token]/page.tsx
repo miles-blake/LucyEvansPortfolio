@@ -74,8 +74,11 @@ export default async function ClientPortalPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-cream">
       {/* Header */}
-      <header className="border-b border-border py-5 px-6">
+      <header className="border-b border-border py-5 px-6 flex items-center justify-between">
         <p className="font-display text-lg text-ink">Lucy Evans Photography</p>
+        <Link href="/" className="font-meta text-xs text-muted-foreground hover:text-ink transition-colors">
+          ← Back to website
+        </Link>
       </header>
 
       <main className="max-w-2xl mx-auto px-6 py-10 space-y-6">
