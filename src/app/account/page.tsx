@@ -109,19 +109,21 @@ export default async function AccountPage({ searchParams }: Props) {
           <h1 className="font-display text-3xl text-ink">My Account</h1>
           <p className="font-meta text-xs text-muted-foreground mt-1">{email}</p>
         </div>
-        <form
-          action={async () => {
-            "use server";
-            await signOut({ redirectTo: "/" });
-          }}
-        >
-          <button
-            type="submit"
-            className="font-meta text-xs text-muted-foreground hover:text-ink transition-colors"
+        {!isAdmin && (
+          <form
+            action={async () => {
+              "use server";
+              await signOut({ redirectTo: "/" });
+            }}
           >
-            Sign out
-          </button>
-        </form>
+            <button
+              type="submit"
+              className="font-meta text-xs text-muted-foreground hover:text-ink transition-colors"
+            >
+              Sign out
+            </button>
+          </form>
+        )}
       </div>
 
       {/* Bookings */}
