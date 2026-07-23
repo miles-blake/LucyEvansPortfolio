@@ -16,6 +16,7 @@ Open your website and add **/admin/login** to the end of your address bar, then 
 
 **How to get there:** It's the first thing you see after logging in. Click "Dashboard" in the sidebar to come back to it anytime.
 
+
 At a glance it shows:
 
 - **Stats** — how many photos, bundles, bookings, paid orders, subscribers, and portfolio pieces you have

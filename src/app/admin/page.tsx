@@ -19,7 +19,7 @@ export default async function AdminDashboardPage() {
   const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-  const [photos, bundles, bookings, orders, subscribers, portfolio, paidOrders, paidInvoices, allTimeOrders, allTimeInvoices, upcomingBookings] = await Promise.all([
+  const [photos, bundles, bookings, orders, subscribers, portfolio, paidOrders, paidInvoices, allTimeOrders, allTimeInvoices, upcomingBookings, outstandingDeposits] = await Promise.all([
     prisma.photo.count(),
     prisma.bundle.count(),
     prisma.booking.count(),
@@ -39,6 +39,12 @@ export default async function AdminDashboardPage() {
     prisma.booking.findMany({
       where: { status: { in: ["INQUIRY", "CONFIRMED"] }, eventDate: { gte: now } },
       select: { id: true, customerName: true, eventDate: true, eventType: true, totalPrice: true, depositAmount: true, depositPaid: true, status: true },
+      orderBy: { eventDate: "asc" },
+      take: 10,
+    }),
+    prisma.booking.findMany({
+      where: { status: "CONFIRMED", depositPaid: false, eventDate: { gte: now } },
+      select: { id: true, customerName: true, eventDate: true, eventType: true, depositAmount: true },
       orderBy: { eventDate: "asc" },
       take: 10,
     }),
@@ -221,6 +227,42 @@ export default async function AdminDashboardPage() {
                     {b.depositPaid && (
                       <p className="font-meta text-xs text-muted-foreground">deposit paid</p>
                     )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        );
+      })()}
+
+      {/* Deposits outstanding */}
+      {outstandingDeposits.length > 0 && (() => {
+        const totalOwed = outstandingDeposits.reduce((s, b) => s + b.depositAmount, 0);
+        return (
+          <section className="border border-amber-200 bg-amber-50/30 rounded-sm p-6 mb-10">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h2 className="font-display text-lg text-ink">Deposits outstanding</h2>
+                <p className="font-meta text-xs text-muted-foreground mt-0.5">Confirmed bookings with unpaid deposits</p>
+              </div>
+              <div className="text-right">
+                <p className="font-display text-2xl text-ink">{formatRevenue(totalOwed)}</p>
+                <p className="font-meta text-xs text-muted-foreground mt-0.5">owed</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {outstandingDeposits.map((b) => (
+                <Link key={b.id} href={`/admin/bookings/${b.id}`}
+                  className="flex items-center justify-between text-sm border border-amber-200/60 bg-cream rounded-sm px-3 py-2 hover:bg-ink/5 transition-colors">
+                  <div className="min-w-0">
+                    <p className="text-ink truncate">{b.customerName}</p>
+                    <p className="font-meta text-xs text-muted-foreground">
+                      {b.eventDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · {b.eventType}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0 ml-4">
+                    <p className="text-amber-700 font-medium">{formatRevenue(b.depositAmount)}</p>
+                    <p className="font-meta text-xs text-muted-foreground">deposit due</p>
                   </div>
                 </Link>
               ))}

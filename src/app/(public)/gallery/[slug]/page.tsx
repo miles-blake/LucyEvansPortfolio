@@ -28,10 +28,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export async function generateStaticParams() {
-  const photos = await prisma.photo.findMany({ select: { slug: true } });
-  return photos.map((p) => ({ slug: p.slug }));
-}
 
 export default async function PhotoDetailPage({ params }: Props) {
   const { slug } = await params;

@@ -22,9 +22,14 @@ export default async function AdminBookingsPage() {
     <div className="max-w-5xl">
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-2xl text-ink">Bookings</h1>
-        <Link href="/admin/bookings/calendar" className="text-xs text-muted-foreground hover:text-ink transition-colors font-meta">
-          Calendar →
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/admin/bookings/kanban" className="text-xs text-muted-foreground hover:text-ink transition-colors font-meta">
+            Kanban →
+          </Link>
+          <Link href="/admin/bookings/calendar" className="text-xs text-muted-foreground hover:text-ink transition-colors font-meta">
+            Calendar →
+          </Link>
+        </div>
       </div>
 
       <div className="border border-border rounded-sm">
@@ -42,11 +47,18 @@ export default async function AdminBookingsPage() {
             {bookings.length === 0 && (
               <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No bookings yet.</td></tr>
             )}
-            {bookings.map((b) => (
+            {bookings.map((b) => {
+              const isStale = b.status === "INQUIRY" && (Date.now() - b.createdAt.getTime()) > 5 * 24 * 60 * 60 * 1000;
+              return (
               <tr key={b.id} className="relative hover:bg-ink/5 cursor-pointer">
                 <td className="px-3 md:px-4 py-3">
                   <Link href={`/admin/bookings/${b.id}`} className="absolute inset-0 z-0" aria-label={`View booking for ${b.customerName}`} />
-                  <p className="relative z-10 text-ink">{b.customerName}</p>
+                  <div className="relative z-10 flex items-center gap-1.5">
+                    <p className="text-ink">{b.customerName}</p>
+                    {isStale && (
+                      <span className="font-meta text-xs text-amber-600 ml-1.5">stale</span>
+                    )}
+                  </div>
                   <p className="relative z-10 font-meta text-xs text-muted-foreground">{b.customerEmail}</p>
                 </td>
                 <td className="px-3 md:px-4 py-3 text-muted-foreground hidden sm:table-cell">{b.package.name}</td>
@@ -74,7 +86,8 @@ export default async function AdminBookingsPage() {
                   </form>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
