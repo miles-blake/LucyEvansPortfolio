@@ -45,8 +45,12 @@ export async function registerClient(_prev: unknown, formData: FormData) {
   }
 
   // Log them in — they'll see a verification banner until they click the link
-  await signIn("client", { email, password, redirectTo: "/account" });
-  redirect("/account");
+  try {
+    await signIn("client", { email, password, redirectTo: "/account" });
+  } catch (err) {
+    if ((err as { digest?: string }).digest?.startsWith("NEXT_REDIRECT")) throw err;
+    redirect("/account");
+  }
 }
 
 export async function loginClient(_prev: unknown, formData: FormData) {
@@ -55,6 +59,11 @@ export async function loginClient(_prev: unknown, formData: FormData) {
 
   if (!email || !password) return { error: "Email and password are required." };
 
-  await signIn("client", { email, password, redirectTo: "/account" });
-  redirect("/account");
+  try {
+    await signIn("client", { email, password, redirectTo: "/account" });
+  } catch (err) {
+    // Re-throw Next.js redirect (successful login)
+    if ((err as { digest?: string }).digest?.startsWith("NEXT_REDIRECT")) throw err;
+    return { error: "Invalid email or password." };
+  }
 }
