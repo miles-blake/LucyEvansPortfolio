@@ -16,13 +16,26 @@ Open your website and add **/admin/login** to the end of your address bar, then 
 
 **How to get there:** It's the first thing you see after logging in. Click "Dashboard" in the sidebar to come back to it anytime.
 
-
 At a glance it shows:
 
 - **Stats** — how many photos, bundles, bookings, paid orders, subscribers, and portfolio pieces you have
 - **Revenue** — your all-time total, this month, and last month, plus a 6-month bar chart broken down by orders and invoices
 - **Recent bookings and orders** — a quick snapshot of what's come in lately
 - **Activity feed** — a running log of recent inquiries, sign-ups, bookings, and orders
+
+---
+
+## Inbox
+
+**How to get there:** Click **Inbox** in the left sidebar. The number on the badge shows your total unread count.
+
+Your unified message center — all unread client messages in one place, sorted by most recent.
+
+**What it shows:**
+- Unread messages from clients in existing booking threads (labelled "message")
+- New contact form submissions from potential clients (labelled "inquiry")
+
+Clicking any item takes you straight to that booking or inquiry. There's a **Mark all read** button to clear everything at once.
 
 ---
 
@@ -67,7 +80,7 @@ Your photography service packages — things like weddings, portraits, and event
 - See all service packages
 - Add, edit, or delete packages — set the name, description, how many rolls and photos are included, base price, and which types of events it applies to
 
-**Where services appear publicly:** Your services page, where clients can learn about your packages and start a booking.
+**Where services appear publicly:** Your services page, where clients can learn about your packages and start a booking request.
 
 ---
 
@@ -77,27 +90,74 @@ Your photography service packages — things like weddings, portraits, and event
 
 Booking requests that come in when someone fills out your booking form on the site.
 
-**What you can do from the list view:**
-- See all bookings in a table, or click **Calendar →** in the top right to see a 3-month calendar view (color-coded by status — green for confirmed, blue for inquiry, grey for completed, red for cancelled)
+### How the booking flow works
 
-**What you can do inside a booking:**
-- See the client's name, email, phone, event date, event type, and package
-- See pricing, deposit status, and any add-ons they selected
-- Update the booking status: Inquiry → Confirmed → Completed (or Cancelled)
-  - When you change a status to **Confirmed**, the client automatically gets a confirmation email with their booking details and a link to their portal
-- Add internal notes — only you see these
+Clients **do not pay when they submit a request**. The new flow is:
+
+1. A client fills out the booking form and submits their request — no payment collected yet
+2. They get an auto-confirmation email saying you'll be in touch within 1–2 business days
+3. You review the request in admin and, when ready, change the status to **Confirmed**
+4. The client automatically receives a confirmation email with a link to their personal portal
+5. From their portal, they pay the 50% deposit to lock in the date
+
+This means you're always in control of which bookings get confirmed before any money changes hands.
+
+### What clients fill out on the booking form
+
+- Package and event type
+- Their preferred date
+- **Pre-shoot questionnaire** — questions tailored to the event type (weddings get 13 questions covering ceremony venue, reception venue, start time, guest count, coverage hours, first look, vibe, priority moments, family groupings, inspiration, etc.; all other shoots get 10 questions covering occasion, location, group size, vibe, must-have shots, inspiration, etc.). All questions are optional.
+- Contact info (name, email, phone, communication preference, and how they heard about you)
+
+### List view and calendar
+
+- See all bookings in a table, or click **Calendar →** in the top right for a 3-month calendar view (color-coded by status — green for confirmed, blue for inquiry, grey for completed, red for cancelled)
+- Or click **Kanban →** to see bookings as cards grouped by status — useful for getting a visual overview of your pipeline
+
+### Inside a booking
+
+- **Customer section** — name, email, phone, communication preference (email or text), and how they found you
+- **Event section** — date, event type, and package details
+- **Moodboard & inspiration** — any Pinterest boards or links the client has shared from their portal appear here for easy reference when planning their shoot
+- **Shoot questionnaire** — all the answers from the pre-shoot form, formatted clearly with each question and their answer
+- **Pricing section** — total price, deposit amount, and deposit status
+- **Update status** — change between Inquiry, Confirmed, Completed, and Cancelled
+  - **Confirmed** → client gets a confirmation email and (if a contract template is set) an auto-generated PDF contract is created and emailed to them
+  - **Completed** → client gets an automated review request email
+  - **Cancelled** → client gets a cancellation notice
+- **Internal notes** — only you see these
 - **Create invoice** — generates an invoice from this booking's details in one click
-- **Email customer** — opens the email tool with the customer's address already filled in
-- **Send portal link** — emails the client a private link to their personal booking page; you can resend it anytime to reset the 30-day clock
-- **Delete booking** — at the bottom of any booking detail page there's a delete button. It asks you to confirm before deleting. This permanently removes the booking, all its messages, delivered photos, contract, and portal token.
+- **Email customer / Send text** — quick links to contact them
+- **Send portal link** — emails the client a private link to their personal booking portal (see Client Portal section below); resend anytime to reset the 30-day expiry
+- **Delivery gallery** — upload finished photos here; the client sees download links in their portal
+- **Contract** — upload a contract PDF or auto-generate one from your template; the client signs digitally from their portal
+- **Messages** — a message thread at the bottom; you write here and the client replies from their portal
+- **Offline payments** — log cash, check, Zelle, or any payment that happened outside the site
+- **Delete booking** — at the very bottom, behind a confirmation step. Permanently removes the booking, messages, photos, contract, and portal token.
 
-**Communication preference:** When clients fill out the booking form, they can choose whether they prefer to be contacted by **email** or **text message** (SMS). Their preference is shown in the Customer section of their booking detail page. The site automatically uses their preferred channel when sending booking confirmations and reminders. If they prefer text, you'll also see a **Send text →** button on their booking page. (Requires Twilio setup — see setup notes.)
+**Communication preference:** When clients fill out the booking form, they choose whether they prefer **email** or **text message** (SMS). The site automatically uses their preferred channel for all booking confirmations and reminders.
 
-**Messaging:** Every booking has a message thread at the bottom. You can send messages directly from the booking detail page and the client can reply from their portal — all messages appear in the same thread.
+---
 
-**Delivery gallery:** Once you've finished a shoot, you can upload the final photos directly on the booking detail page. The client will then see a download section in their portal where they can download each photo. You can upload as many files as you like — they go straight to Cloudinary.
+## Automated Emails
 
-**Contracts:** You can upload a contract PDF to any booking. Once uploaded, the client sees a "View contract" link and a signature box in their portal. They type their full name to sign — the signature and timestamp are saved automatically.
+The site sends emails automatically at key points in the booking lifecycle — you don't have to do anything. Here's the full sequence:
+
+| When it fires | What it sends |
+|---|---|
+| Client submits booking request | Auto-responder telling them you'll be in touch within 1–2 days |
+| You change status to **Confirmed** | Booking confirmation email with portal link |
+| You change status to **Confirmed** (if contract template is set) | Second email with their contract ready to sign |
+| 7 days before the shoot | Prep email with tips (what to wear, what to bring) + booking reminder |
+| 7 days before the shoot (if deposit unpaid) | Balance due reminder with a link to pay |
+| 7 days before the shoot | 7-day countdown reminder (includes overdue deposit warning if unpaid) |
+| 2 days before the shoot | 2-day countdown reminder |
+| 2 days after the shoot | Post-shoot follow-up thanking them and asking for a review |
+| You change status to **Completed** | Review request email with a personal link |
+| You change status to **Cancelled** | Cancellation notice |
+| 6 months after the shoot | Re-engagement email inviting them to book again |
+
+All reminders are sent once and never repeated — the system tracks which ones have been sent so you don't have to.
 
 ---
 
@@ -105,13 +165,29 @@ Booking requests that come in when someone fills out your booking form on the si
 
 **How to get there:** Click **Availability** in the left sidebar.
 
-Block out dates when you're unavailable so clients can't book those days.
+Block out dates when you're unavailable so clients can't request those days.
 
 **What you can do:**
 - Add a blackout date — pick a date and an optional reason (e.g. "Holiday", "Already booked privately")
 - Delete any blackout date to make it available again
 
 Blocked-out dates automatically appear as unavailable on the public booking form so clients can't select them.
+
+---
+
+## Mini Sessions
+
+**How to get there:** Click **Mini Sessions** in the left sidebar.
+
+Mini sessions are time-slot events — you set up a day with multiple short slots and clients each pick one independently, like a sign-up sheet.
+
+**What you can do:**
+- Click **+ New day** to create a mini session event — set the title, date, location, description, slot duration (in minutes), and price per slot
+- Once created, add individual time slots to the day
+- Toggle the day between **draft** (hidden from the public) and **published** (visible on your site)
+- On the detail page, see which slots are available, held, or booked, and who has each slot
+
+**Where mini sessions appear publicly:** A dedicated mini sessions booking page where clients can see available slots and pick their time.
 
 ---
 
@@ -132,7 +208,35 @@ General contact form submissions from people visiting your site.
 - Reason for getting in touch (General question, Booking inquiry, Pricing question, or Other)
 - Their message
 
-If a client is already logged into their account when they fill out the contact form, their name and email are pre-filled automatically.
+New, unread inquiries also appear in your **Inbox** so you never miss one.
+
+---
+
+## Clients
+
+**How to get there:** Click **Clients** in the left sidebar.
+
+A CRM view of everyone who has ever interacted with your business — clients with bookings, orders, inquiries, and newsletter sign-ups are all here.
+
+**What the client list shows:**
+- Every client grouped by email address
+- How many bookings, orders, and inquiries each has
+- Their total lifetime spend across bookings and orders
+- Auto-generated tags based on their history
+
+**Auto-tags (applied automatically, no setup needed):**
+- **new** — first interaction within the last 90 days, only 1 engagement
+- **returning** — 2 or more bookings/orders total
+- **frequent** — 2+ completed bookings or 3+ total engagements
+- **vip** — 4+ completed bookings, or $2,000+ lifetime spend
+- **inactive** — had past activity but hasn't engaged in over a year
+- **inquiry only** — submitted an inquiry but never booked or ordered
+
+**Inside a client profile:**
+- Full history — all their bookings, orders, invoices, and inquiries with statuses and dates
+- Revenue breakdown (how much from bookings vs. orders)
+- **Manual tags** — add your own custom labels (e.g. "bride", "corporate") in addition to the auto-tags
+- Notes — a freeform field for anything you want to remember about this client
 
 ---
 
@@ -168,15 +272,38 @@ Invoices you create and send to clients — separate from automated shop receipt
   - **Mark as paid** — updates the invoice status when payment comes in outside the site
   - **Delete invoice** — removes it permanently
 
+**Automatic payment reminders:** If an invoice is in Sent status and has a due date, the site automatically sends the client a payment reminder when their due date is within 7 days — and again if it goes overdue. Each invoice only gets one reminder (it won't keep re-sending).
+
 **Clients can pay invoices online:** If a client has a portal link or a client account, they see a **Pay now** button directly on the invoice. Clicking it takes them to a secure Stripe checkout — no extra setup needed on your end.
+
+---
+
+## Reviews
+
+**How to get there:** Click **Reviews** in the left sidebar.
+
+Client reviews collected through the site.
+
+**How reviews are collected:**
+- Automatically when you mark a booking as **Completed** — the client gets an email with a personal review link
+- Automatically 2 days after the shoot date (even if the booking isn't yet marked Completed)
+- The client rates from 1–5 stars and writes a short review on a clean, branded page
+
+**What you can do in the admin:**
+- **Pending approval** — reviews that clients have submitted but you haven't published yet
+- Click **Approve & publish** to make a review visible on the public reviews page
+- Click **Unpublish** to take a review down without deleting it
+- Click **Delete** to remove a review permanently
+
+**Public reviews page:** Approved reviews appear at **/reviews** on your site — star rating, client name, and their words, sorted by most recent. Share this page with prospective clients.
 
 ---
 
 ## Payments (Stripe)
 
-Stripe handles all card payments on the site. Clients can pay in two places:
+Stripe handles all card payments on the site. Clients can pay in these places:
 
-- **Deposit** — shown on the client portal and in their account. A "Pay deposit" button appears until the deposit is paid. Once paid, their booking is automatically updated.
+- **Deposit** — shown on the client portal. A "Pay deposit with card" button appears until the deposit is paid. Once paid, their booking is automatically updated.
 - **Invoice** — shown on the portal and account pages. A "Pay now" button appears if there's a balance due. Once paid, the invoice is automatically marked as paid.
 
 Stripe payments go directly to your connected Stripe account. No manual steps needed on your end — everything updates automatically when payment clears.
@@ -185,11 +312,10 @@ Stripe payments go directly to your connected Stripe account. No manual steps ne
 
 ## Venmo Payments
 
-Clients can now choose to pay with Venmo instead of a card — available in three places:
+Clients can choose to pay with Venmo instead of a card — available in two places:
 
 - **Photo shop cart** — a "Pay with Venmo" button sits alongside the "Pay with card" button at checkout
-- **Booking form deposit** — when someone requests a booking, they can choose Venmo to pay their deposit instead of entering a card
-- **Client portal** — a collapsible Venmo option appears next to the "Pay deposit" Stripe button
+- **Client portal** — a collapsible Venmo option appears next to the "Pay deposit" and "Pay invoice" Stripe buttons
 
 **How it works for the client:**
 1. They click "Pay with Venmo" and follow the link straight to your Venmo (@Lucy-Evans99) with the correct amount and payment note pre-filled
@@ -277,9 +403,9 @@ Send a one-off email to anyone directly from the site — useful for following u
 
 ## Photo Gallery & Shop
 
-**How customers browse:** They go to your Gallery page and see all 282 of your film photos in a contact-sheet style grid. They can filter by tag (Landscape, Portrait, Wedding, Coastal, etc.) using the filter bar at the top. Each photo has 3–4 tags assigned automatically based on what's in the image.
+**How customers browse:** They go to your Gallery page and see all of your film photos in a contact-sheet style grid. They can filter by tag (Landscape, Portrait, Wedding, Coastal, etc.) using the filter bar at the top.
 
-**Pricing:** All photos are currently set at $3 each.
+**Pricing:** Set per-photo on each photo's edit page.
 
 **Bundle discounts:** Customers who buy multiple photos in one order automatically get a discount — no code needed. The discount scales based on how many individual photos are in their cart:
 - 3–5 photos: 5% off
@@ -291,7 +417,7 @@ The discount is shown clearly in the cart before checkout and applied automatica
 
 **Saved photos (wishlist):** Customers can bookmark photos by clicking the bookmark icon on any photo. Their saved photos appear on the Wishlist page. Prices always reflect the current price in your shop, even if the price changed after they saved it.
 
-**Checkout:** Before paying, customers fill in their name (required), email address (required), and phone number (optional) on the cart page. They can then choose to **Pay with card** (Stripe, instant) or **Pay with Venmo** (manually verified by you within 24 hours). This means the Orders tab in your admin shows who bought immediately — you don't have to wait for anything.
+**Checkout:** Before paying, customers fill in their name (required), email address (required), and phone number (optional) on the cart page. They can then choose to **Pay with card** (Stripe, instant) or **Pay with Venmo** (manually verified by you within 24 hours).
 
 **After purchase:** Customers land on a confirmation page with download buttons and receive the same links by email. The links never expire — they can re-download anytime if they lose the file. On iPhone, tapping Download opens the native share sheet with a "Save to Photos" option.
 
@@ -339,13 +465,15 @@ A bird's-eye view of how the site is performing.
 
 Changes take effect on all watermarked images immediately after saving.
 
+**Contract template:** Under Settings → Contract template, you can write (or paste) the body of your standard client contract. Whenever you confirm a booking, the site automatically generates a PDF contract from this template and emails it to the client, with their booking details filled in. They sign it from their portal.
+
 **Activity log:** Also under Settings, click **View activity log →** to see a running record of every admin action — booking status changes, deleted bookings, invoices marked paid, order edits. Timestamped and labelled with who did it.
 
 ---
 
 ## Client Portal
 
-A private page you send to booking clients so they can see their booking details, invoice, messages, contract, and final photos — all in one place, without needing an account.
+A private page you send to booking clients so they can see their booking details, invoice, messages, contract, delivered photos, and inspiration links — all in one place, without needing an account.
 
 **How to send it:**
 1. Go to any booking (click **Bookings** in the sidebar, then click the booking you want)
@@ -356,10 +484,12 @@ A private page you send to booking clients so they can see their booking details
 
 **What the client sees on their portal page:**
 - Their booking details (package, event type, date, and current status)
-- A **Pay deposit** button if their deposit hasn't been paid yet
+- A **Pay deposit with card** button (and a Venmo option) if their deposit hasn't been paid yet
 - Their invoice with line items and a **Pay now** button if there's a balance due
 - Their contract — with a "View contract PDF" link and a digital signature box if it hasn't been signed yet
+- **Moodboard & inspiration** — a place where clients can paste Pinterest boards, Instagram posts, or any link that captures the vibe they're going for. They can add up to 20 links and remove them at any time. The links appear in the admin on the booking detail page under "Moodboard & inspiration" so you can reference them when planning their shoot.
 - Their delivered photos as download links, once you've uploaded them
+- A **Leave a review** section that appears after the shoot is complete
 - The message thread where they can write to you and see your replies
 
 ---
@@ -410,6 +540,7 @@ Everything is connected and ready:
 
 - **Stripe** — taking payments for photo shop orders, booking deposits, and invoices
 - **Cloudinary** — photo uploads, storage, and watermarked previews
-- **Resend** — sending emails (booking confirmations, portal links, newsletters, invoice PDFs)
+- **Resend** — sending emails (booking confirmations, reminders, portal links, newsletters, invoice PDFs, review requests)
+- **Twilio** — sending SMS notifications to clients who prefer text messages
 
 The site is live and fully operational.
