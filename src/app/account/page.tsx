@@ -88,7 +88,10 @@ export default async function AccountPage({ searchParams }: Props) {
       {isAdmin && (
         <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-sm text-xs text-amber-800 font-meta flex items-center justify-between">
           <span>Admin preview — viewing as {email}</span>
-          <a href="/account" className="underline">Change email →</a>
+          <div className="flex items-center gap-4">
+            <a href="/account" className="underline">Change email →</a>
+            <a href="/admin" className="underline">← Back to admin</a>
+          </div>
         </div>
       )}
 

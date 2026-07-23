@@ -143,14 +143,15 @@ export function AdminSidebar({ open = false, onClose }: Props) {
           <span className="flex-1 text-left">Search</span>
           <kbd className="font-meta text-[10px] bg-ink/8 px-1.5 py-0.5 rounded hidden md:block">⌘K</kbd>
         </button>
-        <Link
+        <a
           href="/"
-          onClick={onClose}
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex items-center gap-2.5 text-sm text-muted-foreground hover:text-ink transition-colors"
         >
           <ExternalLink size={15} />
           View site
-        </Link>
+        </a>
         <Link
           href="/account"
           onClick={onClose}
