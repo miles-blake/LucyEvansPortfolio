@@ -1,12 +1,9 @@
 "use client";
 
-"use client";
-
 import { useEffect, useState, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { getQuestionsForEventType } from "@/lib/booking-questionnaire";
 import { AddressInput } from "./AddressInput";
-import { VenmoPaymentFlow } from "@/components/VenmoPaymentFlow";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
@@ -75,7 +72,6 @@ function today() {
 
 export default function BookingForm() {
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   const [packages, setPackages] = useState<ServicePackage[]>([]);
   const [bookedDates, setBookedDates] = useState<string[]>([]);
@@ -83,7 +79,7 @@ export default function BookingForm() {
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [venmoBooking, setVenmoBooking] = useState<{ bookingId: string; depositAmount: number } | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
   const preselectedPackageId = searchParams.get("package") ?? "";
   const wasCancelled = searchParams.get("cancelled") === "1";
@@ -165,7 +161,7 @@ export default function BookingForm() {
 
   const isDateBooked = (date: string) => bookedDates.includes(date);
 
-  async function submitBooking(values: FormValues, paymentMethod: "stripe" | "venmo") {
+  async function submitBooking(values: FormValues) {
     if (isDateBooked(values.eventDate)) {
       setServerError("That date is already booked. Please choose another.");
       return;
@@ -180,7 +176,7 @@ export default function BookingForm() {
       const res = await fetch("/api/booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...values, questionnaireAnswers: filteredAnswers, paymentMethod, referralSource: values.referralSource || undefined }),
+        body: JSON.stringify({ ...values, questionnaireAnswers: filteredAnswers, referralSource: values.referralSource || undefined }),
       });
 
       const json = await res.json();
@@ -191,12 +187,7 @@ export default function BookingForm() {
         return;
       }
 
-      if (paymentMethod === "venmo") {
-        setVenmoBooking({ bookingId: json.bookingId, depositAmount: json.depositAmount });
-        setSubmitting(false);
-      } else {
-        router.push(json.url);
-      }
+      setSubmitted(true);
     } catch {
       setServerError("Network error. Please try again.");
       setSubmitting(false);
@@ -204,13 +195,18 @@ export default function BookingForm() {
   }
 
   function onSubmit(values: FormValues) {
-    submitBooking(values, "stripe");
+    submitBooking(values);
   }
 
-  function onVenmoSubmit(e: React.MouseEvent) {
-    e.preventDefault();
-    // Trigger react-hook-form validation then submit with venmo
-    handleSubmit((values) => submitBooking(values, "venmo"))();
+  if (submitted) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center space-y-4">
+        <h1 className="font-display text-3xl text-ink">Request received!</h1>
+        <p className="text-muted-foreground leading-relaxed max-w-md mx-auto">
+          Lucy will review your request and be in touch within 1–2 business days to confirm your date and send you a link to complete your booking.
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -219,14 +215,13 @@ export default function BookingForm() {
         <p className="font-meta text-muted-foreground mb-3">Book a session</p>
         <h1 className="font-display text-4xl text-ink mb-4">Request a booking</h1>
         <p className="text-muted-foreground leading-relaxed">
-          A 50% deposit secures your date. The remaining balance is due before your shoot.
-          You&rsquo;ll receive a confirmation email within 24 hours.
+          Submit your request and Lucy will confirm availability within 1–2 business days. A 50% deposit is due upon confirmation to secure your date.
         </p>
       </div>
 
       {wasCancelled && (
         <div className="mb-6 p-4 bg-blush/30 border border-rose/20 rounded-sm text-sm text-ink">
-          Your payment was cancelled — your booking wasn&rsquo;t confirmed. You can try again below.
+          Your previous request didn&rsquo;t go through. Please try again below.
         </div>
       )}
 
@@ -531,7 +526,7 @@ export default function BookingForm() {
             </div>
           </fieldset>
 
-          {/* Price summary + submit */}
+          {/* Summary + submit */}
           {selectedPackage && (
             <div className="border border-border rounded-sm p-6 bg-cream">
               <h3 className="font-display text-ink mb-4">Summary</h3>
@@ -559,11 +554,11 @@ export default function BookingForm() {
                   </div>
                 )}
                 <div className="flex justify-between pt-2 border-t border-border">
-                  <dt className="text-muted-foreground">Total</dt>
+                  <dt className="text-muted-foreground">Estimated total</dt>
                   <dd className="font-meta">{formatPrice(totalPrice)}</dd>
                 </div>
                 <div className="flex justify-between font-medium">
-                  <dt className="text-ink">Due today (50% deposit)</dt>
+                  <dt className="text-ink">Deposit due on confirmation (50%)</dt>
                   <dd className="font-meta text-ink">{formatPrice(depositAmount)}</dd>
                 </div>
               </dl>
@@ -572,35 +567,16 @@ export default function BookingForm() {
                 <p className="text-rose text-sm mb-4">{serverError}</p>
               )}
 
-              {venmoBooking ? (
-                <VenmoPaymentFlow
-                  bookingId={venmoBooking.bookingId}
-                  amount={venmoBooking.depositAmount}
-                  customerName={watch("customerName")}
-                  type="deposit"
-                />
-              ) : (
-                <div className="space-y-3">
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="w-full bg-ink text-cream py-3 rounded-sm font-display text-sm hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {submitting ? "Redirecting…" : `Pay deposit with card — ${formatPrice(depositAmount)}`}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onVenmoSubmit}
-                    disabled={submitting}
-                    className="w-full bg-[#008CFF] text-white py-3 rounded-sm font-display text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {submitting ? "Processing…" : `Pay deposit with Venmo — ${formatPrice(depositAmount)}`}
-                  </button>
-                  <p className="text-xs text-muted-foreground text-center">
-                    Card: instant confirmation via Stripe · Venmo: verified within 24h
-                  </p>
-                </div>
-              )}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full bg-ink text-cream py-3 rounded-sm font-display text-sm hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submitting ? "Sending request…" : "Request this booking"}
+              </button>
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                No payment now — Lucy will confirm availability first.
+              </p>
             </div>
           )}
         </form>

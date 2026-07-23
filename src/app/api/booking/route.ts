@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { Prisma } from "@prisma/client";
-import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { resend } from "@/lib/resend";
@@ -17,7 +16,6 @@ const schema = z.object({
   message: z.string().optional(),
   referralSource: z.string().optional(),
   questionnaireAnswers: z.record(z.string(), z.string()).optional(),
-  paymentMethod: z.enum(["stripe", "venmo"]).default("stripe"),
   addOns: z.object({
     extraRoll: z.boolean(),
     rushDelivery: z.boolean(),
@@ -117,16 +115,16 @@ export async function POST(req: NextRequest) {
       await resend.emails.send({
         from,
         to: data.customerEmail,
-        subject: "We received your inquiry — Lucy Evans Photography",
+        subject: "Booking request received — Lucy Evans Photography",
         html: `<div style="font-family:sans-serif;max-width:600px;color:#2E2A24">
   <p>Hi ${firstName},</p>
-  <p>Thank you for reaching out! We've received your booking inquiry for your <strong>${data.eventType}</strong> session and will be in touch within 1–2 business days to confirm details.</p>
+  <p>Thank you for reaching out! I've received your booking request and will be in touch within 1–2 business days to confirm your date. Once confirmed, you'll receive a link to your personal portal to pay your deposit and complete your booking.</p>
   <p>Here's what you submitted:</p>
   <table style="border-collapse:collapse;width:100%;margin:16px 0">
     <tr><td style="padding:6px 0;color:#888;font-size:13px">Event type</td><td style="padding:6px 0;font-size:13px;text-transform:capitalize">${data.eventType}</td></tr>
     <tr><td style="padding:6px 0;color:#888;font-size:13px">Date</td><td style="padding:6px 0;font-size:13px">${eventDateFormatted}</td></tr>
     <tr><td style="padding:6px 0;color:#888;font-size:13px">Package</td><td style="padding:6px 0;font-size:13px">${pkg.name}</td></tr>
-    <tr><td style="padding:6px 0;color:#888;font-size:13px">Deposit</td><td style="padding:6px 0;font-size:13px">$${(depositAmount / 100).toFixed(2)}</td></tr>
+    <tr><td style="padding:6px 0;color:#888;font-size:13px">Deposit (due on confirmation)</td><td style="padding:6px 0;font-size:13px">$${(depositAmount / 100).toFixed(2)}</td></tr>
   </table>
   <p>Questions? Just reply to this email.</p>
   <p>— Lucy Evans<br/><a href="${siteUrl}" style="color:#A9C6D8">lucyevans.com</a></p>
@@ -136,37 +134,8 @@ export async function POST(req: NextRequest) {
       console.error("[inquiry auto-responder]", err);
     }
 
-    // Venmo path — skip Stripe, return bookingId for inline payment flow
-    if (data.paymentMethod === "venmo") {
-      return NextResponse.json({ bookingId: booking.id, depositAmount, venmo: true });
-    }
-
-    // Stripe path
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            unit_amount: depositAmount,
-            product_data: {
-              name: `${pkg.name} — Booking Deposit`,
-              description: `50% deposit for ${data.eventType} session on ${data.eventDate}. Remaining balance due before shoot.`,
-            },
-          },
-          quantity: 1,
-        },
-      ],
-      metadata: { bookingId: booking.id },
-      customer_email: data.customerEmail,
-      success_url: `${process.env.NEXTAUTH_URL}/booking/${booking.id}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXTAUTH_URL}/services/book?package=${data.packageId}&cancelled=1`,
-    });
-
-    await prisma.booking.update({ where: { id: booking.id }, data: { stripeSessionId: session.id } });
-
-    return NextResponse.json({ url: session.url, bookingId: booking.id });
+    // All bookings land as INQUIRY — Lucy reviews and confirms before payment is collected
+    return NextResponse.json({ bookingId: booking.id });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid request.", issues: err.issues }, { status: 400 });

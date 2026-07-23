@@ -198,6 +198,24 @@ export default async function BookingDetailPage({ params }: Props) {
           </dl>
         </section>
 
+        {/* Moodboard links */}
+        {booking.moodboardLinks && booking.moodboardLinks.length > 0 && (
+          <section className="border border-border rounded-sm p-6">
+            <h2 className="font-display text-lg text-ink mb-4">Moodboard &amp; inspiration</h2>
+            <p className="font-meta text-xs text-muted-foreground mb-3">Links shared by the client.</p>
+            <ul className="space-y-2">
+              {(booking.moodboardLinks as string[]).map((link) => (
+                <li key={link}>
+                  <a href={link} target="_blank" rel="noopener noreferrer"
+                    className="text-sm text-sky hover:opacity-70 break-all">
+                    {link}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {/* Message (legacy field — new bookings use questionnaire) */}
         {booking.message && (
           <section className="border border-border rounded-sm p-6">

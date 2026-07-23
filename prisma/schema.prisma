@@ -101,6 +101,7 @@ model Booking {
   prepEmailSent    Boolean      @default(false)
   balanceDueSent   Boolean      @default(false)
   reEngagementSent Boolean      @default(false)
+  moodboardLinks   String[]      // Pinterest/inspiration links from client
   offlinePayments  Json?        // array of { id, method, amount, note, proofUrl, recordedAt }
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -245,10 +246,11 @@ model Invoice {
   depositPaid    Int           @default(0) // cents already paid
   amountDue      Int           // cents remaining
   status         InvoiceStatus @default(DRAFT)
-  notes          String?
-  dueDate        DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  notes                String?
+  dueDate              DateTime?
+  invoiceReminderSent  Boolean       @default(false)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
 
   venmoPayments  VenmoPayment[]
 }

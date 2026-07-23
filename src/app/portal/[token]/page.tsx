@@ -7,6 +7,7 @@ import { MessageThread } from "@/components/MessageThread";
 import { ContractSigner } from "@/components/ContractSigner";
 import { sendPortalMessage } from "@/app/account/messages/actions";
 import { PortalReviewForm } from "@/components/PortalReviewForm";
+import { addMoodboardLink, removeMoodboardLink } from "@/app/portal/actions";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -216,6 +217,53 @@ export default async function ClientPortalPage({ params }: Props) {
               </p>
             ) : (
               <ContractSigner contractId={contract.id} pdfUrl={contract.pdfUrl} portalToken={token} />
+            )}
+          </section>
+        )}
+
+        {/* Moodboard / inspiration links */}
+        {(booking.status === "INQUIRY" || booking.status === "CONFIRMED") && (
+          <section className="border border-border rounded-sm p-6">
+            <h2 className="font-display text-lg text-ink mb-1">Inspiration &amp; moodboard</h2>
+            <p className="font-meta text-xs text-muted-foreground mb-4">
+              Share Pinterest boards, Instagram posts, or any links that capture the vibe you&apos;re going for. Lucy will review these when planning your shoot.
+            </p>
+
+            {booking.moodboardLinks.length > 0 && (
+              <ul className="space-y-2 mb-4">
+                {booking.moodboardLinks.map((link) => (
+                  <li key={link} className="flex items-center gap-2 text-sm">
+                    <a href={link} target="_blank" rel="noopener noreferrer"
+                      className="text-sky hover:opacity-70 truncate flex-1">{link}</a>
+                    <form action={removeMoodboardLink}>
+                      <input type="hidden" name="token" value={token} />
+                      <input type="hidden" name="url" value={link} />
+                      <button type="submit" className="font-meta text-xs text-muted-foreground hover:text-rose transition-colors whitespace-nowrap">
+                        Remove
+                      </button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {booking.moodboardLinks.length < 20 && (
+              <form action={addMoodboardLink} className="flex gap-2">
+                <input type="hidden" name="token" value={token} />
+                <input
+                  type="url"
+                  name="url"
+                  placeholder="https://pinterest.com/…"
+                  required
+                  className="flex-1 text-sm border border-border rounded-sm px-3 py-1.5 bg-cream text-ink placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-sky/40"
+                />
+                <button
+                  type="submit"
+                  className="text-xs bg-ink text-cream px-3 py-1.5 rounded-sm hover:opacity-80 transition-opacity font-meta whitespace-nowrap"
+                >
+                  Add link
+                </button>
+              </form>
             )}
           </section>
         )}

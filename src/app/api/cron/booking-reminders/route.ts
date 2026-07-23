@@ -25,7 +25,11 @@ export async function GET(req: NextRequest) {
     };
   }
 
-  const [bookings7, bookings2, bookingsFollowUp, bookingsPrepEmail, bookingsBalanceDue, bookingsReEngagement] = await Promise.all([
+  // Invoice reminder: SENT invoices with dueDate within 7 days (or already past) that haven't been reminded
+  const invoiceReminderCutoff = new Date(now);
+  invoiceReminderCutoff.setUTCDate(invoiceReminderCutoff.getUTCDate() + 7);
+
+  const [bookings7, bookings2, bookingsFollowUp, bookingsPrepEmail, bookingsBalanceDue, bookingsReEngagement, invoicesForReminder] = await Promise.all([
     prisma.booking.findMany({
       where: {
         status: "CONFIRMED",
@@ -73,6 +77,16 @@ export async function GET(req: NextRequest) {
     prisma.booking.findMany({
       where: { status: "COMPLETED", reEngagementSent: false, eventDate: dayWindow(-180) },
       select: { id: true, customerName: true, customerEmail: true, customerPhone: true, communicationPreference: true, eventType: true, portalToken: { select: { token: true } } },
+    }),
+    // Invoice payment reminders: SENT, unpaid, due within 7 days or overdue
+    prisma.invoice.findMany({
+      where: {
+        status: "SENT",
+        amountDue: { gt: 0 },
+        invoiceReminderSent: false,
+        dueDate: { lte: invoiceReminderCutoff },
+      },
+      select: { id: true, number: true, customerName: true, customerEmail: true, amountDue: true, dueDate: true },
     }),
   ]);
 
@@ -286,6 +300,36 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Invoice payment reminders
+  for (const invoice of invoicesForReminder) {
+    try {
+      const firstName = invoice.customerName.split(" ")[0];
+      const isOverdue = invoice.dueDate && invoice.dueDate < now;
+      const dueDateFormatted = invoice.dueDate
+        ? invoice.dueDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
+        : null;
+
+      await resend.emails.send({
+        from,
+        to: invoice.customerEmail,
+        subject: `${isOverdue ? "Overdue" : "Payment due soon"}: Invoice ${invoice.number} — Lucy Evans Photography`,
+        html: `<div style="font-family:sans-serif;max-width:600px;color:#2E2A24">
+          <p>Hi ${firstName},</p>
+          <p>${isOverdue
+            ? `Your invoice <strong>${invoice.number}</strong> for <strong>$${(invoice.amountDue / 100).toFixed(2)}</strong> was due on ${dueDateFormatted} and is now overdue.`
+            : `Just a reminder that your invoice <strong>${invoice.number}</strong> for <strong>$${(invoice.amountDue / 100).toFixed(2)}</strong> is due on ${dueDateFormatted}.`
+          }</p>
+          <p>Please log in to your booking portal to pay, or reply to this email if you have any questions.</p>
+          <p>— Lucy Evans<br/><a href="${siteUrl}" style="color:#A9C6D8">lucyevans.com</a></p>
+        </div>`,
+      });
+      await prisma.invoice.update({ where: { id: invoice.id }, data: { invoiceReminderSent: true } });
+      sent++;
+    } catch (err) {
+      console.error(`[cron] invoice reminder failed for invoice ${invoice.id}:`, err);
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     sent,
@@ -295,5 +339,6 @@ export async function GET(req: NextRequest) {
     checkedPrepEmail: bookingsPrepEmail.length,
     checkedBalanceDue: bookingsBalanceDue.length,
     checkedReEngagement: bookingsReEngagement.length,
+    checkedInvoiceReminders: invoicesForReminder.length,
   });
 }
