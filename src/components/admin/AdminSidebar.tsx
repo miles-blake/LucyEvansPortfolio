@@ -151,6 +151,14 @@ export function AdminSidebar({ open = false, onClose }: Props) {
           <ExternalLink size={15} />
           View site
         </Link>
+        <Link
+          href="/account"
+          onClick={onClose}
+          className="flex items-center gap-2.5 text-sm text-muted-foreground hover:text-ink transition-colors"
+        >
+          <ExternalLink size={15} />
+          Client view
+        </Link>
         <a
           href="/api/admin/preview"
           className="flex items-center gap-2.5 text-sm text-muted-foreground hover:text-ink transition-colors"

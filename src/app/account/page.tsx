@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "My Account" };
 export const dynamic = "force-dynamic";
 
 interface Props {
-  searchParams: Promise<{ verified?: string }>;
+  searchParams: Promise<{ verified?: string; as?: string }>;
 }
 
 const statusLabel: Record<string, string> = {
@@ -28,8 +28,41 @@ const statusColor: Record<string, string> = {
 
 export default async function AccountPage({ searchParams }: Props) {
   const session = await auth();
-  const email = session!.user.email!;
-  const { verified } = await searchParams;
+  const { verified, as: previewAs } = await searchParams;
+
+  const isAdmin = session?.user?.role === "admin";
+
+  // Admin preview mode: show a picker if no email is specified yet
+  if (isAdmin && !previewAs) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-16">
+        <div className="mb-8 p-3 bg-amber-50 border border-amber-200 rounded-sm text-xs text-amber-800 font-meta">
+          Admin preview mode — you&apos;re seeing this as yourself. Enter a client email to preview their account.
+        </div>
+        <h1 className="font-display text-2xl text-ink mb-6">Preview client account</h1>
+        <form method="GET" className="flex gap-2">
+          <input
+            name="as"
+            type="email"
+            required
+            placeholder="client@example.com"
+            className="flex-1 border border-border rounded-sm px-3 py-2 text-sm bg-cream text-ink placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-sky/40"
+          />
+          <button
+            type="submit"
+            className="text-xs bg-ink text-cream px-3 py-2 rounded-sm hover:opacity-80 transition-opacity font-meta whitespace-nowrap"
+          >
+            Preview →
+          </button>
+        </form>
+        <p className="font-meta text-xs text-muted-foreground mt-3">
+          This shows exactly what the client sees. Your admin session stays active.
+        </p>
+      </div>
+    );
+  }
+
+  const email = isAdmin ? previewAs! : session!.user.email!;
 
   // Check verification status
   const client = await prisma.client.findUnique({
@@ -51,6 +84,14 @@ export default async function AccountPage({ searchParams }: Props) {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">
+      {/* Admin preview banner */}
+      {isAdmin && (
+        <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-sm text-xs text-amber-800 font-meta flex items-center justify-between">
+          <span>Admin preview — viewing as {email}</span>
+          <a href="/account" className="underline">Change email →</a>
+        </div>
+      )}
+
       {/* Email verification banners */}
       {verified === "1" && (
         <div className="mb-6 p-4 bg-sage/10 border border-sage/30 rounded-sm text-sm text-sage">
