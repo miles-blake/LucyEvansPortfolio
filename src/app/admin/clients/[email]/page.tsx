@@ -152,6 +152,39 @@ export default async function ClientProfilePage({ params }: Props) {
     .filter((b) => b.status === "CONFIRMED" || b.status === "COMPLETED")
     .reduce((s, b) => s + b.totalPrice, 0);
 
+  const lifetimeValue = totalSpent + bookingRevenue;
+  const completedBookings = bookings.filter((b) => b.status === "COMPLETED");
+  const activeBookings = bookings.filter((b) => b.status === "CONFIRMED" || b.status === "COMPLETED");
+  const paidOrders = orders.filter((o) => o.status === "PAID");
+  const totalEngagements = activeBookings.length + paidOrders.length;
+
+  const allDates = [
+    ...bookings.map((b) => b.createdAt),
+    ...orders.map((o) => o.createdAt),
+    ...inquiries.map((i) => i.createdAt),
+  ];
+  const lastActivity = allDates.length > 0 ? new Date(Math.max(...allDates.map((d) => d.getTime()))) : null;
+  const firstActivity = allDates.length > 0 ? new Date(Math.min(...allDates.map((d) => d.getTime()))) : null;
+  const daysSinceLast = lastActivity ? (Date.now() - lastActivity.getTime()) / 86_400_000 : null;
+  const daysSinceFirst = firstActivity ? (Date.now() - firstActivity.getTime()) / 86_400_000 : null;
+
+  const autoTags: string[] = [];
+  if (completedBookings.length >= 4 || lifetimeValue >= 200_000) {
+    autoTags.push("vip");
+  } else if (completedBookings.length >= 2 || totalEngagements >= 3) {
+    autoTags.push("frequent");
+  } else if (totalEngagements >= 2) {
+    autoTags.push("returning");
+  } else if (totalEngagements <= 1 && daysSinceFirst !== null && daysSinceFirst <= 90) {
+    autoTags.push("new");
+  }
+  if (daysSinceLast !== null && daysSinceLast > 365 && totalEngagements > 0) {
+    autoTags.push("inactive");
+  }
+  if (inquiries.length > 0 && activeBookings.length === 0 && paidOrders.length === 0) {
+    autoTags.push("inquiry only");
+  }
+
   return (
     <div className="max-w-3xl">
       <Link
@@ -209,6 +242,27 @@ export default async function ClientProfilePage({ params }: Props) {
           <p className="font-meta text-xs text-muted-foreground mt-1">total spent</p>
         </div>
       </div>
+
+      {/* Auto-tags */}
+      {autoTags.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap mb-6">
+          <span className="font-meta text-[10px] text-muted-foreground uppercase tracking-widest">Auto</span>
+          {autoTags.map((tag) => (
+            <span
+              key={tag}
+              className={`font-meta text-xs px-2.5 py-1 rounded-full ${
+                tag === "vip"
+                  ? "bg-amber-50 border border-amber-200 text-amber-700"
+                  : tag === "inactive"
+                  ? "bg-rose/10 text-rose border border-rose/20"
+                  : "bg-sky/10 text-sky border border-sky/20"
+              }`}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Tags — only shown for merged profiles */}
       {profile && (
